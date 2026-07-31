@@ -2,6 +2,7 @@ import json
 
 from scrapy.http import HtmlResponse, Request
 
+from car_tracker_scraper.items import ListingSummaryItem
 from car_tracker_scraper.spiders.mercadolibre_discovery import (
     MercadolibreDiscoverySpider,
     _is_zero_km,
@@ -34,13 +35,13 @@ def _polycard(item_id: str, attributes: list[str], is_pad: bool = False, price_c
     }
 
 
-def _build_html(polycards: list[dict]) -> bytes:
+def _build_html(polycards: list[dict], pagination_nodes_url=None) -> bytes:
     ctx = {
         "appProps": {
             "sharedState": {
                 "search": {
                     "results": polycards,
-                    "pagination": {"pagination_nodes_url": []},
+                    "pagination": {"pagination_nodes_url": pagination_nodes_url or []},
                 }
             }
         }
@@ -106,6 +107,32 @@ def test_parse_does_not_crash_when_price_complements_is_a_list():
 
     assert len(items) == 1
     assert items[0]["financing_initial_payment"] is None
+
+
+def test_parse_skips_non_string_pagination_entries_without_crashing():
+    # Regresion real (2026-07-31): con max_pages=2 contra el sitio real,
+    # response.follow() crasheo con "Cannot mix str and non-str arguments" -
+    # algun elemento de pagination_nodes_url no era un string plano.
+    polycards = [_polycard("MLA1", ["2014", "184.000 Km"])]
+    request = Request(
+        url="https://autos.mercadolibre.com.ar/fiat",
+        meta={"marca": "fiat", "page_count": 1},
+    )
+    response = HtmlResponse(
+        url=request.url,
+        body=_build_html(polycards, pagination_nodes_url=[None, "https://autos.mercadolibre.com.ar/fiat_Desde_49"]),
+        encoding="utf-8",
+        request=request,
+    )
+
+    spider = MercadolibreDiscoverySpider(marcas="fiat", max_pages="2")
+    results = list(spider.parse(response))
+
+    items = [r for r in results if isinstance(r, ListingSummaryItem)]
+    requests = [r for r in results if isinstance(r, Request)]
+    assert len(items) == 1
+    assert len(requests) == 1
+    assert requests[0].url == "https://autos.mercadolibre.com.ar/fiat_Desde_49"
 
 
 def test_start_requests_url_does_not_match_known_robots_disallow_patterns():

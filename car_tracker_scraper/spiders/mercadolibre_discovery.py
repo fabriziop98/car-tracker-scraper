@@ -121,6 +121,17 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
 
         pagination = search.get("pagination", {})
         for next_url in pagination.get("pagination_nodes_url", []):
+            # Regresion real (2026-07-31): con max_pages=2 contra el sitio real,
+            # algun elemento de esta lista no era un string plano y
+            # response.follow() crasheaba con "Cannot mix str and non-str
+            # arguments". No se confirmo todavia la forma real de ese valor
+            # (pendiente: diagnosticar con print(repr(...)) contra un caso real)
+            # - por ahora no crashear, solo loguear y saltear ese item.
+            if not isinstance(next_url, str):
+                self.logger.warning(
+                    "pagination_nodes_url tiene un valor no-string, se saltea: %r", next_url
+                )
+                continue
             yield response.follow(
                 next_url,
                 callback=self.parse,
