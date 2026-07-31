@@ -53,10 +53,35 @@ class MercadolibreDetailSpider(scrapy.Spider):
             "components", {}
         )
 
-        seller_card = components.get("seller_card_motors") or {}
-        event_data = (
-            ((seller_card.get("phone_link") or {}).get("track") or {}).get("melidata_event") or {}
-        ).get("event_data") or {}
+        # El vendedor viene en dos formas distintas segun el tipo (confirmado
+        # con 2 fixtures reales, 2026-07-31): concesionaria -> seller_card_motors
+        # (con phone_link.track...item_seller_type="car_dealer"); particular ->
+        # seller_profile (misma forma anidada seller_name.title.text, sin
+        # phone_link). No asumir que seller_card_motors siempre existe.
+        dealer_card = components.get("seller_card_motors")
+        private_card = components.get("seller_profile")
+        if dealer_card:
+            seller_card = dealer_card
+            seller_type = (
+                (((dealer_card.get("phone_link") or {}).get("track") or {}).get("melidata_event") or {}).get(
+                    "event_data"
+                )
+                or {}
+            ).get("item_seller_type")
+        elif private_card:
+            seller_card = private_card
+            seller_type = "particular"
+        else:
+            seller_card = {}
+            seller_type = None
+
+        # seller_id/state/item_status: el path universal components.track
+        # (NO anidado en seller_card_motors) trae estos 3 campos para ambos
+        # tipos de vendedor - mas robusto que depender de seller_card_motors,
+        # que no existe para particulares.
+        top_event_data = (
+            ((components.get("track") or {}).get("melidata_event") or {}).get("event_data") or {}
+        )
 
         item_proximity_rows = (components.get("item_proximity") or {}).get("content_rows") or []
         location_text = item_proximity_rows[0]["label"]["text"] if item_proximity_rows else None
@@ -81,10 +106,10 @@ class MercadolibreDetailSpider(scrapy.Spider):
             location_raw=location_text,
             highlighted_specs_raw=(components.get("highlighted_specs_attrs") or {}).get("components"),
             seller_name=(seller_card.get("seller_name") or {}).get("title", {}).get("text"),
-            seller_type=event_data.get("item_seller_type"),
-            seller_id=event_data.get("seller_id"),
-            province_raw=event_data.get("state"),
-            item_status=event_data.get("item_status"),
+            seller_type=seller_type,
+            seller_id=top_event_data.get("seller_id"),
+            province_raw=top_event_data.get("state"),
+            item_status=top_event_data.get("item_status"),
             financing_initial_payment=financing.get("title", {}).get("text"),
             fetched_at=datetime.now(timezone.utc).isoformat(),
         )

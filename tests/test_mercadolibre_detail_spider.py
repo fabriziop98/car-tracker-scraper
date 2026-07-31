@@ -9,6 +9,7 @@ from scrapy.http import HtmlResponse
 from car_tracker_scraper.spiders.mercadolibre_detail import MercadolibreDetailSpider
 
 FIXTURE = Path(__file__).parent / "fixtures" / "ml_detail_sample.html"
+FIXTURE_PARTICULAR = Path(__file__).parent / "fixtures" / "ml_detail_sample2.html"
 
 
 @pytest.mark.skipif(not FIXTURE.exists(), reason="fixture real no disponible en este checkout")
@@ -44,3 +45,28 @@ def test_parse_real_detail_fixture():
     assert item["financing_initial_payment"] == "Anticipo de $\xa07.000.000"  # \xa0 = non-breaking space, tal como lo formatea ML
     assert isinstance(item["highlighted_specs_raw"], list)
     assert len(item["highlighted_specs_raw"]) > 0
+
+
+@pytest.mark.skipif(not FIXTURE_PARTICULAR.exists(), reason="fixture real no disponible en este checkout")
+def test_parse_real_detail_fixture_particular_seller():
+    # Regresion real (2026-07-31): un vendedor particular no tiene
+    # seller_card_motors (ese componente solo aparece para concesionarias) -
+    # antes de este fix, seller_name/seller_type/seller_id/province_raw/
+    # item_status salian todos None para este caso.
+    spider = MercadolibreDetailSpider(urls="https://auto.mercadolibre.com.ar/fake-url-for-test")
+    response = HtmlResponse(
+        url="https://auto.mercadolibre.com.ar/MLA-3664412834-fiat-toro-20-volcano-4x4-at-_JM",
+        body=FIXTURE_PARTICULAR.read_bytes(),
+        encoding="utf-8",
+    )
+
+    items = list(spider.parse(response))
+    assert len(items) == 1
+    item = items[0]
+
+    assert item["source_listing_key"] == "MLA3664412834"
+    assert item["seller_name"] == "Rodrigo Atilio"
+    assert item["seller_type"] == "particular"
+    assert item["seller_id"] == 67156401
+    assert item["province_raw"] == "Mendoza"
+    assert item["item_status"] == "active"
