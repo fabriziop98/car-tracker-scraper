@@ -7,6 +7,10 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
+from dotenv import load_dotenv
+
+load_dotenv()  # carga .env (gitignored) si existe - ver .env.example
+
 BOT_NAME = "car_tracker_scraper"
 
 SPIDER_MODULES = ["car_tracker_scraper.spiders"]
@@ -15,14 +19,9 @@ NEWSPIDER_MODULE = "car_tracker_scraper.spiders"
 ADDONS = {}
 
 
-# UA de navegador real, igual al que ya se probo funcionando en el reverse
-# engineering de Fase 0 (findings_clickup.md). No es una identidad falsa en
-# el sentido problematico (no nos hacemos pasar por "Googlebot" ni nada asi),
-# es lo que hace cualquier scraper de produccion.
-USER_AGENT = (
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
-)
+# El User-Agent/Accept-Language/sec-ch-ua ya NO se fijan aca: los pone
+# AntiBlockingMiddleware por request, desde el pool de personas coherentes
+# de car_tracker_scraper/antiblocking/user_agents.py (wdxtkg30nk).
 
 # Obey robots.txt rules.
 # DESACTIVADO A PROPOSITO - decision de negocio de Fabrizio (2026-07-31), no
@@ -41,14 +40,26 @@ USER_AGENT = (
 # ninguno de esos bots.
 ROBOTSTXT_OBEY = False
 
-# Concurrency and throttling settings — timing humano, sin patrones de reloj
-# perfectos (seccion 3.2 del doc de arquitectura).
 CONCURRENT_REQUESTS_PER_DOMAIN = 2
-DOWNLOAD_DELAY = 2
-RANDOMIZE_DOWNLOAD_DELAY = True
 
-DEFAULT_REQUEST_HEADERS = {
-    "Accept-Language": "es-AR,es;q=0.9",
+# El pacing (delay + jitter) y el backoff en errores ya NO los maneja
+# DOWNLOAD_DELAY/RANDOMIZE_DOWNLOAD_DELAY/AUTOTHROTTLE (delay fijo o uniforme
+# - justo lo que wdxtkg30nk pide evitar): los maneja AntiBlockingMiddleware
+# via token bucket en Redis + jitter lognormal. Dejarlos prendidos a la vez
+# duplicaria/pisaria el pacing.
+DOWNLOAD_DELAY = 0
+AUTOTHROTTLE_ENABLED = False
+
+# Capa anti-bloqueo (wdxtkg30nk): token bucket por dominio en Redis,
+# UA pool coherente, proxy pool opcional, circuit breaker, backoff con
+# jitter lognormal. Config real (Redis URL, Telegram, proxies) por
+# variable de entorno - ver .env.example.
+ANTIBLOCK_REDIS_URL = "redis://localhost:6379/0"
+ANTIBLOCK_TOKEN_BUCKET_CAPACITY = 5  # burst permitido
+ANTIBLOCK_TOKEN_BUCKET_REFILL_PER_SEC = 0.5  # ~1 request cada 2s en regimen estable
+
+DOWNLOADER_MIDDLEWARES = {
+    "car_tracker_scraper.antiblocking.middleware.AntiBlockingMiddleware": 350,
 }
 
 # Disable cookies (enabled by default)
@@ -87,13 +98,8 @@ DEFAULT_REQUEST_HEADERS = {
 #    "car_tracker_scraper.pipelines.CarTrackerScraperPipeline": 300,
 #}
 
-# Enable and configure the AutoThrottle extension (disabled by default)
-# See https://docs.scrapy.org/en/latest/topics/autothrottle.html
-AUTOTHROTTLE_ENABLED = True
-AUTOTHROTTLE_START_DELAY = 2
-AUTOTHROTTLE_MAX_DELAY = 30
-AUTOTHROTTLE_TARGET_CONCURRENCY = 1.0
-#AUTOTHROTTLE_DEBUG = False
+# AutoThrottle deshabilitado a proposito - ver comentario junto a
+# AUTOTHROTTLE_ENABLED mas arriba (AntiBlockingMiddleware maneja el pacing).
 
 # Enable and configure HTTP caching (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html#httpcache-middleware-settings

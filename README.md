@@ -14,7 +14,11 @@ cuando se repita este mismo patron con sus fuentes ya reverse-engineered (ver
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+cp .env.example .env  # completar TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, ANTIBLOCK_REDIS_URL
 ```
+
+Requiere un Redis corriendo (el mismo del `docker-compose.yml` del repo `car-tracker`) para el
+token bucket y el circuit breaker de la capa anti-bloqueo — ver mas abajo.
 
 ## Discovery
 
@@ -55,6 +59,30 @@ scrapy crawl mercadolibre_detail -a urls_file=urls.txt \
   el primer lugar donde mirar.
 - Publicar a RabbitMQ (en vez de a un archivo JSONL local) es la tarea separada de
   "persistencia event-driven / cola" del roadmap de Fase 1 — no esta implementado en este repo todavia.
+
+## Capa anti-bloqueo (`car_tracker_scraper/antiblocking/`)
+
+Implementa wdxtkg30nk completo:
+
+- **Token bucket por dominio en Redis** — compartido entre procesos, no solo por-instancia como
+  `DOWNLOAD_DELAY` de Scrapy.
+- **Backoff exponencial con jitter lognormal** en reintentos (403/429/503) — nunca un delay fijo.
+- **UA pool coherente** (`user_agents.py`): 5 personas de navegador reales, cada una con su
+  User-Agent + Accept-Language + `sec-ch-ua`* consistentes entre si (Firefox/Safari no mandan
+  Client Hints, y no se les agregan). Rotado por request en Discovery; **sticky** (misma persona
+  toda la corrida) en Detail via `spider.sticky_persona = True`.
+- **Proxy pool opcional** (`ANTIBLOCK_PROXY_LIST`) — vacio por default, sin proveedor contratado
+  todavia; se activa solo seteando la variable de entorno, sin tocar codigo.
+- **Circuit breaker por dominio**: si la tasa de error supera el umbral en una ventana de tiempo,
+  pausa ese dominio 30 min y manda una alerta a Telegram. Se cierra solo cuando pasan los 30 min
+  (o manualmente via `CircuitBreaker.close()`).
+- **Ventana horaria 2:00-7:00 ART** (`run_batch.py`): pensado para invocarse via cron: si se corre
+  fuera de la ventana, no hace nada. Instalar en crontab (ver el docstring del script).
+
+Todo esto se probo con `fakeredis` (sin Redis real disponible en este entorno de desarrollo) y
+con un mensaje de Telegram real (confirmado funcionando 2026-07-31). **Sin verificar todavia**:
+una corrida real de `scrapy crawl` contra MercadoLibre con el Redis real del docker-compose
+levantado — probarlo ahi antes de confiar en produccion.
 
 ## Tests
 

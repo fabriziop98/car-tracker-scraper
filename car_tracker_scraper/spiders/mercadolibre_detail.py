@@ -22,6 +22,11 @@ from car_tracker_scraper.items import ListingDetailItem
 class MercadolibreDetailSpider(scrapy.Spider):
     name = "mercadolibre_detail"
     allowed_domains = ["auto.mercadolibre.com.ar"]
+    # wdxtkg30nk: "sticky session en Detail" - AntiBlockingMiddleware
+    # mantiene la misma persona (UA/headers) durante toda la corrida en vez
+    # de rotar por request, ya que un mismo "usuario" navegando varias
+    # fichas de detalle en una sesion es el patron esperado.
+    sticky_persona = True
 
     def __init__(self, urls_file: str | None = None, urls: str | None = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
