@@ -5,12 +5,24 @@ Recorre los listados paginados de una o mas marcas y descubre avisos nuevos
 del doc de arquitectura). NO trae la ficha completa - eso es el trabajo
 separado de mercadolibre_detail.
 
+Filtrado de 0km: el filtro de condicion de ML (`ITEM*CONDITION_2230581`) va
+pegado a un segmento `_NoIndex_True` en la URL, y el robots.txt real de
+autos.mercadolibre.com.ar bloquea justo ese patron
+(`Disallow: /*_NoIndex_True` bajo `User-agent: *`) - confirmado 2026-07-31.
+En vez de usar ese filtro via URL, este spider pide la pagina de marca SIN
+filtrar (URL que no choca con ninguna regla del robots.txt) y descarta los
+0km el mismo, en base al mismo dato que revelo el bug original en Fase 0:
+el texto "0 Km" en attributes_list. Es una heuristica de texto, no un campo
+de condicion explicito - monitorear si empieza a fallar (ver
+`_is_zero_km`).
+
 Uso:
     scrapy crawl mercadolibre_discovery -a marcas=fiat,ford -a max_pages=3 \
         -O output/discovery_%(time)s.jsonl
 """
 from __future__ import annotations
 
+import re
 from datetime import datetime, timezone
 
 import scrapy
@@ -22,9 +34,11 @@ from car_tracker_scraper.extraction.mercadolibre import (
 )
 from car_tracker_scraper.items import ListingSummaryItem
 
-# ITEM*CONDITION_2230581 = filtro "usado", confirmado con datos reales
-# (findings_clickup.md): sin este filtro, ML mezcla 0km con usados.
-CONDITION_USADO = "ITEM*CONDITION_2230581"
+_ZERO_KM_RE = re.compile(r"^0[.,]?0*\s*km$", re.IGNORECASE)
+
+
+def _is_zero_km(attributes_raw: list[str] | None) -> bool:
+    return any(_ZERO_KM_RE.match(attr.strip()) for attr in (attributes_raw or []))
 
 
 class MercadolibreDiscoverySpider(scrapy.Spider):
@@ -38,10 +52,7 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
 
     def start_requests(self):
         for marca in self.marcas:
-            url = (
-                f"https://autos.mercadolibre.com.ar/{marca}/"
-                f"{marca}_{CONDITION_USADO}_NoIndex_True?sb=all_mercadolibre"
-            )
+            url = f"https://autos.mercadolibre.com.ar/{marca}?sb=all_mercadolibre"
             yield scrapy.Request(url, callback=self.parse, meta={"marca": marca, "page_count": 1})
 
     def parse(self, response):
@@ -57,6 +68,10 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
                 continue  # publicidad, no contaminar agregados
 
             comp = polycard_components(polycard)
+            attributes_raw = (comp.get("attributes_list") or {}).get("texts")
+            if _is_zero_km(attributes_raw):
+                continue  # 0km, no es el segmento usado que nos interesa
+
             price = (comp.get("price") or {}).get("current_price") or {}
             price_complements = (comp.get("price") or {}).get("price_complements") or {}
 
@@ -70,7 +85,7 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
                 title_raw=(comp.get("title") or {}).get("text"),
                 price_amount=price.get("value"),
                 price_currency=price.get("currency"),
-                attributes_raw=(comp.get("attributes_list") or {}).get("texts"),
+                attributes_raw=attributes_raw,
                 location_raw=(comp.get("location") or {}).get("text"),
                 financing_initial_payment=price_complements.get("initial_payment_amount"),
                 discovered_at=datetime.now(timezone.utc).isoformat(),

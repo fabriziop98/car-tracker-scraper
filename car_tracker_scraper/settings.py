@@ -25,15 +25,13 @@ USER_AGENT = (
 )
 
 # Obey robots.txt rules.
-# DECISION PENDIENTE, no un simple pendiente de verificacion: el robots.txt real
-# de autos.mercadolibre.com.ar tiene, bajo "User-agent: *", la regla
-# `Disallow: /*_NoIndex_True`. La URL que arma mercadolibre_discovery
-# (".../fiat_ITEM*CONDITION_2230581_NoIndex_True?...") matchea esa regla.
-# Con ROBOTSTXT_OBEY=True (este default), Scrapy va a bloquear el 100% de los
-# pedidos de Discovery en silencio - 0 items, sin excepcion visible.
-# Ademas: "User-agent: ClaudeBot / Disallow: /" tambien esta confirmado en ese
-# mismo robots.txt (ya sabiamos esto de Fase 0, ahora reconfirmado).
-# Ver README para las alternativas que hay que decidir antes de tocar esto.
+# El robots.txt real de autos.mercadolibre.com.ar bloquea "*_NoIndex_True"
+# bajo "User-agent: *" (confirmado 2026-07-31). El filtro de condicion de ML
+# (ITEM*CONDITION_2230581) va pegado a ese segmento, asi que mercadolibre_discovery
+# YA NO lo usa en la URL - pide la pagina de marca sin filtrar (que no choca
+# con ninguna regla) y descarta 0km del lado del parser (ver _is_zero_km en
+# el spider). Con esto, ROBOTSTXT_OBEY=True no bloquea nada de lo que este
+# scraper necesita.
 ROBOTSTXT_OBEY = True
 
 # Concurrency and throttling settings — timing humano, sin patrones de reloj

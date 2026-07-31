@@ -46,13 +46,13 @@ scrapy crawl mercadolibre_detail -a urls_file=urls.txt \
   Fiat Palio real de ML) — tanto el JSON-LD (`Vehicle`/`BreadcrumbList`) como
   `__NORDIC_RENDERING_CTX__` (`seller_card_motors`, `highlighted_specs_attrs`, `item_proximity`,
   `initial_payment_amount`, etc.). Ya no es best-effort.
-- **robots.txt — DECISION PENDIENTE, no solo verificacion:** el `robots.txt` real de
-  `autos.mercadolibre.com.ar` (el subdominio que pega Discovery) tiene, en el bloque generico
-  `User-agent: *`, la regla `Disallow: /*_NoIndex_True`. La URL que arma Discovery
-  (`.../fiat_ITEM*CONDITION_2230581_NoIndex_True?...`) matchea esa regla. Con
-  `ROBOTSTXT_OBEY=True` (default actual), Scrapy va a bloquear el 100% de los pedidos de
-  Discovery en silencio (0 resultados, sin error visible). Ver la nota en `settings.py` y
-  decidir como seguir antes de intentar correr Discovery de verdad.
+- **robots.txt: resuelto.** El `robots.txt` real de `autos.mercadolibre.com.ar` bloquea
+  `*_NoIndex_True` bajo `User-agent: *` (confirmado 2026-07-31), y el filtro de condicion de
+  ML iba pegado a ese segmento. Discovery ya no lo usa: pide la pagina de marca sin filtrar
+  y descarta 0km el mismo lado del parser (`_is_zero_km`, mismo dato — el texto "0 Km" — que
+  revelo el bug original en Fase 0). Es una heuristica de texto, no un campo de condicion
+  explicito; si en algun momento empieza a fallar (ML cambia el formato del texto de km), es
+  el primer lugar donde mirar.
 - Publicar a RabbitMQ (en vez de a un archivo JSONL local) es la tarea separada de
   "persistencia event-driven / cola" del roadmap de Fase 1 — no esta implementado en este repo todavia.
 
