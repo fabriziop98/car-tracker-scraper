@@ -18,6 +18,12 @@ class ListingSummaryItem(scrapy.Item):
     financing_initial_payment = scrapy.Field()  # anticipo de financiacion, si el aviso lo expone
     discovered_at = scrapy.Field()  # timestamp ISO de cuando el scraper lo vio
 
+    # Landing zone (wdxtkg30nm): puntero al raw guardado en S3/MinIO, para
+    # reprocesar sin volver a scrapear si se encuentra un bug de parseo.
+    s3_key = scrapy.Field()
+    http_status = scrapy.Field()
+    parser_version = scrapy.Field()
+
 
 class ListingDetailItem(scrapy.Item):
     """El resultado de Detail Fetch: la ficha completa de un aviso."""
@@ -50,3 +56,8 @@ class ListingDetailItem(scrapy.Item):
     financing_initial_payment = scrapy.Field()
 
     fetched_at = scrapy.Field()
+
+    # Landing zone (wdxtkg30nm)
+    s3_key = scrapy.Field()
+    http_status = scrapy.Field()
+    parser_version = scrapy.Field()

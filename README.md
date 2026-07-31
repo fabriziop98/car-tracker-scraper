@@ -79,10 +79,30 @@ Implementa wdxtkg30nk completo:
 - **Ventana horaria 2:00-7:00 ART** (`run_batch.py`): pensado para invocarse via cron: si se corre
   fuera de la ventana, no hace nada. Instalar en crontab (ver el docstring del script).
 
-Todo esto se probo con `fakeredis` (sin Redis real disponible en este entorno de desarrollo) y
-con un mensaje de Telegram real (confirmado funcionando 2026-07-31). **Sin verificar todavia**:
-una corrida real de `scrapy crawl` contra MercadoLibre con el Redis real del docker-compose
-levantado — probarlo ahi antes de confiar en produccion.
+**Verificado end-to-end 2026-07-31**: corrida real contra MercadoLibre con el Redis del
+docker-compose levantado (12 items reales, cero errores) y confirmado por `redis-cli` que las
+keys `antiblock:tb:*` / `antiblock:cb:*` se crean de verdad. Mensaje de Telegram real tambien
+confirmado.
+
+## Landing zone (`car_tracker_scraper/landing/`)
+
+Implementa wdxtkg30nm: guarda **siempre** el HTML crudo (gzip) en S3/MinIO, particionado
+`{fuente}/{YYYY-MM-DD}/...`, antes de que el spider intente parsearlo — si el parser tiene un
+bug, se reprocesa desde ahi, sin volver a scrapear.
+
+- `LandingZoneMiddleware` (downloader middleware, prioridad 300 — mas baja que
+  `AntiBlockingMiddleware` a proposito, ver comentario en el modulo) sube cada response FINAL
+  (post-reintentos) y le agrega `s3_key`/`http_status`/`parser_version` al `request.meta`.
+- Los spiders leen esos 3 campos de `response.meta` y los incluyen en cada item — terminan
+  siendo el puente hacia la tabla `raw_payload` de Postgres del lado de la ingesta Spring Boot.
+- `PARSER_VERSION` (`car_tracker_scraper/version.py`) — subirlo cada vez que cambia la logica de
+  extraccion, para saber que rango reprocesar si se encuentra un bug despues.
+- MinIO agregado al `docker-compose.yml` del repo `car-tracker` (puerto 9000 API, 9001 consola
+  web) — habla la misma API que S3 real, migrar a AWS S3/R2 despues es solo cambiar el
+  endpoint, no el codigo.
+
+Probado con `moto` (S3 simulado en memoria) — **sin verificar todavia** contra el MinIO real del
+docker-compose.
 
 ## Tests
 

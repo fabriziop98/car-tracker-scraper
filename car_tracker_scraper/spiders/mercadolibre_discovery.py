@@ -125,6 +125,9 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
                     else None
                 ),
                 discovered_at=datetime.now(timezone.utc).isoformat(),
+                s3_key=response.meta.get("s3_key"),
+                http_status=response.meta.get("http_status"),
+                parser_version=response.meta.get("parser_version"),
             )
 
         if page_count >= self.max_pages:

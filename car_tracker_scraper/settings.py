@@ -58,8 +58,17 @@ ANTIBLOCK_REDIS_URL = "redis://localhost:6379/0"
 ANTIBLOCK_TOKEN_BUCKET_CAPACITY = 5  # burst permitido
 ANTIBLOCK_TOKEN_BUCKET_REFILL_PER_SEC = 0.5  # ~1 request cada 2s en regimen estable
 
+# Landing zone (wdxtkg30nm): guardar siempre el HTML crudo en S3/MinIO
+# antes de parsearlo. Config real por variable de entorno - ver .env.example.
+LANDING_S3_ENDPOINT_URL = "http://localhost:9000"
+LANDING_S3_BUCKET = "car-tracker-raw"
+
 DOWNLOADER_MIDDLEWARES = {
     "car_tracker_scraper.antiblocking.middleware.AntiBlockingMiddleware": 350,
+    # Prioridad mas baja que AntiBlockingMiddleware a proposito: tiene que
+    # ver la response FINAL (post-reintentos), no un 429/503 intermedio -
+    # ver el comentario en landing/middleware.py.
+    "car_tracker_scraper.landing.middleware.LandingZoneMiddleware": 300,
 }
 
 # Disable cookies (enabled by default)

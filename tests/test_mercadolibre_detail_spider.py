@@ -4,7 +4,7 @@ guardado por Fabrizio via curl (ver README, seccion de pendientes)."""
 from pathlib import Path
 
 import pytest
-from scrapy.http import HtmlResponse
+from scrapy.http import HtmlResponse, Request
 
 from car_tracker_scraper.spiders.mercadolibre_detail import MercadolibreDetailSpider
 
@@ -15,11 +15,9 @@ FIXTURE_PARTICULAR = Path(__file__).parent / "fixtures" / "ml_detail_sample2.htm
 @pytest.mark.skipif(not FIXTURE.exists(), reason="fixture real no disponible en este checkout")
 def test_parse_real_detail_fixture():
     spider = MercadolibreDetailSpider(urls="https://auto.mercadolibre.com.ar/fake-url-for-test")
-    response = HtmlResponse(
-        url="https://auto.mercadolibre.com.ar/MLA-3635810164-fiat-palio-weekend-adventure-16-locker-xtreme-2014-_JM",
-        body=FIXTURE.read_bytes(),
-        encoding="utf-8",
-    )
+    url = "https://auto.mercadolibre.com.ar/MLA-3635810164-fiat-palio-weekend-adventure-16-locker-xtreme-2014-_JM"
+    request = Request(url, meta={"s3_key": "mercadolibre/2026-07-31/test.html.gz", "http_status": 200, "parser_version": "test"})
+    response = HtmlResponse(url=url, body=FIXTURE.read_bytes(), encoding="utf-8", request=request)
 
     items = list(spider.parse(response))
     assert len(items) == 1
@@ -54,11 +52,9 @@ def test_parse_real_detail_fixture_particular_seller():
     # antes de este fix, seller_name/seller_type/seller_id/province_raw/
     # item_status salian todos None para este caso.
     spider = MercadolibreDetailSpider(urls="https://auto.mercadolibre.com.ar/fake-url-for-test")
-    response = HtmlResponse(
-        url="https://auto.mercadolibre.com.ar/MLA-3664412834-fiat-toro-20-volcano-4x4-at-_JM",
-        body=FIXTURE_PARTICULAR.read_bytes(),
-        encoding="utf-8",
-    )
+    url = "https://auto.mercadolibre.com.ar/MLA-3664412834-fiat-toro-20-volcano-4x4-at-_JM"
+    request = Request(url, meta={"s3_key": "mercadolibre/2026-07-31/test.html.gz", "http_status": 200, "parser_version": "test"})
+    response = HtmlResponse(url=url, body=FIXTURE_PARTICULAR.read_bytes(), encoding="utf-8", request=request)
 
     items = list(spider.parse(response))
     assert len(items) == 1

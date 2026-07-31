@@ -117,6 +117,9 @@ class MercadolibreDetailSpider(scrapy.Spider):
             item_status=top_event_data.get("item_status"),
             financing_initial_payment=financing.get("title", {}).get("text"),
             fetched_at=datetime.now(timezone.utc).isoformat(),
+            s3_key=response.meta.get("s3_key"),
+            http_status=response.meta.get("http_status"),
+            parser_version=response.meta.get("parser_version"),
         )
 
 
