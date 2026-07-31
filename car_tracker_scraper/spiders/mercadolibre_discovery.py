@@ -6,15 +6,18 @@ del doc de arquitectura). NO trae la ficha completa - eso es el trabajo
 separado de mercadolibre_detail.
 
 Filtrado de 0km: el filtro de condicion de ML (`ITEM*CONDITION_2230581`) va
-pegado a un segmento `_NoIndex_True` en la URL, y el robots.txt real de
-autos.mercadolibre.com.ar bloquea justo ese patron
-(`Disallow: /*_NoIndex_True` bajo `User-agent: *`) - confirmado 2026-07-31.
-En vez de usar ese filtro via URL, este spider pide la pagina de marca SIN
-filtrar (URL que no choca con ninguna regla del robots.txt) y descarta los
-0km el mismo, en base al mismo dato que revelo el bug original en Fase 0:
-el texto "0 Km" en attributes_list. Es una heuristica de texto, no un campo
-de condicion explicito - monitorear si empieza a fallar (ver
-`_is_zero_km`).
+pegado a un segmento `_NoIndex_True` en la URL. En vez de usar ese filtro via
+URL, este spider pide la pagina de marca SIN filtrar y descarta los 0km el
+mismo, en base al mismo dato que revelo el bug original en Fase 0: el texto
+"0 Km" en attributes_list. Es una heuristica de texto, no un campo de
+condicion explicito - monitorear si empieza a fallar (ver `_is_zero_km`).
+
+robots.txt: ROBOTSTXT_OBEY esta en False A PROPOSITO (ver settings.py) -
+decision de negocio de Fabrizio, no un default. El unico mecanismo de
+paginacion que expone ML es `_Desde_{offset}`, que el propio robots.txt de
+autos.mercadolibre.com.ar bloquea bajo "User-agent: *" (confirmado a mano en
+el navegador que no hay ruta alternativa) - con ROBOTSTXT_OBEY=True el
+Discovery quedaria limitado a la pagina 1 de cada marca.
 
 Uso:
     scrapy crawl mercadolibre_discovery -a marcas=fiat,ford -a max_pages=3 \
@@ -120,17 +123,20 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
             return
 
         pagination = search.get("pagination", {})
-        for next_url in pagination.get("pagination_nodes_url", []):
-            # Regresion real (2026-07-31): con max_pages=2 contra el sitio real,
-            # algun elemento de esta lista no era un string plano y
-            # response.follow() crasheaba con "Cannot mix str and non-str
-            # arguments". No se confirmo todavia la forma real de ese valor
-            # (pendiente: diagnosticar con print(repr(...)) contra un caso real)
-            # - por ahora no crashear, solo loguear y saltear ese item.
+        for node in pagination.get("pagination_nodes_url", []):
+            # Forma real confirmada 2026-07-31 (diagnose_pagination.py contra
+            # el sitio real): pagination_nodes_url es una lista de DICTS
+            # ({"value": "2", "url": "...", "is_actual_page": False}), no de
+            # strings planos - el fix anterior evitaba el crash pero de hecho
+            # nunca seguia ninguna pagina (todo se saltaba por no ser str).
+            if not isinstance(node, dict):
+                self.logger.warning("pagination_nodes_url tiene un item inesperado: %r", node)
+                continue
+            if node.get("is_actual_page"):
+                continue  # es la pagina que ya estamos procesando
+            next_url = node.get("url")
             if not isinstance(next_url, str):
-                self.logger.warning(
-                    "pagination_nodes_url tiene un valor no-string, se saltea: %r", next_url
-                )
+                self.logger.warning("pagination_nodes_url.url no es un string: %r", node)
                 continue
             yield response.follow(
                 next_url,

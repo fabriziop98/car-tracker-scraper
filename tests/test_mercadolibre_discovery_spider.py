@@ -109,18 +109,25 @@ def test_parse_does_not_crash_when_price_complements_is_a_list():
     assert items[0]["financing_initial_payment"] is None
 
 
-def test_parse_skips_non_string_pagination_entries_without_crashing():
-    # Regresion real (2026-07-31): con max_pages=2 contra el sitio real,
-    # response.follow() crasheo con "Cannot mix str and non-str arguments" -
-    # algun elemento de pagination_nodes_url no era un string plano.
+def test_parse_follows_pagination_dicts_and_skips_the_current_page():
+    # Forma real confirmada 2026-07-31 (diagnose_pagination.py contra el
+    # sitio real): pagination_nodes_url es una lista de DICTS
+    # ({"value": "2", "url": "...", "is_actual_page": False}), no de strings
+    # planos. El primer fix solo evitaba el crash pero de hecho nunca
+    # seguia ninguna pagina (todo se salteaba por no ser str).
     polycards = [_polycard("MLA1", ["2014", "184.000 Km"])]
     request = Request(
         url="https://autos.mercadolibre.com.ar/fiat",
         meta={"marca": "fiat", "page_count": 1},
     )
+    pagination_nodes = [
+        {"value": "1", "url": "https://autos.mercadolibre.com.ar/fiat", "is_actual_page": True},
+        {"value": "2", "url": "https://autos.mercadolibre.com.ar/fiat_Desde_49_NoIndex_True", "is_actual_page": False},
+        {"garbage": "shape"},  # defensivo: no deberia crashear ante una forma inesperada
+    ]
     response = HtmlResponse(
         url=request.url,
-        body=_build_html(polycards, pagination_nodes_url=[None, "https://autos.mercadolibre.com.ar/fiat_Desde_49"]),
+        body=_build_html(polycards, pagination_nodes_url=pagination_nodes),
         encoding="utf-8",
         request=request,
     )
@@ -132,7 +139,7 @@ def test_parse_skips_non_string_pagination_entries_without_crashing():
     requests = [r for r in results if isinstance(r, Request)]
     assert len(items) == 1
     assert len(requests) == 1
-    assert requests[0].url == "https://autos.mercadolibre.com.ar/fiat_Desde_49"
+    assert requests[0].url == "https://autos.mercadolibre.com.ar/fiat_Desde_49_NoIndex_True"
 
 
 def test_start_requests_url_does_not_match_known_robots_disallow_patterns():

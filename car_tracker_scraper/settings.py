@@ -25,14 +25,21 @@ USER_AGENT = (
 )
 
 # Obey robots.txt rules.
-# El robots.txt real de autos.mercadolibre.com.ar bloquea "*_NoIndex_True"
-# bajo "User-agent: *" (confirmado 2026-07-31). El filtro de condicion de ML
-# (ITEM*CONDITION_2230581) va pegado a ese segmento, asi que mercadolibre_discovery
-# YA NO lo usa en la URL - pide la pagina de marca sin filtrar (que no choca
-# con ninguna regla) y descarta 0km del lado del parser (ver _is_zero_km en
-# el spider). Con esto, ROBOTSTXT_OBEY=True no bloquea nada de lo que este
-# scraper necesita.
-ROBOTSTXT_OBEY = True
+# DESACTIVADO A PROPOSITO - decision de negocio de Fabrizio (2026-07-31), no
+# un default silencioso. El robots.txt real de autos.mercadolibre.com.ar
+# bloquea, bajo "User-agent: *", TANTO "*_NoIndex_True" (evitado cambiando
+# la URL de entrada) COMO "*_Desde_" - y "_Desde_{offset}" es el UNICO
+# mecanismo de paginacion que ML expone (confirmado a mano en el navegador:
+# la pagina 2 carga la misma URL "_Desde_49_NoIndex_True", no hay ruta
+# alternativa por query param). Con ROBOTSTXT_OBEY=True, el Discovery queda
+# limitado a la pagina 1 de cada marca (~37-48 avisos), sin poder paginar
+# mas hondo. Fabrizio eligio priorizar cobertura de datos sobre compliance
+# estricto con esa regla puntual - el riesgo legal/reputacional de esto es
+# de el, no una decision tecnica unilateral. Los bloqueos nombrados
+# (ClaudeBot/GPTBot/etc. con Disallow: /) nunca aplicaron a este scraper de
+# todos modos, porque el USER_AGENT configurado abajo no se identifica como
+# ninguno de esos bots.
+ROBOTSTXT_OBEY = False
 
 # Concurrency and throttling settings — timing humano, sin patrones de reloj
 # perfectos (seccion 3.2 del doc de arquitectura).
