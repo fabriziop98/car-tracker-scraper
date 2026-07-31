@@ -8,7 +8,10 @@ from car_tracker_scraper.spiders.mercadolibre_discovery import (
 )
 
 
-def _polycard(item_id: str, attributes: list[str], is_pad: bool = False) -> dict:
+def _polycard(item_id: str, attributes: list[str], is_pad: bool = False, price_complements=None) -> dict:
+    price = {"current_price": {"value": 5_000_000, "currency": "ARS"}}
+    if price_complements is not None:
+        price["price_complements"] = price_complements
     return {
         "id": "POLYCARD",
         "polycard": {
@@ -21,7 +24,7 @@ def _polycard(item_id: str, attributes: list[str], is_pad: bool = False) -> dict
             },
             "components": [
                 {"type": "title", "title": {"text": "Fiat Palio"}},
-                {"type": "price", "price": {"current_price": {"value": 5_000_000, "currency": "ARS"}}},
+                {"type": "price", "price": price},
                 {"type": "attributes_list", "attributes_list": {"texts": attributes}},
                 {"type": "location", "location": {"text": "Godoy Cruz, Mendoza"}},
             ],
@@ -74,6 +77,23 @@ def test_parse_filters_ads_and_zero_km():
 
     assert len(items) == 1
     assert items[0]["source_listing_key"] == "MLA1"
+
+
+def test_parse_does_not_crash_when_price_complements_is_a_list():
+    # Regresion real (2026-07-31): en produccion, price_complements salio
+    # como list en al menos un item, no dict, y crasheaba con
+    # AttributeError en price_complements.get(...).
+    polycards = [
+        _polycard("MLA1", ["2014", "184.000 Km"], price_complements=[{"some": "unexpected shape"}]),
+    ]
+    request = Request(url="https://autos.mercadolibre.com.ar/fiat", meta={"marca": "fiat", "page_count": 1})
+    response = HtmlResponse(url=request.url, body=_build_html(polycards), encoding="utf-8", request=request)
+
+    spider = MercadolibreDiscoverySpider(marcas="fiat")
+    items = list(spider.parse(response))
+
+    assert len(items) == 1
+    assert items[0]["financing_initial_payment"] is None
 
 
 def test_start_requests_url_does_not_match_known_robots_disallow_patterns():

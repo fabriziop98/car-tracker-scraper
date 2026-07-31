@@ -82,7 +82,10 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
                 continue  # 0km, no es el segmento usado que nos interesa
 
             price = (comp.get("price") or {}).get("current_price") or {}
-            price_complements = (comp.get("price") or {}).get("price_complements") or {}
+            # price_complements no tiene forma confirmada todavia (findings_clickup.md
+            # solo lo menciona en prosa): en produccion salio como list en vez de
+            # dict en al menos un item real - no crashear, solo no sacar el dato.
+            price_complements = (comp.get("price") or {}).get("price_complements")
 
             yield ListingSummaryItem(
                 source="mercadolibre",
@@ -96,7 +99,11 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
                 price_currency=price.get("currency"),
                 attributes_raw=attributes_raw,
                 location_raw=(comp.get("location") or {}).get("text"),
-                financing_initial_payment=price_complements.get("initial_payment_amount"),
+                financing_initial_payment=(
+                    price_complements.get("initial_payment_amount")
+                    if isinstance(price_complements, dict)
+                    else None
+                ),
                 discovered_at=datetime.now(timezone.utc).isoformat(),
             )
 
