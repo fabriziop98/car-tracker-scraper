@@ -43,19 +43,25 @@ class MercadolibreDetailSpider(scrapy.Spider):
         vehicle = extract_json_ld(html, "Vehicle") or {}
         offers = vehicle.get("offers") or {}
 
-        # Todo lo que sigue de __NORDIC_RENDERING_CTX__ es best-effort: a
-        # diferencia del listado (extraccion confirmada con datos reales en
-        # findings_clickup.md), la forma exacta de initialState.components
-        # para la pagina de DETALLE solo esta descripta en prosa, no
-        # verificada contra un fixture real. Confirmar/ajustar estos paths
-        # con un HTML de detalle real antes de confiar en produccion.
+        # initialState.components confirmado contra un fixture real
+        # (tests/fixtures/ml_detail_sample.html, un Fiat Palio real de ML) -
+        # ya no es best-effort. Ojo: cuelga de appProps.pageProps, no de
+        # appProps directamente como en el listado (paginas distintas, mismo
+        # mecanismo __NORDIC_RENDERING_CTX__).
         ctx = extract_nordic_ctx(html)
-        components = ctx.get("initialState", {}).get("components", {})
+        components = ctx.get("appProps", {}).get("pageProps", {}).get("initialState", {}).get(
+            "components", {}
+        )
 
         seller_card = components.get("seller_card_motors") or {}
         event_data = (
             ((seller_card.get("phone_link") or {}).get("track") or {}).get("melidata_event") or {}
         ).get("event_data") or {}
+
+        item_proximity_rows = (components.get("item_proximity") or {}).get("content_rows") or []
+        location_text = item_proximity_rows[0]["label"]["text"] if item_proximity_rows else None
+
+        financing = components.get("initial_payment_amount") or {}
 
         yield ListingDetailItem(
             source="mercadolibre",
@@ -72,16 +78,14 @@ class MercadolibreDetailSpider(scrapy.Spider):
             price_valid_until=offers.get("priceValidUntil"),
             breadcrumb_raw=_breadcrumb_text(extract_json_ld(html, "BreadcrumbList")),
             subtitle_raw=(components.get("header") or {}).get("subtitle"),
-            location_raw=(components.get("item_proximity") or components.get("short_description") or {}).get(
-                "text"
-            ),
+            location_raw=location_text,
             highlighted_specs_raw=(components.get("highlighted_specs_attrs") or {}).get("components"),
-            seller_name=seller_card.get("name"),
+            seller_name=(seller_card.get("seller_name") or {}).get("title", {}).get("text"),
             seller_type=event_data.get("item_seller_type"),
             seller_id=event_data.get("seller_id"),
             province_raw=event_data.get("state"),
             item_status=event_data.get("item_status"),
-            financing_initial_payment=components.get("initial_payment_amount"),
+            financing_initial_payment=financing.get("title", {}).get("text"),
             fetched_at=datetime.now(timezone.utc).isoformat(),
         )
 

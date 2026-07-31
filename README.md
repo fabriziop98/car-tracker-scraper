@@ -42,16 +42,17 @@ scrapy crawl mercadolibre_detail -a urls_file=urls.txt \
 - **Discovery**: extraccion verificada — reusa el mismo parsing (`__NORDIC_RENDERING_CTX__`,
   brace-balancing, desanidado de polycards) que ya se probo con datos reales contra
   MercadoLibre durante el reverse engineering de Fase 0.
-- **Detail**: la parte de JSON-LD (`@type: Vehicle`, `BreadcrumbList`) esta bien fundada
-  (mismo mecanismo schema.org, con ejemplo real en los findings). La parte de
-  `__NORDIC_RENDERING_CTX__` (`seller_card_motors`, `highlighted_specs_attrs`, etc.) es
-  **best-effort**: los paths exactos solo estan descriptos en prosa en los findings, no
-  verificados contra un HTML de detalle real todavia. Antes de confiar en produccion,
-  guardar un detalle real (`curl` corrido por vos, no por el asistente — el robots.txt de
-  ML bloquea `ClaudeBot`) en `tests/fixtures/` y ajustar `mercadolibre_detail.py` contra eso.
-- **robots.txt**: `ROBOTSTXT_OBEY=True` (default de Scrapy). El bloque generico
-  `User-agent: *` de ML no se pudo confirmar completo — revisarlo en el navegador antes
-  de un crawl grande, por si frena mas de lo esperado.
+- **Detail**: verificado contra un fixture real (`tests/fixtures/ml_detail_sample.html`, un
+  Fiat Palio real de ML) — tanto el JSON-LD (`Vehicle`/`BreadcrumbList`) como
+  `__NORDIC_RENDERING_CTX__` (`seller_card_motors`, `highlighted_specs_attrs`, `item_proximity`,
+  `initial_payment_amount`, etc.). Ya no es best-effort.
+- **robots.txt — DECISION PENDIENTE, no solo verificacion:** el `robots.txt` real de
+  `autos.mercadolibre.com.ar` (el subdominio que pega Discovery) tiene, en el bloque generico
+  `User-agent: *`, la regla `Disallow: /*_NoIndex_True`. La URL que arma Discovery
+  (`.../fiat_ITEM*CONDITION_2230581_NoIndex_True?...`) matchea esa regla. Con
+  `ROBOTSTXT_OBEY=True` (default actual), Scrapy va a bloquear el 100% de los pedidos de
+  Discovery en silencio (0 resultados, sin error visible). Ver la nota en `settings.py` y
+  decidir como seguir antes de intentar correr Discovery de verdad.
 - Publicar a RabbitMQ (en vez de a un archivo JSONL local) es la tarea separada de
   "persistencia event-driven / cola" del roadmap de Fase 1 — no esta implementado en este repo todavia.
 
@@ -61,6 +62,5 @@ scrapy crawl mercadolibre_detail -a urls_file=urls.txt \
 python -m pytest tests/ -v
 ```
 
-Corren contra un fixture **sintetico** (construido en base a la estructura confirmada
-en los findings), no contra HTML real de ML — ver el docstring de
-`tests/test_extraction_mercadolibre.py`.
+`test_extraction_mercadolibre.py` corre contra un fixture sintetico (estructura documentada).
+`test_mercadolibre_detail_spider.py` corre contra el fixture real en `tests/fixtures/`.
