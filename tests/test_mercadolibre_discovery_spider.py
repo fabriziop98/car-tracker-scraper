@@ -76,9 +76,14 @@ def test_parse_filters_ads_and_zero_km():
     assert items[0]["source_listing_key"] == "MLA1"
 
 
-def test_start_requests_url_has_no_noindex_segment():
+def test_start_requests_url_does_not_match_known_robots_disallow_patterns():
     spider = MercadolibreDiscoverySpider(marcas="fiat")
     requests = list(spider.start_requests())
     assert len(requests) == 1
-    assert "_NoIndex_True" not in requests[0].url
-    assert "ITEM*CONDITION" not in requests[0].url
+    url = requests[0].url
+    assert url == "https://autos.mercadolibre.com.ar/fiat"
+    # Reglas confirmadas del robots.txt real de autos.mercadolibre.com.ar
+    # (User-agent: *) que ya nos mordieron una vez cada una:
+    assert "_NoIndex_True" not in url
+    assert "ITEM*CONDITION" not in url
+    assert "mercadolibre" not in url.split("mercadolibre.com.ar", 1)[1]

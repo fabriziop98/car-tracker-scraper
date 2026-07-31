@@ -51,8 +51,17 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
         self.max_pages = int(max_pages)
 
     def start_requests(self):
+        # Sin query string: "?sb=all_mercadolibre" (el sort-order que traia el
+        # comando curl original de findings_clickup.md) contiene el substring
+        # "mercadolibre", que matchea "Disallow: /*mercadolibre" bajo
+        # "User-agent: *" en el robots.txt real de autos.mercadolibre.com.ar
+        # (confirmado corriendo el spider real 2026-07-31: bloqueado en
+        # silencio via RobotsTxtMiddleware). La URL base sin query, tal como
+        # esta documentada en findings_clickup.md ("URL de listado:
+        # https://autos.mercadolibre.com.ar/{marca}"), no choca con ninguna
+        # regla.
         for marca in self.marcas:
-            url = f"https://autos.mercadolibre.com.ar/{marca}?sb=all_mercadolibre"
+            url = f"https://autos.mercadolibre.com.ar/{marca}"
             yield scrapy.Request(url, callback=self.parse, meta={"marca": marca, "page_count": 1})
 
     def parse(self, response):
