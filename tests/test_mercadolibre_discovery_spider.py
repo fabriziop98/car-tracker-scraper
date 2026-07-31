@@ -5,6 +5,7 @@ from scrapy.http import HtmlResponse, Request
 from car_tracker_scraper.spiders.mercadolibre_discovery import (
     MercadolibreDiscoverySpider,
     _is_zero_km,
+    _normalize_url,
 )
 
 
@@ -17,7 +18,8 @@ def _polycard(item_id: str, attributes: list[str], is_pad: bool = False, price_c
         "polycard": {
             "metadata": {
                 "id": item_id,
-                "url": f"https://auto.mercadolibre.com.ar/{item_id}-some-slug",
+                # Sin esquema, tal como lo devuelve ML de verdad (ver _normalize_url)
+                "url": f"auto.mercadolibre.com.ar/{item_id}-some-slug",
                 "is_pad": "true" if is_pad else "false",
                 "category_id": "MLA1744",
                 "domain_id": "MLA-CARS_AND_VANS",
@@ -77,6 +79,16 @@ def test_parse_filters_ads_and_zero_km():
 
     assert len(items) == 1
     assert items[0]["source_listing_key"] == "MLA1"
+    assert items[0]["url"] == "https://auto.mercadolibre.com.ar/MLA1-some-slug"
+
+
+def test_normalize_url_adds_scheme_when_missing():
+    # Regresion real (2026-07-31): metadata.url viene sin esquema en
+    # produccion. Sin esto, pasarle la URL de un item de Discovery a
+    # mercadolibre_detail rompe (Scrapy exige URL absoluta).
+    assert _normalize_url("auto.mercadolibre.com.ar/MLA-123-slug") == "https://auto.mercadolibre.com.ar/MLA-123-slug"
+    assert _normalize_url("https://auto.mercadolibre.com.ar/MLA-123-slug") == "https://auto.mercadolibre.com.ar/MLA-123-slug"
+    assert _normalize_url(None) is None
 
 
 def test_parse_does_not_crash_when_price_complements_is_a_list():

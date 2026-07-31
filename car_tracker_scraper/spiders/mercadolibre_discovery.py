@@ -41,6 +41,15 @@ def _is_zero_km(attributes_raw: list[str] | None) -> bool:
     return any(_ZERO_KM_RE.match(attr.strip()) for attr in (attributes_raw or []))
 
 
+def _normalize_url(url: str | None) -> str | None:
+    """metadata.url viene sin esquema en produccion (ej. "auto.mercadolibre.com.ar/MLA-...",
+    no "https://auto..."). Confirmado corriendo el spider real 2026-07-31 - sin esto,
+    pasarle este valor tal cual a mercadolibre_detail rompe (Scrapy exige URL absoluta)."""
+    if url and not url.startswith(("http://", "https://")):
+        return f"https://{url}"
+    return url
+
+
 class MercadolibreDiscoverySpider(scrapy.Spider):
     name = "mercadolibre_discovery"
     allowed_domains = ["autos.mercadolibre.com.ar"]
@@ -90,7 +99,7 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
             yield ListingSummaryItem(
                 source="mercadolibre",
                 source_listing_key=metadata.get("id"),
-                url=metadata.get("url"),
+                url=_normalize_url(metadata.get("url")),
                 is_ad=False,
                 category_id=metadata.get("category_id"),
                 domain_id=metadata.get("domain_id"),
