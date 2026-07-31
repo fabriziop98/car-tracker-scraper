@@ -19,6 +19,14 @@ autos.mercadolibre.com.ar bloquea bajo "User-agent: *" (confirmado a mano en
 el navegador que no hay ruta alternativa) - con ROBOTSTXT_OBEY=True el
 Discovery quedaria limitado a la pagina 1 de cada marca.
 
+Ojo con `max_pages`: NO es un tope de "cuantas paginas en total". Cada
+pagina de ML devuelve una VENTANA de ~10 links de paginacion (no solo
+"siguiente"), asi que max_pages es en realidad la profundidad de saltos
+desde la pagina inicial. Confirmado contra el sitio real (2026-07-31):
+max_pages=3 para una sola marca termino trayendo 154 items via 17 requests
+distintos, llegando hasta offset 1969 - mucha mas cobertura de la que el
+nombre del parametro sugiere a primera vista.
+
 Uso:
     scrapy crawl mercadolibre_discovery -a marcas=fiat,ford -a max_pages=3 \
         -O output/discovery_%(time)s.jsonl
