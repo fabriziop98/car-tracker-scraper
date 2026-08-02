@@ -63,6 +63,14 @@ ANTIBLOCK_TOKEN_BUCKET_REFILL_PER_SEC = 0.5  # ~1 request cada 2s en regimen est
 LANDING_S3_ENDPOINT_URL = "http://localhost:9000"
 LANDING_S3_BUCKET = "car-tracker-raw"
 
+# Mensajeria (wdxtkg30nn): unico canal por el que este scraper le habla a la
+# ingesta Spring Boot - nunca DB compartida. Topologia real (cola, DLQ,
+# reintentos) la posee y declara el lado Java. Config real por variable de
+# entorno - ver .env.example.
+ITEM_PIPELINES = {
+    "car_tracker_scraper.queue_publish.pipeline.RabbitMQPublishPipeline": 400,
+}
+
 DOWNLOADER_MIDDLEWARES = {
     "car_tracker_scraper.antiblocking.middleware.AntiBlockingMiddleware": 350,
     # Prioridad mas baja que AntiBlockingMiddleware a proposito: tiene que
