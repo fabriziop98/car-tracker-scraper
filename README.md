@@ -84,6 +84,32 @@ docker-compose levantado (12 items reales, cero errores) y confirmado por `redis
 keys `antiblock:tb:*` / `antiblock:cb:*` se crean de verdad. Mensaje de Telegram real tambien
 confirmado.
 
+## Scheduler (`car_tracker_scraper/scheduling/`, `run_batch.py`)
+
+Implementa wdxtkg35ba: hasta ahora todas las corridas de Discovery/Detail eran manuales, lo que
+hace imposible cumplir el criterio de salida de Fase 1 "30+ dias corridos de captura sin gaps
+mayores a 12h". `run_batch.py` ahora corre **Discovery y Detail**, no solo Discovery:
+
+- **Discovery**: se refresca cada `DISCOVERY_INTERVAL_HOURS` (5h por default, seccion 3.4 del doc:
+  "cada 4-6h") sobre las marcas curadas (`MARCAS` en `run_batch.py` - ampliar a mano hasta que
+  exista auto-discovery de marcas, wdxtkg35bb). Cada URL no-ad descubierta se registra en
+  `DiscoveryCandidateTracker` (Redis, sorted set `scheduling:discovery_candidates` - mismo Redis
+  que ya usa la capa anti-bloqueo, nunca Postgres: "que URLs mirar y cada cuanto" es estrategia de
+  crawl, no logica de negocio del lado Java).
+- **Detail**: en cada tick de cron, toma un batch acotado (`DETAIL_BATCH_SIZE`, 400 por default) de
+  candidatos vencidos (mas de `DETAIL_TIER_HOURS`, 72h por default, sin re-detallar) y les corre
+  Detail - que publica a RabbitMQ como siempre. Un candidato nunca-detallado (recien descubierto)
+  siempre sale primero. Tier unico por ahora (no hay A/B/C todavia - necesita datos reales de
+  volumen por modelo, que no existen todavia; no bloquear el scheduler en resolver eso primero).
+- Pensado para instalarse en crontab cada 15-20 min (mismo comando que antes, ver docstring de
+  `run_batch.py`) - la mayoria de los ticks no hacen nada o un batch chico; el trabajo pesado se
+  reparte solo a lo largo de la ventana 2:00-7:00 ART en vez de una corrida gigante de una sola vez.
+
+**Tests**: `tests/test_scheduling.py`, fakeredis (mismo criterio que `test_antiblocking.py`) +
+`subprocess.run` mockeado - no dispara crawls reales. El tracker tambien se probo a mano contra el
+Redis real del docker-compose antes de commitear (ver historial de sesion, sin test automatizado
+committeado para eso - hubiera necesitado Docker en CI).
+
 ## Landing zone (`car_tracker_scraper/landing/`)
 
 Implementa wdxtkg30nm: guarda **siempre** el HTML crudo (gzip) en S3/MinIO, particionado

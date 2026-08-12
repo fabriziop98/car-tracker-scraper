@@ -1,0 +1,8 @@
+# wdxtkg35ba - formato /etc/cron.d/ (lleva el campo de usuario antes del
+# comando, a diferencia de un crontab de usuario). run_batch.py decide solo
+# si hay algo que hacer (ventana 2:00-7:00 ART, Discovery vencido o no,
+# batch de Detail acotado) - por eso se lo invoca seguido, cada 15 min.
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/local/sbin:/usr/bin:/sbin:/bin
+
+*/15 * * * * root cd /app && python run_batch.py >> /app/logs/batch.log 2>&1

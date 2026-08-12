@@ -3,9 +3,19 @@
 batch entre 2:00 y 7:00 ART - menor carga en el sitio origen, menor
 agresividad de las defensas anti-bot").
 
-Pensado para invocarse via cron cada 15-30 min; si se corre fuera de la
-ventana, no hace nada (exit 0) en vez de esperar bloqueando - mas simple
-de operar y de loguear que un proceso long-running con sleep interno.
+wdxtkg35ba: ademas de Discovery, ahora tambien corre Detail - autolimitado
+por DiscoveryCandidateTracker (Redis, car_tracker_scraper/scheduling/state.py)
+en vez de depender de que alguien extraiga URLs a mano de un .jsonl suelto.
+Discovery refresca el catalogo de candidatos cada DISCOVERY_INTERVAL_HOURS;
+Detail procesa un batch acotado (DETAIL_BATCH_SIZE) de lo que esta vencido
+en cada tick. Pensado para invocarse cada 15-20 min (igual que antes) - la
+mayoria de los ticks no hacen nada o un batch chico, el trabajo pesado se
+reparte solo a lo largo de la ventana en vez de una corrida gigante.
+
+Tier unico por ahora (DETAIL_TIER_HOURS): la diferenciacion A/B/C por
+volumen real (seccion 3.4 del doc) queda para cuando haya datos reales de
+que modelos tienen mas volumen - no bloquear el scheduler en resolver eso
+primero (ver wdxtkg35ba).
 
 Instalar en crontab (ejemplo, cada 20 min):
     */20 * * * * cd /ruta/a/car-tracker-scraper && .venv/bin/python run_batch.py >> logs/batch.log 2>&1
@@ -15,21 +25,108 @@ es el mecanismo real, listo para instalar el dia que haya donde correrlo.
 """
 from __future__ import annotations
 
+import json
+import os
 import subprocess
 import sys
 from datetime import datetime
+from pathlib import Path
 from zoneinfo import ZoneInfo
+
+import redis
+from dotenv import load_dotenv
+
+from car_tracker_scraper.scheduling.state import (
+    DiscoveryCandidateTracker,
+    mark_discovery_ran,
+    seconds_since_last_discovery,
+)
+
+load_dotenv()  # cron no carga .env solo - a diferencia de scrapy crawl, que lo hace via settings.py
 
 ART = ZoneInfo("America/Argentina/Buenos_Aires")
 WINDOW_START_HOUR = 2
 WINDOW_END_HOUR = 7
 
-MARCAS = ["fiat"]  # ampliar a medida que se sumen mas marcas/fuentes
+# Catalogo curado hoy (ver `SELECT slug FROM brand` en Postgres) - correr
+# Discovery sobre una marca no curada solo llena pending_review sin poder
+# resolverse nunca (wdxtkg35bb, auto-discovery de marcas, todavia no existe).
+MARCAS = [
+    "chevrolet", "citroen", "fiat", "ford", "honda", "land-rover",
+    "nissan", "peugeot", "renault", "toyota", "volkswagen",
+]
+
+DISCOVERY_MAX_PAGES = 3
+DISCOVERY_INTERVAL_HOURS = 5  # seccion 3.4 del doc: cada 4-6h
+
+DETAIL_TIER_HOURS = 72
+DETAIL_BATCH_SIZE = 400  # lo que entra en un tick de ~15-20 min al ritmo del token bucket (~0.5 req/s)
+
+REDIS_URL = os.environ.get("ANTIBLOCK_REDIS_URL", "redis://localhost:6379/0")
+
+OUTPUT_DIR = Path("output")
 
 
 def in_batch_window(now: datetime | None = None) -> bool:
     now = now or datetime.now(ART)
     return WINDOW_START_HOUR <= now.hour < WINDOW_END_HOUR
+
+
+def run_discovery(now: datetime, tracker: DiscoveryCandidateTracker) -> int:
+    print(f"[run_batch] {now.isoformat()} Discovery para: {', '.join(MARCAS)}")
+    output_path = OUTPUT_DIR / f"discovery_{now.strftime('%Y%m%dT%H%M%S')}.jsonl"
+    result = subprocess.run([
+        sys.executable, "-m", "scrapy", "crawl", "mercadolibre_discovery",
+        "-a", f"marcas={','.join(MARCAS)}",
+        "-a", f"max_pages={DISCOVERY_MAX_PAGES}",
+        "-O", str(output_path),
+    ])
+    if result.returncode != 0:
+        print(f"[run_batch] Discovery termino con returncode={result.returncode}, no actualizo el tracker de candidatos")
+        return result.returncode
+
+    discovered = _record_discovered(output_path, tracker)
+    print(f"[run_batch] {discovered} candidatos nuevos/conocidos registrados (total conocido: {tracker.known_count()})")
+    return 0
+
+
+def _record_discovered(jsonl_path: Path, tracker: DiscoveryCandidateTracker) -> int:
+    count = 0
+    with jsonl_path.open(encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            item = json.loads(line)
+            if item.get("is_ad"):
+                continue
+            url = item.get("url")
+            if url:
+                tracker.record_discovered(url)
+                count += 1
+    return count
+
+
+def run_detail(now: datetime, tracker: DiscoveryCandidateTracker) -> int:
+    urls = tracker.due_for_detail(older_than_seconds=DETAIL_TIER_HOURS * 3600, limit=DETAIL_BATCH_SIZE)
+    if not urls:
+        print("[run_batch] Ningun candidato vencido para Detail en este tick.")
+        return 0
+
+    urls_path = OUTPUT_DIR / f"detail_batch_{now.strftime('%Y%m%dT%H%M%S')}.txt"
+    urls_path.write_text("\n".join(urls) + "\n", encoding="utf-8")
+
+    print(f"[run_batch] Detail sobre {len(urls)} candidatos vencidos.")
+    result = subprocess.run([
+        sys.executable, "-m", "scrapy", "crawl", "mercadolibre_detail",
+        "-a", f"urls_file={urls_path}",
+        "-O", str(OUTPUT_DIR / f"detail_{now.strftime('%Y%m%dT%H%M%S')}.jsonl"),
+    ])
+    # Se marcan como "detallados" haya o no fallado algun item puntual - un
+    # item que falla se retoma solo en el proximo ciclo del mismo tier
+    # (DETAIL_TIER_HOURS), no hace falta tracking de exito/fracaso por URL.
+    tracker.mark_detailed(urls, when=now.timestamp())
+    return result.returncode
 
 
 def main() -> int:
@@ -38,23 +135,22 @@ def main() -> int:
         print(f"[run_batch] {now.isoformat()} fuera de la ventana {WINDOW_START_HOUR}-{WINDOW_END_HOUR} ART, no corro nada.")
         return 0
 
-    print(f"[run_batch] {now.isoformat()} dentro de la ventana, corriendo Discovery para: {', '.join(MARCAS)}")
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "scrapy",
-            "crawl",
-            "mercadolibre_discovery",
-            "-a",
-            f"marcas={','.join(MARCAS)}",
-            "-a",
-            "max_pages=3",
-            "-O",
-            f"output/discovery_{now.strftime('%Y%m%dT%H%M%S')}.jsonl",
-        ]
-    )
-    return result.returncode
+    redis_client = redis.Redis.from_url(REDIS_URL)
+    tracker = DiscoveryCandidateTracker(redis_client)
+
+    exit_code = 0
+    if seconds_since_last_discovery(redis_client) >= DISCOVERY_INTERVAL_HOURS * 3600:
+        discovery_rc = run_discovery(now, tracker)
+        exit_code = discovery_rc or exit_code
+        if discovery_rc == 0:
+            # Solo si salio bien - una falla transitoria reintenta en el proximo
+            # tick (15-20 min) en vez de esperar DISCOVERY_INTERVAL_HOURS enteras.
+            mark_discovery_ran(redis_client, when=now.timestamp())
+    else:
+        print(f"[run_batch] Discovery corrida hace menos de {DISCOVERY_INTERVAL_HOURS}h, no toca todavia.")
+
+    exit_code = run_detail(now, tracker) or exit_code
+    return exit_code
 
 
 if __name__ == "__main__":
