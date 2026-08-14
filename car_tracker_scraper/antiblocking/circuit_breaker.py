@@ -71,3 +71,17 @@ class CircuitBreaker:
     def close(self, source: str) -> None:
         """Cierra el circuito manualmente (ej. despues de confirmar recuperacion)."""
         self.redis.delete(self._open_until_key(source))
+
+    def stats(self, source: str) -> tuple[int, int, float]:
+        """Lectura de solo consulta de la misma ventana que `record()` usa
+        para decidir si abrir el circuito - (total, fails, error_rate).
+        Pensado para que otros consumidores (wdxtkg34th: metricas Prometheus
+        por fuente) reusen esta cuenta en vez de llevar la suya propia.
+        No poda ni escribe nada, a diferencia de `record()`."""
+        now = time.time()
+        events = self.redis.zrangebyscore(self._events_key(source), now - self.window_seconds, now)
+        total = len(events)
+        if total == 0:
+            return 0, 0, 0.0
+        fails = sum(1 for e in events if _as_text(e).endswith(":fail"))
+        return total, fails, fails / total

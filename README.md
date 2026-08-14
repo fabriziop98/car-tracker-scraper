@@ -110,6 +110,36 @@ mayores a 12h". `run_batch.py` ahora corre **Discovery y Detail**, no solo Disco
 Redis real del docker-compose antes de commitear (ver historial de sesion, sin test automatizado
 committeado para eso - hubiera necesitado Docker en CI).
 
+## Observabilidad por fuente (`car_tracker_scraper/observability/metrics.py`)
+
+Implementa wdxtkg34th (deferido de wdxtkg30nw — la mitad Java de esa tarea, gap de ingesta +
+cuarentena de precio + dashboard + alertas Telegram, ya estaba completa). Cubre lo que pide la
+seccion 3.3 del doc de arquitectura del lado del scraper: success rate, tasa de 403/429, latencia
+p95, items/min, % de campos nulos por campo, ratio de items nuevos vs. conocidos.
+
+- El scraper corre como **jobs batch de corta duracion** (spiders disparados por Discovery/Detail),
+  no como proceso servidor — Prometheus no puede hacer pull scraping de algo que ya termino. Patron
+  usado: **Pushgateway**. `SourceMetricsExtension` (extension de Scrapy, engachada a los signals
+  `spider_opened`/`response_received`/`item_scraped`/`spider_closed`) junta las metricas de la
+  corrida y las empuja con `push_to_gateway()` al cerrar el spider.
+- `METRICS_PUSHGATEWAY_URL` vacio = extension deshabilitada (no rompe el spider, solo loguea).
+  Contenedor `pushgateway` agregado al `docker-compose.yml` de `car-tracker`; Prometheus lo scrapea
+  con `honor_labels: true` (ver `observability/prometheus/prometheus.yml` de ese repo).
+- **Success rate** lee de `CircuitBreaker.stats()` (misma ventana/eventos en Redis que ya usa el
+  circuit breaker de la capa anti-bloqueo, wdxtkg30nk) — no duplica el conteo ok/fail. La tasa de
+  403/429 si se cuenta local (el circuit breaker solo guarda ok/fail booleano, no el status code).
+- **Nuevos vs. conocidos**: reusa el mismo sorted set de Redis del scheduler
+  (`scheduling:discovery_candidates`, `DiscoveryCandidateTracker`) para saber si una URL ya era
+  conocida antes de esta corrida — sin duplicar esa cuenta tampoco.
+- Dashboard: fila nueva "Scraper por fuente" en
+  `observability/grafana/provisioning/dashboards/car-tracker-overview.json` (repo `car-tracker`),
+  no un dashboard aparte.
+- Fuera de alcance a proposito: no migra el circuit breaker de Redis a Prometheus (Redis sigue
+  siendo la fuente de verdad operacional) ni toca nada del lado Java.
+
+**Tests**: `tests/test_metrics.py`, fakeredis + `push_to_gateway` mockeado (no dispara requests HTTP
+reales). Verificar contra el Pushgateway real del docker-compose queda para Fabrizio.
+
 ## Landing zone (`car_tracker_scraper/landing/`)
 
 Implementa wdxtkg30nm: guarda **siempre** el HTML crudo (gzip) en S3/MinIO, particionado

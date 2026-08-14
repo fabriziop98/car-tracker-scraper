@@ -79,6 +79,15 @@ DOWNLOADER_MIDDLEWARES = {
     "car_tracker_scraper.landing.middleware.LandingZoneMiddleware": 300,
 }
 
+# Metricas por fuente hacia Prometheus Pushgateway (wdxtkg34th): success
+# rate, 403/429, latencia p95, items/min, null% por campo, nuevos vs
+# conocidos. METRICS_PUSHGATEWAY_URL vacio = deshabilitado, no rompe el
+# spider. Config real por variable de entorno - ver .env.example.
+METRICS_PUSHGATEWAY_URL = ""
+EXTENSIONS = {
+    "car_tracker_scraper.observability.metrics.SourceMetricsExtension": 500,
+}
+
 # Disable cookies (enabled by default)
 #COOKIES_ENABLED = False
 
