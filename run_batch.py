@@ -17,6 +17,13 @@ volumen real (seccion 3.4 del doc) queda para cuando haya datos reales de
 que modelos tienen mas volumen - no bloquear el scheduler en resolver eso
 primero (ver wdxtkg35ba).
 
+wdxtkg35bb: las marcas de Discovery ya no estan hardcodeadas aca - se piden
+en cada corrida a GET {CAR_TRACKER_API_URL}/api/brands/discovered (Java,
+`car-tracker`), que a su vez las persiste desde transferencias reales DNRPA
+(datos.gob.ar), no desde un facet de MercadoLibre. El scraper sigue sin
+conectarse nunca directo a Postgres - este endpoint es el unico puente en
+esa direccion, mismo principio que RabbitMQ/S3 en la direccion opuesta.
+
 Instalar en crontab (ejemplo, cada 20 min):
     */20 * * * * cd /ruta/a/car-tracker-scraper && .venv/bin/python run_batch.py >> logs/batch.log 2>&1
 
@@ -29,6 +36,8 @@ import json
 import os
 import subprocess
 import sys
+import urllib.error
+import urllib.request
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -48,13 +57,7 @@ ART = ZoneInfo("America/Argentina/Buenos_Aires")
 WINDOW_START_HOUR = 2
 WINDOW_END_HOUR = 7
 
-# Catalogo curado hoy (ver `SELECT slug FROM brand` en Postgres) - correr
-# Discovery sobre una marca no curada solo llena pending_review sin poder
-# resolverse nunca (wdxtkg35bb, auto-discovery de marcas, todavia no existe).
-MARCAS = [
-    "chevrolet", "citroen", "fiat", "ford", "honda", "land-rover",
-    "nissan", "peugeot", "renault", "toyota", "volkswagen",
-]
+CAR_TRACKER_API_URL = os.environ.get("CAR_TRACKER_API_URL", "http://localhost:8080")
 
 DISCOVERY_MAX_PAGES = 3
 DISCOVERY_INTERVAL_HOURS = 5  # seccion 3.4 del doc: cada 4-6h
@@ -72,12 +75,35 @@ def in_batch_window(now: datetime | None = None) -> bool:
     return WINDOW_START_HOUR <= now.hour < WINDOW_END_HOUR
 
 
+def fetch_discovered_marcas() -> list[str]:
+    """GET /api/brands/discovered (car-tracker, wdxtkg35bb) - unico puente hacia
+    Postgres en esta direccion, nunca una conexion directa a la DB desde aca.
+    Vacio (API caida, o brand_discovery todavia sin datos del job DNRPA) se
+    trata igual que cualquier fuente caida en este proyecto: no se cachea ni
+    se hardcodea un fallback, se loguea y se reintenta en el proximo tick."""
+    url = f"{CAR_TRACKER_API_URL}/api/brands/discovered"
+    try:
+        with urllib.request.urlopen(url, timeout=10) as response:
+            payload = json.load(response)
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+        print(f"[run_batch] No se pudo obtener marcas descubiertas de {url}: {exc}")
+        return []
+    return [item["slug"] for item in payload]
+
+
 def run_discovery(now: datetime, tracker: DiscoveryCandidateTracker) -> int:
-    print(f"[run_batch] {now.isoformat()} Discovery para: {', '.join(MARCAS)}")
+    marcas = fetch_discovered_marcas()
+    if not marcas:
+        print(f"[run_batch] {now.isoformat()} sin marcas descubiertas todavia "
+              f"({CAR_TRACKER_API_URL} no responde o brand_discovery esta vacia) - "
+              "salteo este Discovery, reintento en el proximo tick.")
+        return 1
+
+    print(f"[run_batch] {now.isoformat()} Discovery para: {', '.join(marcas)}")
     output_path = OUTPUT_DIR / f"discovery_{now.strftime('%Y%m%dT%H%M%S')}.jsonl"
     result = subprocess.run([
         sys.executable, "-m", "scrapy", "crawl", "mercadolibre_discovery",
-        "-a", f"marcas={','.join(MARCAS)}",
+        "-a", f"marcas={','.join(marcas)}",
         "-a", f"max_pages={DISCOVERY_MAX_PAGES}",
         "-O", str(output_path),
     ])

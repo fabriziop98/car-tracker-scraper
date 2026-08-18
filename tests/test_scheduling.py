@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import time
+import urllib.error
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -138,8 +139,40 @@ def test_record_discovered_from_jsonl_skips_ads(tmp_path: Path):
     assert tracker.due_for_detail(older_than_seconds=0, limit=10) == ["https://example.com/real"]
 
 
+class _FakeUrlResponse:
+    """Standin minimo para lo que urllib.request.urlopen devuelve como context manager - solo lo que json.load necesita (.read())."""
+
+    def __init__(self, body: bytes):
+        self._body = body
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc_info):
+        return False
+
+    def read(self):
+        return self._body
+
+
+@patch("run_batch.urllib.request.urlopen")
+def test_fetch_discovered_marcas_parses_slugs_from_the_api_response(mock_urlopen):
+    mock_urlopen.return_value = _FakeUrlResponse(json.dumps([
+        {"slug": "volkswagen", "brandName": "VOLKSWAGEN", "volume": 27417},
+        {"slug": "ford", "brandName": "FORD", "volume": 21518},
+    ]).encode("utf-8"))
+
+    assert run_batch.fetch_discovered_marcas() == ["volkswagen", "ford"]
+
+
+@patch("run_batch.urllib.request.urlopen", side_effect=urllib.error.URLError("connection refused"))
+def test_fetch_discovered_marcas_returns_an_empty_list_when_the_api_is_unreachable(mock_urlopen):
+    assert run_batch.fetch_discovered_marcas() == []
+
+
+@patch("run_batch.fetch_discovered_marcas", return_value=["fiat"])
 @patch("run_batch.subprocess.run")
-def test_run_discovery_feeds_the_tracker_on_success(mock_run, tmp_path: Path, monkeypatch):
+def test_run_discovery_feeds_the_tracker_on_success(mock_run, mock_fetch_marcas, tmp_path: Path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     (tmp_path / "output").mkdir()
     mock_run.return_value = MagicMock(returncode=0)
@@ -162,11 +195,27 @@ def test_run_discovery_feeds_the_tracker_on_success(mock_run, tmp_path: Path, mo
     assert tracker.known_count() == 1
 
 
+@patch("run_batch.fetch_discovered_marcas", return_value=["fiat"])
 @patch("run_batch.subprocess.run")
-def test_run_discovery_does_not_touch_tracker_on_failure(mock_run, tmp_path: Path, monkeypatch):
+def test_run_discovery_does_not_touch_tracker_on_failure(mock_run, mock_fetch_marcas, tmp_path: Path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     (tmp_path / "output").mkdir()
     mock_run.return_value = MagicMock(returncode=1)
+    r = fakeredis.FakeRedis()
+    tracker = DiscoveryCandidateTracker(r)
+
+    from datetime import datetime
+
+    rc = run_batch.run_discovery(datetime(2026, 1, 1, 3, 0, tzinfo=run_batch.ART), tracker)
+
+    assert rc == 1
+    assert tracker.known_count() == 0
+
+
+@patch("run_batch.fetch_discovered_marcas", return_value=[])
+def test_run_discovery_skips_without_crashing_when_no_marcas_are_discovered_yet(mock_fetch_marcas, tmp_path: Path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "output").mkdir()
     r = fakeredis.FakeRedis()
     tracker = DiscoveryCandidateTracker(r)
 
