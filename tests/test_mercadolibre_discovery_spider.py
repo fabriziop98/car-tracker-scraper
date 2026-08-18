@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 from scrapy.http import HtmlResponse, Request
@@ -8,6 +9,13 @@ from car_tracker_scraper.spiders.mercadolibre_discovery import (
     _is_zero_km,
     _normalize_url,
 )
+
+
+def _drain_async_gen(agen):
+    async def _collect():
+        return [item async for item in agen]
+
+    return asyncio.run(_collect())
 
 
 def _polycard(item_id: str, attributes: list[str], is_pad: bool = False, price_complements=None) -> dict:
@@ -144,7 +152,7 @@ def test_parse_follows_pagination_dicts_and_skips_the_current_page():
 
 def test_start_requests_url_does_not_match_known_robots_disallow_patterns():
     spider = MercadolibreDiscoverySpider(marcas="fiat")
-    requests = list(spider.start_requests())
+    requests = _drain_async_gen(spider.start())
     assert len(requests) == 1
     url = requests[0].url
     assert url == "https://autos.mercadolibre.com.ar/fiat"

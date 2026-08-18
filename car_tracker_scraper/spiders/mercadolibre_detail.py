@@ -39,7 +39,10 @@ class MercadolibreDetailSpider(scrapy.Spider):
         if not self._urls:
             raise ValueError("Pasar -a urls_file=path/to/urls.txt o -a urls=url1,url2,...")
 
-    def start_requests(self):
+    async def start(self):
+        # start_requests() no despacha requests en Scrapy 2.17 (ver el
+        # comentario equivalente en mercadolibre_discovery.py) - async
+        # start() es el reemplazo que si funciona.
         for url in self._urls:
             yield scrapy.Request(url, callback=self.parse)
 

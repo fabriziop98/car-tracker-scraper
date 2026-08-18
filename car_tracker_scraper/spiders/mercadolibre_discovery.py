@@ -70,7 +70,16 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
         self.marcas = [m.strip() for m in marcas.split(",") if m.strip()]
         self.max_pages = int(max_pages)
 
-    def start_requests(self):
+    async def start(self):
+        # start_requests() esta deprecado desde Scrapy 2.13 en favor de este
+        # metodo - confirmado ademas que en Scrapy 2.17 (version instalada
+        # via requirements.txt sin upper bound) start_requests() no es solo
+        # deprecado sino que NO DESPACHA NINGUN REQUEST (el spider abre y
+        # cierra en ~12ms, 0 items, sin error visible - encontrado en
+        # produccion 2026-08-18, wdxtkg34th/wdxtkg35ba). Verificado aislado
+        # contra un server HTTP local (sin tocar mercadolibre.com) que el
+        # cambio a async start() resuelve el problema.
+        #
         # Sin query string: "?sb=all_mercadolibre" (el sort-order que traia el
         # comando curl original de findings_clickup.md) contiene el substring
         # "mercadolibre", que matchea "Disallow: /*mercadolibre" bajo

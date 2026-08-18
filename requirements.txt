@@ -1,4 +1,13 @@
-scrapy>=2.13,<3
+scrapy>=2.13,<2.14  # upper bound acotado tras el incidente de wdxtkg35ba/wdxtkg34th:
+                    # un rango sin upper bound (antes `>=2.13,<3`) dejo que el build
+                    # de Docker (Python 3.12) resolviera 2.17.0 - version en la que
+                    # start_requests() queda roto en silencio (0 requests, 0 items,
+                    # sin error), mientras el venv local (Python 3.9, tope real
+                    # scrapy 2.13.x) seguia andando bien. La app ya fue migrada a
+                    # async def start() (el reemplazo oficial), pero el rango sigue
+                    # acotado para que local y Docker resuelvan la misma linea de
+                    # versiones y no vuelvan a divergir en silencio. Subir el tope
+                    # a mano, version por version, verificando ambos entornos.
 pytest>=8,<9
 redis>=5,<6
 python-dotenv>=1,<2
