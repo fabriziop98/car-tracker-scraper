@@ -120,6 +120,7 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
                 source="mercadolibre",
                 source_listing_key=metadata.get("id"),
                 url=_normalize_url(metadata.get("url")),
+                marca=marca,
                 is_ad=False,
                 category_id=metadata.get("category_id"),
                 domain_id=metadata.get("domain_id"),

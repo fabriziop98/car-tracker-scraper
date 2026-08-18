@@ -87,6 +87,49 @@ def test_mark_detailed_with_empty_list_is_a_no_op():
     assert tracker.known_count() == 0
 
 
+def test_due_for_detail_without_allowed_marcas_ignores_the_filter_entirely():
+    r = fakeredis.FakeRedis()
+    tracker = DiscoveryCandidateTracker(r)
+    tracker.record_discovered("https://example.com/a", marca="fiat")
+
+    due = tracker.due_for_detail(older_than_seconds=0, limit=10)
+
+    assert due == ["https://example.com/a"]
+
+
+def test_due_for_detail_with_allowed_marcas_excludes_urls_of_uncurated_brands():
+    r = fakeredis.FakeRedis()
+    tracker = DiscoveryCandidateTracker(r)
+    tracker.record_discovered("https://example.com/curada", marca="fiat")
+    tracker.record_discovered("https://example.com/no-curada", marca="bmw")
+
+    due = tracker.due_for_detail(older_than_seconds=0, limit=10, allowed_marcas={"fiat"})
+
+    assert due == ["https://example.com/curada"]
+
+
+def test_due_for_detail_with_allowed_marcas_includes_urls_without_marca_metadata():
+    """Compat: URLs registradas antes de wdxtkg35bb (sin marca guardada) no quedan bloqueadas para siempre."""
+    r = fakeredis.FakeRedis()
+    tracker = DiscoveryCandidateTracker(r)
+    tracker.record_discovered("https://example.com/sin-marca")
+
+    due = tracker.due_for_detail(older_than_seconds=0, limit=10, allowed_marcas={"fiat"})
+
+    assert due == ["https://example.com/sin-marca"]
+
+
+def test_record_discovered_with_the_same_url_updates_the_marca():
+    r = fakeredis.FakeRedis()
+    tracker = DiscoveryCandidateTracker(r)
+    tracker.record_discovered("https://example.com/a", marca="bmw")
+
+    tracker.record_discovered("https://example.com/a", marca="fiat")
+
+    due = tracker.due_for_detail(older_than_seconds=0, limit=10, allowed_marcas={"fiat"})
+    assert due == ["https://example.com/a"]
+
+
 # --- last-discovery timestamp -----------------------------------------------
 
 
@@ -227,8 +270,9 @@ def test_run_discovery_skips_without_crashing_when_no_marcas_are_discovered_yet(
     assert tracker.known_count() == 0
 
 
+@patch("run_batch.fetch_curated_marcas", return_value=["fiat"])
 @patch("run_batch.subprocess.run")
-def test_run_detail_does_nothing_when_no_candidate_is_due(mock_run, tmp_path: Path, monkeypatch):
+def test_run_detail_does_nothing_when_no_candidate_is_due(mock_run, mock_fetch_curated, tmp_path: Path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     (tmp_path / "output").mkdir()
     r = fakeredis.FakeRedis()
@@ -242,14 +286,15 @@ def test_run_detail_does_nothing_when_no_candidate_is_due(mock_run, tmp_path: Pa
     mock_run.assert_not_called()
 
 
+@patch("run_batch.fetch_curated_marcas", return_value=["fiat"])
 @patch("run_batch.subprocess.run")
-def test_run_detail_marks_attempted_urls_as_detailed_even_if_the_crawl_fails(mock_run, tmp_path: Path, monkeypatch):
+def test_run_detail_marks_attempted_urls_as_detailed_even_if_the_crawl_fails(mock_run, mock_fetch_curated, tmp_path: Path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     (tmp_path / "output").mkdir()
     mock_run.return_value = MagicMock(returncode=1)  # el crawl "falla" pero igual se marcan (ver docstring de run_detail)
     r = fakeredis.FakeRedis()
     tracker = DiscoveryCandidateTracker(r)
-    tracker.record_discovered("https://example.com/a")
+    tracker.record_discovered("https://example.com/a", marca="fiat")
 
     from datetime import datetime
 
@@ -257,6 +302,47 @@ def test_run_detail_marks_attempted_urls_as_detailed_even_if_the_crawl_fails(moc
 
     assert rc == 1
     assert tracker.due_for_detail(older_than_seconds=3600, limit=10) == []
+
+
+@patch("run_batch.fetch_curated_marcas", return_value=["fiat"])
+@patch("run_batch.subprocess.run")
+def test_run_detail_only_processes_candidates_of_curated_brands(mock_run, mock_fetch_curated, tmp_path: Path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "output").mkdir()
+    mock_run.return_value = MagicMock(returncode=0)
+    r = fakeredis.FakeRedis()
+    tracker = DiscoveryCandidateTracker(r)
+    tracker.record_discovered("https://example.com/fiat-curada", marca="fiat")
+    tracker.record_discovered("https://example.com/bmw-no-curada", marca="bmw")
+
+    from datetime import datetime
+
+    run_batch.run_detail(datetime.now(run_batch.ART), tracker)
+
+    urls_arg = mock_run.call_args[0][0]
+    urls_file = Path(urls_arg[urls_arg.index("-a") + 1].split("=", 1)[1])
+    detailed_urls = urls_file.read_text(encoding="utf-8").splitlines()
+    assert detailed_urls == ["https://example.com/fiat-curada"]
+    # la de bmw sigue con score=0 (nunca detallada), se reintenta sola cuando bmw se cure -
+    # older_than_seconds=3600 para no confundirla con la de fiat, recien marcada hace instantes
+    assert tracker.due_for_detail(older_than_seconds=3600, limit=10) == ["https://example.com/bmw-no-curada"]
+
+
+@patch("run_batch.fetch_curated_marcas", return_value=[])
+@patch("run_batch.subprocess.run")
+def test_run_detail_skips_the_tick_instead_of_running_unfiltered_when_curated_marcas_is_unavailable(mock_run, mock_fetch_curated, tmp_path: Path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "output").mkdir()
+    r = fakeredis.FakeRedis()
+    tracker = DiscoveryCandidateTracker(r)
+    tracker.record_discovered("https://example.com/a", marca="fiat")
+
+    from datetime import datetime
+
+    rc = run_batch.run_detail(datetime(2026, 1, 1, 3, 0, tzinfo=run_batch.ART), tracker)
+
+    assert rc == 1
+    mock_run.assert_not_called()
 
 
 @patch("run_batch.subprocess.run")

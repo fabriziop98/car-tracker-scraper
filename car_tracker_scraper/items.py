@@ -7,6 +7,8 @@ class ListingSummaryItem(scrapy.Item):
     source = scrapy.Field()  # ej. "mercadolibre"
     source_listing_key = scrapy.Field()  # ej. "MLA1927083505" -> candidato a listing.source_listing_key
     url = scrapy.Field()  # URL canonica del aviso, usada por el Detail spider
+    marca = scrapy.Field()  # ej. "fiat" - la marca que se le paso a Discovery para esta request (wdxtkg35bb: run_batch.py
+    # la necesita para no correr Detail sobre marcas no curadas todavia, ver DiscoveryCandidateTracker)
     is_ad = scrapy.Field()  # bool, filtrar antes de persistir (no contaminar agregados)
     category_id = scrapy.Field()  # ej. "MLA1744"
     domain_id = scrapy.Field()  # ej. "MLA-CARS_AND_VANS" -> semilla candidata para el catalogo canonico

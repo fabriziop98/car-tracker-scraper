@@ -24,6 +24,14 @@ en cada corrida a GET {CAR_TRACKER_API_URL}/api/brands/discovered (Java,
 conectarse nunca directo a Postgres - este endpoint es el unico puente en
 esa direccion, mismo principio que RabbitMQ/S3 en la direccion opuesta.
 
+Con Discovery corriendo amplio (todas las marcas DNRPA sobre el umbral, no
+solo las curadas), Detail - la parte cara, fetch completo + publicacion real
+a RabbitMQ - se queda acotado a GET {CAR_TRACKER_API_URL}/api/brands/curated
+(`SELECT slug FROM brand`, diseño original confirmado con Fabrizio): correr
+Detail sobre una marca sin catalogo solo llena `pending_review` sin poder
+resolverse nunca. Si ese endpoint falla, Detail se saltea el tick entero en
+vez de correr sin filtro - mismo criterio "fail-safe" que el resto del scheduler.
+
 Instalar en crontab (ejemplo, cada 20 min):
     */20 * * * * cd /ruta/a/car-tracker-scraper && .venv/bin/python run_batch.py >> logs/batch.log 2>&1
 
@@ -91,6 +99,22 @@ def fetch_discovered_marcas() -> list[str]:
     return [item["slug"] for item in payload]
 
 
+def fetch_curated_marcas() -> list[str]:
+    """GET /api/brands/curated (car-tracker, wdxtkg35bb) - equivalente a
+    `SELECT slug FROM brand`, sin conectarse directo a Postgres. Usado por
+    run_detail para no correr el fetch caro sobre marcas sin catalogo
+    todavia. Vacio (API caida) se trata igual que fetch_discovered_marcas:
+    no se cachea ni se asume un fallback, se loguea y se reintenta despues."""
+    url = f"{CAR_TRACKER_API_URL}/api/brands/curated"
+    try:
+        with urllib.request.urlopen(url, timeout=10) as response:
+            payload = json.load(response)
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+        print(f"[run_batch] No se pudo obtener marcas curadas de {url}: {exc}")
+        return []
+    return list(payload)
+
+
 def run_discovery(now: datetime, tracker: DiscoveryCandidateTracker) -> int:
     marcas = fetch_discovered_marcas()
     if not marcas:
@@ -128,15 +152,22 @@ def _record_discovered(jsonl_path: Path, tracker: DiscoveryCandidateTracker) -> 
                 continue
             url = item.get("url")
             if url:
-                tracker.record_discovered(url)
+                tracker.record_discovered(url, marca=item.get("marca"))
                 count += 1
     return count
 
 
 def run_detail(now: datetime, tracker: DiscoveryCandidateTracker) -> int:
-    urls = tracker.due_for_detail(older_than_seconds=DETAIL_TIER_HOURS * 3600, limit=DETAIL_BATCH_SIZE)
+    curated_marcas = fetch_curated_marcas()
+    if not curated_marcas:
+        print(f"[run_batch] {now.isoformat()} sin marcas curadas todavia "
+              f"({CAR_TRACKER_API_URL} no responde o brand esta vacia) - "
+              "salteo Detail este tick en vez de correr sin filtro.")
+        return 1
+
+    urls = tracker.due_for_detail(older_than_seconds=DETAIL_TIER_HOURS * 3600, limit=DETAIL_BATCH_SIZE, allowed_marcas=set(curated_marcas))
     if not urls:
-        print("[run_batch] Ningun candidato vencido para Detail en este tick.")
+        print("[run_batch] Ningun candidato vencido de marca curada para Detail en este tick.")
         return 0
 
     urls_path = OUTPUT_DIR / f"detail_batch_{now.strftime('%Y%m%dT%H%M%S')}.txt"
