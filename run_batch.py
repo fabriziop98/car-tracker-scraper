@@ -118,10 +118,19 @@ def fetch_curated_marcas() -> list[str]:
 def run_discovery(now: datetime, tracker: DiscoveryCandidateTracker) -> int:
     marcas = fetch_discovered_marcas()
     if not marcas:
-        print(f"[run_batch] {now.isoformat()} sin marcas descubiertas todavia "
-              f"({CAR_TRACKER_API_URL} no responde o brand_discovery esta vacia) - "
-              "salteo este Discovery, reintento en el proximo tick.")
-        return 1
+        # brand_discovery se puebla via BrandDiscoveryJob (car-tracker, Java,
+        # semanal - lunes 4am ART). Hasta su primera corrida (o si el job/API
+        # esta caido) cae a las marcas curadas en vez de bloquear Discovery
+        # por completo - una vez que DNRPA tenga datos, la lista amplia vuelve
+        # a tomar precedencia sola (wdxtkg35bb).
+        marcas = fetch_curated_marcas()
+        if not marcas:
+            print(f"[run_batch] {now.isoformat()} sin marcas descubiertas ni curadas "
+                  f"todavia ({CAR_TRACKER_API_URL} no responde o ambas APIs vacias) - "
+                  "salteo este Discovery, reintento en el proximo tick.")
+            return 1
+        print(f"[run_batch] {now.isoformat()} brand_discovery vacio (DNRPA todavia no "
+              "corrio) - caigo a marcas curadas para este Discovery.")
 
     print(f"[run_batch] {now.isoformat()} Discovery para: {', '.join(marcas)}")
     output_path = OUTPUT_DIR / f"discovery_{now.strftime('%Y%m%dT%H%M%S')}.jsonl"
@@ -174,15 +183,27 @@ def run_detail(now: datetime, tracker: DiscoveryCandidateTracker) -> int:
     urls_path.write_text("\n".join(urls) + "\n", encoding="utf-8")
 
     print(f"[run_batch] Detail sobre {len(urls)} candidatos vencidos.")
+    output_path = OUTPUT_DIR / f"detail_{now.strftime('%Y%m%dT%H%M%S')}.jsonl"
     result = subprocess.run([
         sys.executable, "-m", "scrapy", "crawl", "mercadolibre_detail",
         "-a", f"urls_file={urls_path}",
-        "-O", str(OUTPUT_DIR / f"detail_{now.strftime('%Y%m%dT%H%M%S')}.jsonl"),
+        "-O", str(output_path),
     ])
-    # Se marcan como "detallados" haya o no fallado algun item puntual - un
-    # item que falla se retoma solo en el proximo ciclo del mismo tier
-    # (DETAIL_TIER_HOURS), no hace falta tracking de exito/fracaso por URL.
-    tracker.mark_detailed(urls, when=now.timestamp())
+    if output_path.exists() and output_path.stat().st_size > 0:
+        # Se marcan como "detallados" haya o no fallado algun item puntual - un
+        # item que falla se retoma solo en el proximo ciclo del mismo tier
+        # (DETAIL_TIER_HOURS), no hace falta tracking de exito/fracaso por URL.
+        tracker.mark_detailed(urls, when=now.timestamp())
+    else:
+        # Falla total (0 items) en vez de fallos puntuales - scrapy suele
+        # devolver returncode 0 igual (IgnoreRequest no es un crash), asi
+        # que el chequeo real es el archivo de salida, no el returncode.
+        # No marcar nada: mejor reintentar el proximo tick que perder estos
+        # candidatos 72h (DETAIL_TIER_HOURS) por una falla de infraestructura
+        # (incidente real 2026-08-19: settings.py con ANTIBLOCK_REDIS_URL
+        # hardcodeado a localhost tumbo el circuit breaker toda la ventana).
+        print("[run_batch] Detail no produjo ningun item - no marco estos "
+              "candidatos como detallados, se reintentan en el proximo tick.")
     return result.returncode
 
 

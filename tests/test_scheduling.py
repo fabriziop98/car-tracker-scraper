@@ -255,8 +255,9 @@ def test_run_discovery_does_not_touch_tracker_on_failure(mock_run, mock_fetch_ma
     assert tracker.known_count() == 0
 
 
+@patch("run_batch.fetch_curated_marcas", return_value=[])
 @patch("run_batch.fetch_discovered_marcas", return_value=[])
-def test_run_discovery_skips_without_crashing_when_no_marcas_are_discovered_yet(mock_fetch_marcas, tmp_path: Path, monkeypatch):
+def test_run_discovery_skips_without_crashing_when_no_marcas_are_discovered_yet(mock_fetch_marcas, mock_fetch_curated, tmp_path: Path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     (tmp_path / "output").mkdir()
     r = fakeredis.FakeRedis()
@@ -268,6 +269,32 @@ def test_run_discovery_skips_without_crashing_when_no_marcas_are_discovered_yet(
 
     assert rc == 1
     assert tracker.known_count() == 0
+
+
+@patch("run_batch.fetch_curated_marcas", return_value=["fiat"])
+@patch("run_batch.fetch_discovered_marcas", return_value=[])
+@patch("run_batch.subprocess.run")
+def test_run_discovery_falls_back_to_curated_marcas_when_brand_discovery_is_empty(mock_run, mock_fetch_discovered, mock_fetch_curated, tmp_path: Path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "output").mkdir()
+    r = fakeredis.FakeRedis()
+    tracker = DiscoveryCandidateTracker(r)
+
+    def _fake_run(args, **kwargs):
+        output_path = Path(args[args.index("-O") + 1])
+        output_path.write_text(json.dumps({"url": "https://example.com/x", "is_ad": False}) + "\n", encoding="utf-8")
+        return MagicMock(returncode=0)
+
+    mock_run.side_effect = _fake_run
+
+    from datetime import datetime
+
+    rc = run_batch.run_discovery(datetime(2026, 1, 1, 3, 0, tzinfo=run_batch.ART), tracker)
+
+    assert rc == 0
+    assert tracker.known_count() == 1
+    assert "-a" in mock_run.call_args[0][0]
+    assert "marcas=fiat" in mock_run.call_args[0][0]
 
 
 @patch("run_batch.fetch_curated_marcas", return_value=["fiat"])
@@ -288,13 +315,21 @@ def test_run_detail_does_nothing_when_no_candidate_is_due(mock_run, mock_fetch_c
 
 @patch("run_batch.fetch_curated_marcas", return_value=["fiat"])
 @patch("run_batch.subprocess.run")
-def test_run_detail_marks_attempted_urls_as_detailed_even_if_the_crawl_fails(mock_run, mock_fetch_curated, tmp_path: Path, monkeypatch):
+def test_run_detail_marks_attempted_urls_as_detailed_on_a_partial_failure(mock_run, mock_fetch_curated, tmp_path: Path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     (tmp_path / "output").mkdir()
-    mock_run.return_value = MagicMock(returncode=1)  # el crawl "falla" pero igual se marcan (ver docstring de run_detail)
     r = fakeredis.FakeRedis()
     tracker = DiscoveryCandidateTracker(r)
     tracker.record_discovered("https://example.com/a", marca="fiat")
+
+    # el crawl "falla" (returncode=1, ej. un item puntual con error) pero SI produjo
+    # output real - se marcan igual (ver docstring de run_detail)
+    def _fake_run(args, **kwargs):
+        output_path = Path(args[args.index("-O") + 1])
+        output_path.write_text(json.dumps({"url": "https://example.com/a"}) + "\n", encoding="utf-8")
+        return MagicMock(returncode=1)
+
+    mock_run.side_effect = _fake_run
 
     from datetime import datetime
 
@@ -306,10 +341,38 @@ def test_run_detail_marks_attempted_urls_as_detailed_even_if_the_crawl_fails(moc
 
 @patch("run_batch.fetch_curated_marcas", return_value=["fiat"])
 @patch("run_batch.subprocess.run")
+def test_run_detail_does_not_mark_candidates_on_a_total_failure(mock_run, mock_fetch_curated, tmp_path: Path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "output").mkdir()
+    # falla total (0 items, ej. la capa anti-bloqueo no llega a Redis) - el crawl
+    # puede devolver returncode=0 igual (IgnoreRequest no es un crash de scrapy),
+    # asi que el chequeo real es que el archivo de salida haya quedado vacio -
+    # incidente real 2026-08-19, ver comentario en run_detail
+    mock_run.return_value = MagicMock(returncode=0)
+    r = fakeredis.FakeRedis()
+    tracker = DiscoveryCandidateTracker(r)
+    tracker.record_discovered("https://example.com/a", marca="fiat")
+
+    from datetime import datetime
+
+    rc = run_batch.run_detail(datetime.now(run_batch.ART), tracker)
+
+    assert rc == 0
+    assert tracker.due_for_detail(older_than_seconds=3600, limit=10) == ["https://example.com/a"]
+
+
+@patch("run_batch.fetch_curated_marcas", return_value=["fiat"])
+@patch("run_batch.subprocess.run")
 def test_run_detail_only_processes_candidates_of_curated_brands(mock_run, mock_fetch_curated, tmp_path: Path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     (tmp_path / "output").mkdir()
-    mock_run.return_value = MagicMock(returncode=0)
+
+    def _fake_run(args, **kwargs):
+        output_path = Path(args[args.index("-O") + 1])
+        output_path.write_text(json.dumps({"url": "https://example.com/fiat-curada"}) + "\n", encoding="utf-8")
+        return MagicMock(returncode=0)
+
+    mock_run.side_effect = _fake_run
     r = fakeredis.FakeRedis()
     tracker = DiscoveryCandidateTracker(r)
     tracker.record_discovered("https://example.com/fiat-curada", marca="fiat")
