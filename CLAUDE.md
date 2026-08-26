@@ -22,7 +22,7 @@ python -m pytest tests/ -v                              # full test suite
 python -m pytest tests/test_scheduling.py -v             # single test file
 python -m pytest tests/test_scheduling.py::test_name -v  # single test
 
-scrapy crawl mercadolibre_discovery -a marcas=fiat,ford -a max_pages=3 -O output/discovery_%(time)s.jsonl
+scrapy crawl mercadolibre_discovery -a marcas=fiat,ford -O output/discovery_%(time)s.jsonl
 scrapy crawl mercadolibre_detail -a urls_file=urls.txt -O output/detail_%(time)s.jsonl
 python run_batch.py                                     # scheduler tick: Discovery refresh + a Detail batch
 ```

@@ -157,6 +157,69 @@ def test_parse_follows_pagination_dicts_and_skips_the_current_page():
     assert requests[0].url == "https://autos.mercadolibre.com.ar/fiat_Desde_49_NoIndex_True"
 
 
+def test_parse_stops_when_no_node_advances_past_current_page():
+    # Confirmado 2026-08-26 (diagnose_pagination.py contra Toyota real,
+    # wdxtkg398b): en la ultima pagina real (value=42, offset 1969) los
+    # resultados NO vienen vacios, pero ningun nodo de la ventana supera el
+    # value de la pagina actual (is_actual_page). Esa es la señal real de
+    # "se acabo el inventario", no una pagina vacia - sin ella, el spider
+    # antes solo cortaba por un max_pages fijo, arbitrario e independiente
+    # del inventario real de cada marca.
+    polycards = [_polycard("MLA1", ["2014", "184.000 Km"])]
+    pagination_nodes = [
+        {"value": "32", "url": "https://autos.mercadolibre.com.ar/toyota_Desde_1489_NoIndex_True", "is_actual_page": False},
+        {"value": "41", "url": "https://autos.mercadolibre.com.ar/toyota_Desde_1921_NoIndex_True", "is_actual_page": False},
+        {"value": "42", "url": "https://autos.mercadolibre.com.ar/toyota_Desde_1969_NoIndex_True", "is_actual_page": True},
+    ]
+    request = Request(
+        url="https://autos.mercadolibre.com.ar/toyota_Desde_1969_NoIndex_True",
+        meta={"marca": "toyota", "page_count": 3},
+    )
+    response = HtmlResponse(
+        url=request.url,
+        body=_build_html(polycards, pagination_nodes_url=pagination_nodes),
+        encoding="utf-8",
+        request=request,
+    )
+
+    spider = MercadolibreDiscoverySpider(marcas="toyota")
+    results = list(spider.parse(response))
+
+    items = [r for r in results if isinstance(r, ListingSummaryItem)]
+    requests = [r for r in results if isinstance(r, Request)]
+    assert len(items) == 1
+    assert requests == []
+
+
+def test_parse_skips_nodes_at_or_before_current_page():
+    # Los nodos con value <= la pagina actual son paginas ya recorridas
+    # (hacia atras) - seguirlos no suma cobertura nueva, solo trafico extra
+    # (aunque el dupefilter de Scrapy los frenaria igual en la practica).
+    polycards = [_polycard("MLA1", ["2014", "184.000 Km"])]
+    pagination_nodes = [
+        {"value": "5", "url": "https://autos.mercadolibre.com.ar/toyota_Desde_193_NoIndex_True", "is_actual_page": False},
+        {"value": "10", "url": "https://autos.mercadolibre.com.ar/toyota_Desde_433_NoIndex_True", "is_actual_page": True},
+        {"value": "11", "url": "https://autos.mercadolibre.com.ar/toyota_Desde_481_NoIndex_True", "is_actual_page": False},
+    ]
+    request = Request(
+        url="https://autos.mercadolibre.com.ar/toyota_Desde_433_NoIndex_True",
+        meta={"marca": "toyota", "page_count": 2},
+    )
+    response = HtmlResponse(
+        url=request.url,
+        body=_build_html(polycards, pagination_nodes_url=pagination_nodes),
+        encoding="utf-8",
+        request=request,
+    )
+
+    spider = MercadolibreDiscoverySpider(marcas="toyota")
+    results = list(spider.parse(response))
+
+    requests = [r for r in results if isinstance(r, Request)]
+    assert len(requests) == 1
+    assert requests[0].url == "https://autos.mercadolibre.com.ar/toyota_Desde_481_NoIndex_True"
+
+
 def test_resolve_marca_recovers_real_brand_from_fallback_page():
     # Caso real de produccion (2026-08-26): pedir /salto (marca DNRPA sin path
     # de filtro real en ML) no da 0 resultados - ML cae a un listado generico

@@ -58,7 +58,7 @@ AUTOTHROTTLE_ENABLED = False
 # variable de entorno - ver .env.example.
 ANTIBLOCK_REDIS_URL = os.environ.get("ANTIBLOCK_REDIS_URL", "redis://localhost:6379/0")
 ANTIBLOCK_TOKEN_BUCKET_CAPACITY = 5  # burst permitido
-ANTIBLOCK_TOKEN_BUCKET_REFILL_PER_SEC = 0.5  # ~1 request cada 2s en regimen estable
+ANTIBLOCK_TOKEN_BUCKET_REFILL_PER_SEC = float(os.environ.get("ANTIBLOCK_TOKEN_BUCKET_REFILL_PER_SEC", "0.5"))
 
 # Landing zone (wdxtkg30nm): guardar siempre el HTML crudo en S3/MinIO
 # antes de parsearlo. Config real por variable de entorno - ver .env.example.

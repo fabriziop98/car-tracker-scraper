@@ -1,7 +1,14 @@
-"""Corredor del batch grueso, respetando la ventana horaria 2:00-7:00 ART
-(wdxtkg30nk, seccion 3.4 del doc de arquitectura: "correr el grueso del
-batch entre 2:00 y 7:00 ART - menor carga en el sitio origen, menor
-agresividad de las defensas anti-bot").
+"""Corredor del batch grueso (wdxtkg30nk, seccion 3.4 del doc de arquitectura).
+
+wdxtkg30xr (2026-08-25): se saco la ventana horaria 2:00-7:00 ART que existia
+ademas del token bucket/circuit breaker - dos mecanismos redundantes de
+"no pegarle fuerte al sitio origen", y el gate horario era el que mas
+limitaba throughput real (5h/dia de las 24 disponibles) camino a la meta de
+Fase 1 (100k+ registros). El token bucket (`ANTIBLOCK_TOKEN_BUCKET_REFILL_PER_SEC`,
+ahora 1.0 req/s) sigue siendo el limite real de agresividad - decision de
+negocio de Fabrizio, igual que ROBOTSTXT_OBEY (ver settings.py). Si el
+circuit breaker empieza a abrirse seguido, esa es la señal de bajar el rate
+antes que reintroducir una ventana horaria.
 
 wdxtkg35ba: ademas de Discovery, ahora tambien corre Detail - autolimitado
 por DiscoveryCandidateTracker (Redis, car_tracker_scraper/scheduling/state.py)
@@ -11,6 +18,22 @@ Detail procesa un batch acotado (DETAIL_BATCH_SIZE) de lo que esta vencido
 en cada tick. Pensado para invocarse cada 15-20 min (igual que antes) - la
 mayoria de los ticks no hacen nada o un batch chico, el trabajo pesado se
 reparte solo a lo largo de la ventana en vez de una corrida gigante.
+
+wdxtkg398b (2026-08-26): Discovery ya no corta en una profundidad fija por
+marca, pagina hasta agotar el inventario real de ML (ver
+mercadolibre_discovery.py). El runtime de Discovery por tick deja de ser
+tan predecible como con max_pages=3, pero el riesgo de que eso choque con
+el tick de 15 min de cron es acotado: (1) Discovery solo corre una vez
+cada DISCOVERY_INTERVAL_HOURS (5h), no en cada tick, asi que un tick largo
+no repite en el siguiente; (2) run_discovery() es sincronico dentro de
+main(), asi que si corre mas de 15-20 min si puede solapar con la proxima
+invocacion de cron (no hay lock file) - pero seconds_since_last_discovery()
+solo se actualiza al terminar OK, asi que el tick solapado no dispara un
+segundo Discovery, como mucho corre Detail en paralelo compitiendo por el
+mismo token bucket compartido (correcto, no hay condicion de carrera real:
+ambos respetan el mismo limite en Redis). Si el circuit breaker empieza a
+abrirse mas seguido tras este cambio, esa es la señal de revisar esto, no
+de reintroducir un tope chico arbitrario.
 
 Tier unico por ahora (DETAIL_TIER_HOURS): la diferenciacion A/B/C por
 volumen real (seccion 3.4 del doc) queda para cuando haya datos reales de
@@ -32,11 +55,8 @@ Detail sobre una marca sin catalogo solo llena `pending_review` sin poder
 resolverse nunca. Si ese endpoint falla, Detail se saltea el tick entero en
 vez de correr sin filtro - mismo criterio "fail-safe" que el resto del scheduler.
 
-Instalar en crontab (ejemplo, cada 20 min):
-    */20 * * * * cd /ruta/a/car-tracker-scraper && .venv/bin/python run_batch.py >> logs/batch.log 2>&1
-
-No hay nada desplegado todavia (sin servidor, sin Temporal) - este script
-es el mecanismo real, listo para instalar el dia que haya donde correrlo.
+Instalar en crontab (ejemplo, cada 15-20 min, sin restriccion horaria):
+    */15 * * * * cd /ruta/a/car-tracker-scraper && .venv/bin/python run_batch.py >> logs/batch.log 2>&1
 """
 from __future__ import annotations
 
@@ -62,25 +82,22 @@ from car_tracker_scraper.scheduling.state import (
 load_dotenv()  # cron no carga .env solo - a diferencia de scrapy crawl, que lo hace via settings.py
 
 ART = ZoneInfo("America/Argentina/Buenos_Aires")
-WINDOW_START_HOUR = 2
-WINDOW_END_HOUR = 7
 
 CAR_TRACKER_API_URL = os.environ.get("CAR_TRACKER_API_URL", "http://localhost:8080")
 
-DISCOVERY_MAX_PAGES = 3
+DISCOVERY_MAX_PAGES = 30  # wdxtkg398b: ya no es el corte real por marca (eso lo
+# hace el spider solo, siguiendo pagination_nodes_url hasta que ML no ofrezca
+# ninguna pagina con value mayor a la actual - confirmado 2026-08-26 contra
+# Toyota real, ver mercadolibre_discovery.py). Esto es solo el backstop de
+# seguridad por si ese calculo no converge nunca.
 DISCOVERY_INTERVAL_HOURS = 5  # seccion 3.4 del doc: cada 4-6h
 
 DETAIL_TIER_HOURS = 72
-DETAIL_BATCH_SIZE = 400  # lo que entra en un tick de ~15-20 min al ritmo del token bucket (~0.5 req/s)
+DETAIL_BATCH_SIZE = 700  # ritmo del token bucket (1 req/s) en un tick de ~15 min, con margen para no solaparse con el siguiente tick de cron
 
 REDIS_URL = os.environ.get("ANTIBLOCK_REDIS_URL", "redis://localhost:6379/0")
 
 OUTPUT_DIR = Path("output")
-
-
-def in_batch_window(now: datetime | None = None) -> bool:
-    now = now or datetime.now(ART)
-    return WINDOW_START_HOUR <= now.hour < WINDOW_END_HOUR
 
 
 def fetch_discovered_marcas() -> list[str]:
@@ -209,10 +226,6 @@ def run_detail(now: datetime, tracker: DiscoveryCandidateTracker) -> int:
 
 def main() -> int:
     now = datetime.now(ART)
-    if not in_batch_window(now):
-        print(f"[run_batch] {now.isoformat()} fuera de la ventana {WINDOW_START_HOUR}-{WINDOW_END_HOUR} ART, no corro nada.")
-        return 0
-
     redis_client = redis.Redis.from_url(REDIS_URL)
     tracker = DiscoveryCandidateTracker(redis_client)
 

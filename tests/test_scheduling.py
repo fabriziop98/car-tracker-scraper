@@ -148,17 +148,6 @@ def test_seconds_since_last_discovery_is_small_right_after_marking():
 # --- run_batch.py ------------------------------------------------------------
 
 
-def test_in_batch_window_boundaries_still_hold():
-    from datetime import datetime
-
-    from run_batch import ART, in_batch_window
-
-    assert in_batch_window(datetime(2026, 1, 1, 2, 0, tzinfo=ART)) is True
-    assert in_batch_window(datetime(2026, 1, 1, 6, 59, tzinfo=ART)) is True
-    assert in_batch_window(datetime(2026, 1, 1, 7, 0, tzinfo=ART)) is False
-    assert in_batch_window(datetime(2026, 1, 1, 1, 59, tzinfo=ART)) is False
-
-
 def test_record_discovered_from_jsonl_skips_ads(tmp_path: Path):
     r = fakeredis.FakeRedis()
     tracker = DiscoveryCandidateTracker(r)
@@ -408,13 +397,31 @@ def test_run_detail_skips_the_tick_instead_of_running_unfiltered_when_curated_ma
     mock_run.assert_not_called()
 
 
+@patch("run_batch.fetch_curated_marcas", return_value=["fiat"])
+@patch("run_batch.fetch_discovered_marcas", return_value=["fiat"])
+@patch("run_batch.redis.Redis.from_url")
 @patch("run_batch.subprocess.run")
-def test_main_skips_everything_outside_the_window(mock_run):
+def test_main_runs_regardless_of_the_hour(mock_run, mock_from_url, mock_fetch_discovered, mock_fetch_curated, tmp_path: Path, monkeypatch):
+    # wdxtkg30xr (2026-08-25): la ventana horaria 2-7am ART se saco - un tick
+    # a mediodia tiene que seguir corriendo Discovery/Detail como cualquier otro.
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "output").mkdir()
+    r = fakeredis.FakeRedis()
+    mock_from_url.return_value = r
+    tracker = DiscoveryCandidateTracker(r)
+    tracker.record_discovered("https://example.com/a", marca="fiat")
+
+    def _fake_run(args, **kwargs):
+        output_path = Path(args[args.index("-O") + 1])
+        output_path.write_text(json.dumps({"url": "https://example.com/x", "is_ad": False}) + "\n", encoding="utf-8")
+        return MagicMock(returncode=0)
+
+    mock_run.side_effect = _fake_run
+
     with patch("run_batch.datetime") as mock_datetime:
         from datetime import datetime as real_datetime
 
         mock_datetime.now.return_value = real_datetime(2026, 1, 1, 12, 0, tzinfo=run_batch.ART)
-        rc = run_batch.main()
+        run_batch.main()
 
-    assert rc == 0
-    mock_run.assert_not_called()
+    mock_run.assert_called()

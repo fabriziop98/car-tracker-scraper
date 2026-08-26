@@ -10,5 +10,5 @@ printenv | grep -Ev '^(HOME|PATH|PWD|SHLVL|_)=' > /app/.env
 mkdir -p /app/logs
 touch /app/logs/batch.log
 
-echo "[entrypoint] $(date -u +%FT%TZ) scheduler arrancando - cron cada 15 min, ventana real 2:00-7:00 ART"
+echo "[entrypoint] $(date -u +%FT%TZ) scheduler arrancando - cron cada 15 min, 24/7 (sin ventana horaria)"
 exec cron -f

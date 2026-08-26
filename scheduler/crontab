@@ -1,7 +1,8 @@
 # wdxtkg35ba - formato /etc/cron.d/ (lleva el campo de usuario antes del
 # comando, a diferencia de un crontab de usuario). run_batch.py decide solo
-# si hay algo que hacer (ventana 2:00-7:00 ART, Discovery vencido o no,
-# batch de Detail acotado) - por eso se lo invoca seguido, cada 15 min.
+# si hay algo que hacer (Discovery vencido o no, batch de Detail acotado) -
+# por eso se lo invoca seguido, cada 15 min, 24/7 (sin ventana horaria desde
+# wdxtkg30xr, 2026-08-25 - el limite real de agresividad es el token bucket).
 SHELL=/bin/bash
 PATH=/usr/local/bin:/usr/local/sbin:/usr/bin:/sbin:/bin
 

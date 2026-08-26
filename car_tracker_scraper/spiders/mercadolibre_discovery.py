@@ -21,14 +21,27 @@ Discovery quedaria limitado a la pagina 1 de cada marca.
 
 Ojo con `max_pages`: NO es un tope de "cuantas paginas en total". Cada
 pagina de ML devuelve una VENTANA de ~10 links de paginacion (no solo
-"siguiente"), asi que max_pages es en realidad la profundidad de saltos
-desde la pagina inicial. Confirmado contra el sitio real (2026-07-31):
-max_pages=3 para una sola marca termino trayendo 154 items via 17 requests
-distintos, llegando hasta offset 1969 - mucha mas cobertura de la que el
-nombre del parametro sugiere a primera vista.
+"siguiente"), asi que max_pages es la profundidad de saltos desde la pagina
+inicial - y desde wdxtkg398b, es solo un tope de SEGURIDAD (deliberadamente
+alto), no el mecanismo real de corte por marca. Confirmado contra el sitio
+real (2026-07-31): max_pages=3 para una sola marca termino trayendo 154
+items via 17 requests distintos, llegando hasta offset 1969.
+
+wdxtkg398b (2026-08-26, `diagnose_pagination.py` contra Toyota real): la
+ventana pagination_nodes_url trae ademas un link "salto al final" (ej. desde
+la pagina 10 aparece un nodo value=42 mucho mas alla del rango secuencial
+5-15), que apunta directo a la ultima pagina real - por eso alcanzar el
+final real toma pocos saltos incluso en marcas grandes. En esa ultima
+pagina real (value=42, offset 1969) los resultados NO vienen vacios (48
+items) - la señal de "se acabo el inventario" es que NINGUN nodo de la
+ventana supera el value de la pagina actual (is_actual_page), no una pagina
+vacia. Por eso el corte real ahora es: seguir solo nodos con value mayor al
+de la pagina actual, y parar de fanear cuando no queda ninguno - `max_pages`
+pasa a ser el backstop por si ese calculo nunca converge (nunca deberia,
+en operacion normal).
 
 Uso:
-    scrapy crawl mercadolibre_discovery -a marcas=fiat,ford -a max_pages=3 \
+    scrapy crawl mercadolibre_discovery -a marcas=fiat,ford \
         -O output/discovery_%(time)s.jsonl
 """
 from __future__ import annotations
@@ -93,6 +106,27 @@ def _resolve_marca(title_raw: str | None, requested_marca: str, known_marcas: li
     return requested_marca
 
 
+def _parse_page_value(raw: object) -> int | None:
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return None
+
+
+def _current_page_value(nodes: list) -> int:
+    """Busca el nodo is_actual_page=True en la ventana y devuelve su value.
+    Si no aparece (forma inesperada) devuelve 0, que hace que todo nodo
+    valido se trate como "hacia adelante" - mismo comportamiento (seguir
+    todo) que el codigo tenia antes de wdxtkg398b, sin regresion en ese
+    caso raro."""
+    for node in nodes:
+        if isinstance(node, dict) and node.get("is_actual_page"):
+            value = _parse_page_value(node.get("value"))
+            if value is not None:
+                return value
+    return 0
+
+
 def _normalize_url(url: str | None) -> str | None:
     """metadata.url viene sin esquema en produccion (ej. "auto.mercadolibre.com.ar/MLA-...",
     no "https://auto..."). Confirmado corriendo el spider real 2026-07-31 - sin esto,
@@ -106,7 +140,7 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
     name = "mercadolibre_discovery"
     allowed_domains = ["autos.mercadolibre.com.ar"]
 
-    def __init__(self, marcas: str = "fiat", max_pages: str = "3", *args, **kwargs):
+    def __init__(self, marcas: str = "fiat", max_pages: str = "30", *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.marcas = [m.strip() for m in marcas.split(",") if m.strip()]
         self.max_pages = int(max_pages)
@@ -184,10 +218,18 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
             )
 
         if page_count >= self.max_pages:
+            self.logger.warning(
+                "%s: llego al tope de seguridad max_pages=%d sin que ML dejara de "
+                "ofrecer paginas nuevas - cortando de todos modos (ver wdxtkg398b).",
+                marca, self.max_pages,
+            )
             return
 
         pagination = search.get("pagination", {})
-        for node in pagination.get("pagination_nodes_url", []):
+        nodes = pagination.get("pagination_nodes_url", [])
+        current_value = _current_page_value(nodes)
+
+        for node in nodes:
             # Forma real confirmada 2026-07-31 (diagnose_pagination.py contra
             # el sitio real): pagination_nodes_url es una lista de DICTS
             # ({"value": "2", "url": "...", "is_actual_page": False}), no de
@@ -201,6 +243,14 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
             next_url = node.get("url")
             if not isinstance(next_url, str):
                 self.logger.warning("pagination_nodes_url.url no es un string: %r", node)
+                continue
+            node_value = _parse_page_value(node.get("value"))
+            if node_value is not None and node_value <= current_value:
+                # Pagina ya recorrida (hacia atras) o duplicada - no suma
+                # cobertura nueva. Cuando NINGUN nodo de la ventana pasa este
+                # filtro (la ultima pagina real, confirmado 2026-08-26 contra
+                # Toyota: value=42, resultados no vacios) el for termina sin
+                # yieldear ningun Request y la marca queda agotada de verdad.
                 continue
             yield response.follow(
                 next_url,

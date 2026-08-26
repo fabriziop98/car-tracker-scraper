@@ -3,7 +3,6 @@ en vez de un Redis real - no hay Docker en este entorno de desarrollo.
 Verificar contra el Redis real del docker-compose queda para Fabrizio."""
 import asyncio
 import statistics
-from datetime import datetime
 from unittest.mock import patch
 
 import fakeredis
@@ -16,7 +15,6 @@ from car_tracker_scraper.antiblocking.circuit_breaker import CircuitBreaker
 from car_tracker_scraper.antiblocking.proxy import load_proxy_pool, random_proxy
 from car_tracker_scraper.antiblocking.token_bucket import RedisTokenBucket, domain_of
 from car_tracker_scraper.antiblocking.user_agents import PERSONA_POOL, random_persona
-from run_batch import in_batch_window
 
 
 # --- token bucket ---------------------------------------------------------
@@ -134,17 +132,6 @@ def test_load_proxy_pool_parses_csv(monkeypatch):
     pool = load_proxy_pool()
     assert pool == ["proxy1:8080", "proxy2:8080"]
     assert random_proxy(pool) in pool
-
-
-# --- batch time window --------------------------------------------------------
-
-
-def test_in_batch_window_boundaries():
-    assert in_batch_window(datetime(2026, 7, 31, 2, 0))
-    assert in_batch_window(datetime(2026, 7, 31, 6, 59))
-    assert not in_batch_window(datetime(2026, 7, 31, 7, 0))
-    assert not in_batch_window(datetime(2026, 7, 31, 1, 59))
-    assert not in_batch_window(datetime(2026, 7, 31, 14, 0))
 
 
 # --- middleware (integracion liviana, redis mockeado) --------------------------------------------------------
