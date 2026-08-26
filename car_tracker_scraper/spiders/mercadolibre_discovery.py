@@ -34,6 +34,7 @@ Uso:
 from __future__ import annotations
 
 import re
+import unicodedata
 from datetime import datetime, timezone
 
 import scrapy
@@ -46,10 +47,50 @@ from car_tracker_scraper.extraction.mercadolibre import (
 from car_tracker_scraper.items import ListingSummaryItem
 
 _ZERO_KM_RE = re.compile(r"^0[.,]?0*\s*km$", re.IGNORECASE)
+_NON_ALNUM_RE = re.compile(r"[^a-z0-9]")
 
 
 def _is_zero_km(attributes_raw: list[str] | None) -> bool:
     return any(_ZERO_KM_RE.match(attr.strip()) for attr in (attributes_raw or []))
+
+
+def _compact(text: str) -> str:
+    """Minusculas y sin caracteres no alfanumericos, para comparar 'Mercedes-Benz'
+    (titulo) con 'mercedes-benz' (slug) sin depender de que ambos usen la misma
+    puntuacion/acentuacion - mismo criterio que _compact() en dnrpa_lookup.py
+    del lado car-tracker (ver su CLAUDE.md, caso real 'C-HR' vs 'CHR')."""
+    ascii_only = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
+    return _NON_ALNUM_RE.sub("", ascii_only.lower())
+
+
+def _resolve_marca(title_raw: str | None, requested_marca: str, known_marcas: list[str]) -> str:
+    """Encontrado en produccion 2026-08-26: pedir `https://autos.mercadolibre.com.ar/{marca}`
+    para una marca DNRPA sin path de filtro real en ML (ej. 'salto', ruido de
+    automotor_marca_descripcion que paso el umbral de volumen) no da 0 resultados -
+    ML cae a un listado generico sin filtrar, y sin este fix el spider taggeaba TODOS
+    esos items con esa marca invalida (confirmado: 414 items bajo marca=salto en un
+    solo Discovery resultaron ser Citroen, Toyota, Mercedes-Benz, Nissan, etc reales).
+    Eso los sacaba para siempre de due_for_detail (scheduling/state.py), que filtra
+    por marca curada - candidatos de marca curada real quedaban invisibles para Detail.
+
+    En vez de confiar ciegamente en el parametro de busqueda, se intenta reconocer la
+    marca real a partir de las primeras palabras del titulo (los titulos de ML siempre
+    arrancan con la marca) contra el propio set de marcas pedidas en esta corrida. Esto
+    no arriesga romper una pagina de marca donde el filtro si se aplico de verdad: ahi
+    el titulo ya arranca con esa misma marca, y matchea igual. Si el titulo no matchea
+    ninguna marca conocida (texto libre / caso raro), se conserva requested_marca sin
+    tocar - mismo comportamiento que antes del fix, sin regresion."""
+    if not title_raw:
+        return requested_marca
+    compact_known = {_compact(m): m for m in known_marcas}
+    words = title_raw.split()
+    for n in (3, 2, 1):
+        if len(words) < n:
+            continue
+        candidate = _compact(" ".join(words[:n]))
+        if candidate in compact_known:
+            return compact_known[candidate]
+    return requested_marca
 
 
 def _normalize_url(url: str | None) -> str | None:
@@ -116,15 +157,17 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
             # dict en al menos un item real - no crashear, solo no sacar el dato.
             price_complements = (comp.get("price") or {}).get("price_complements")
 
+            title_raw = (comp.get("title") or {}).get("text")
+
             yield ListingSummaryItem(
                 source="mercadolibre",
                 source_listing_key=metadata.get("id"),
                 url=_normalize_url(metadata.get("url")),
-                marca=marca,
+                marca=_resolve_marca(title_raw, marca, self.marcas),
                 is_ad=False,
                 category_id=metadata.get("category_id"),
                 domain_id=metadata.get("domain_id"),
-                title_raw=(comp.get("title") or {}).get("text"),
+                title_raw=title_raw,
                 price_amount=price.get("value"),
                 price_currency=price.get("currency"),
                 attributes_raw=attributes_raw,

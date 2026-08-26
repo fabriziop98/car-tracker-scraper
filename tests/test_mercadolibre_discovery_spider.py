@@ -8,6 +8,7 @@ from car_tracker_scraper.spiders.mercadolibre_discovery import (
     MercadolibreDiscoverySpider,
     _is_zero_km,
     _normalize_url,
+    _resolve_marca,
 )
 
 
@@ -18,7 +19,13 @@ def _drain_async_gen(agen):
     return asyncio.run(_collect())
 
 
-def _polycard(item_id: str, attributes: list[str], is_pad: bool = False, price_complements=None) -> dict:
+def _polycard(
+    item_id: str,
+    attributes: list[str],
+    is_pad: bool = False,
+    price_complements=None,
+    title: str = "Fiat Palio",
+) -> dict:
     price = {"current_price": {"value": 5_000_000, "currency": "ARS"}}
     if price_complements is not None:
         price["price_complements"] = price_complements
@@ -34,7 +41,7 @@ def _polycard(item_id: str, attributes: list[str], is_pad: bool = False, price_c
                 "domain_id": "MLA-CARS_AND_VANS",
             },
             "components": [
-                {"type": "title", "title": {"text": "Fiat Palio"}},
+                {"type": "title", "title": {"text": title}},
                 {"type": "price", "price": price},
                 {"type": "attributes_list", "attributes_list": {"texts": attributes}},
                 {"type": "location", "location": {"text": "Godoy Cruz, Mendoza"}},
@@ -148,6 +155,58 @@ def test_parse_follows_pagination_dicts_and_skips_the_current_page():
     assert len(items) == 1
     assert len(requests) == 1
     assert requests[0].url == "https://autos.mercadolibre.com.ar/fiat_Desde_49_NoIndex_True"
+
+
+def test_resolve_marca_recovers_real_brand_from_fallback_page():
+    # Caso real de produccion (2026-08-26): pedir /salto (marca DNRPA sin path
+    # de filtro real en ML) no da 0 resultados - ML cae a un listado generico
+    # sin filtrar. Sin el fix, este item quedaba taggeado marca=salto para
+    # siempre y era invisible para due_for_detail (marca curada).
+    known = ["salto", "toyota", "fiat", "nissan"]
+    assert _resolve_marca("Nissan Kicks 2022 1.6 Advance", "salto", known) == "nissan"
+    assert _resolve_marca("Toyota Corolla 2021 2.0 Gr Sport Cvt", "salto", known) == "toyota"
+
+
+def test_resolve_marca_keeps_requested_marca_when_filter_is_real():
+    # No debe romper el caso donde la marca pedida SI es la real (la inmensa
+    # mayoria de las paginas) - el titulo ya arranca con esa misma marca.
+    known = ["toyota", "fiat", "nissan"]
+    assert _resolve_marca("Toyota Hilux 2020 2.8 4x4", "toyota", known) == "toyota"
+
+
+def test_resolve_marca_falls_back_when_title_matches_nothing_known():
+    # Texto libre / marca no reconocida: se mantiene el comportamiento previo
+    # al fix (requested_marca), sin arriesgar un falso positivo.
+    known = ["toyota", "fiat", "nissan"]
+    assert _resolve_marca("Utilitario Sin Marca Especificada", "salto", known) == "salto"
+    assert _resolve_marca(None, "salto", known) == "salto"
+
+
+def test_resolve_marca_matches_multiword_slugs_and_accents():
+    # 'Mercedes-Benz' (titulo) vs 'mercedes-benz' (slug), y acentos ('Citroen'
+    # vs 'Citroën') no deben impedir el match - mismo criterio _compact() que
+    # dnrpa_lookup.py del lado car-tracker.
+    known = ["mercedes-benz", "land-rover", "citroen"]
+    assert _resolve_marca("Mercedes-Benz Sprinter 2011 2.1", "salto", known) == "mercedes-benz"
+    assert _resolve_marca("Land Rover Discovery 2019", "salto", known) == "land-rover"
+    assert _resolve_marca("Citroën Berlingo Furgon 2018", "salto", known) == "citroen"
+
+
+def test_parse_uses_resolved_marca_per_item():
+    polycards = [
+        _polycard("MLA1", ["2014", "184.000 Km"], title="Nissan Kicks 2022 1.6 Advance"),
+        _polycard("MLA2", ["2018", "50.000 Km"], title="Toyota Corolla 2021 2.0"),
+    ]
+    request = Request(
+        url="https://autos.mercadolibre.com.ar/salto",
+        meta={"marca": "salto", "page_count": 1},
+    )
+    response = HtmlResponse(url=request.url, body=_build_html(polycards), encoding="utf-8", request=request)
+
+    spider = MercadolibreDiscoverySpider(marcas="salto,nissan,toyota")
+    items = list(spider.parse(response))
+
+    assert [item["marca"] for item in items] == ["nissan", "toyota"]
 
 
 def test_start_requests_url_does_not_match_known_robots_disallow_patterns():
