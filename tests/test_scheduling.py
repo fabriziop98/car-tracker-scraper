@@ -521,11 +521,14 @@ def test_every_registered_source_has_distinct_spiders_and_a_sane_batch_size():
     spiders = [s.discovery_spider for s in run_batch.SOURCES] + [s.detail_spider for s in run_batch.SOURCES]
     assert len(spiders) == len(set(spiders)), "dos fuentes comparten un spider"
 
-    # Las fuentes corren secuencialmente dentro del mismo tick de cron (15 min)
-    # y el token bucket va a ~1 req/s por dominio: si la suma de los batches se
-    # pasa de eso, los ticks se empiezan a solapar (ver SourceConfig).
+    # Las fuentes corren secuencialmente dentro del mismo tick de cron (15 min):
+    # si la suma de sus tiempos estimados se pasa, los ticks se solapan.
+    # Se pondera por seconds_per_request y no por batch_size a secas, porque una
+    # fuente con DOWNLOAD_DELAY propio (DeRuedas: 5s) cuesta varias veces mas
+    # por aviso que una que solo respeta el token bucket (1s).
     tick_seconds = 15 * 60
-    assert sum(s.detail_batch_size for s in run_batch.SOURCES) <= tick_seconds
+    total = sum(s.estimated_detail_seconds for s in run_batch.SOURCES)
+    assert total <= tick_seconds, f"el tick se pasa: {total}s > {tick_seconds}s"
 
 
 def test_one_failing_source_does_not_stop_the_others(monkeypatch, tmp_path: Path):

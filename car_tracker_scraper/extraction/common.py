@@ -33,6 +33,26 @@ def compact(text: str) -> str:
     return _NON_ALNUM_RE.sub("", ascii_only.lower())
 
 
+def resolve_marca_slug(source_brand: str | None, requested_marca: str, known_marcas: list[str]) -> str:
+    """Normaliza el nombre de marca que devuelve una fuente al slug curado.
+
+    Las fuentes devuelven el nombre display ('Alfa Romeo', 'Mercedes-Benz'),
+    pero DiscoveryCandidateTracker.due_for_detail filtra Detail por marca
+    CURADA, que es un slug ('alfa-romeo'). Emitir el display hace que ningun
+    candidato de esa fuente matchee nunca y Detail se muere de hambre EN
+    SILENCIO - ya paso una vez de verdad en MercadoLibre (wdxtkg3980) y se
+    ataja aca para todas las fuentes nuevas.
+
+    Si el nombre no matchea ninguna marca conocida (marca que la fuente tiene
+    y nosotros todavia no curamos), se conserva la pedida - criterio
+    conservador, mismo que usa el Discovery de ML.
+    """
+    if not source_brand:
+        return requested_marca
+    compact_known = {compact(m): m for m in known_marcas}
+    return compact_known.get(compact(source_brand), requested_marca)
+
+
 def extract_balanced_json(text: str, start: int = 0) -> Any:
     """Parsea el objeto JSON balanceado que empieza en `start`.
 

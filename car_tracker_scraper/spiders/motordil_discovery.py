@@ -28,7 +28,7 @@ from urllib.parse import urlencode
 
 import scrapy
 
-from car_tracker_scraper.extraction.common import compact
+from car_tracker_scraper.extraction.common import resolve_marca_slug
 from car_tracker_scraper.extraction.motordil import (
     detail_path,
     extract_rsc_payload,
@@ -44,24 +44,11 @@ def _listing_url(listing: dict) -> str | None:
     return f"{BASE_URL}{path}" if path else None
 
 
-def _resolve_marca_slug(make: str | None, requested_marca: str, known_marcas: list[str]) -> str:
-    """Motordil devuelve el nombre display de la marca ('Alfa Romeo'), pero el
-    tracker de candidatos filtra Detail por marca CURADA, que es un slug
-    ('alfa-romeo', ver DiscoveryCandidateTracker.due_for_detail). Emitir el
-    nombre display haria que ningun candidato de esta fuente matchee nunca y
-    Detail se muera de hambre en silencio - exactamente el sintoma del
-    incidente wdxtkg3980, por una causa distinta.
-
-    Se mapea contra el propio set de marcas pedidas en la corrida (que ya son
-    slugs curados) comparando en forma compacta, asi 'Alfa Romeo' -> 'alfa-romeo'
-    y 'Mercedes Benz' -> 'mercedes-benz' sin depender de la puntuacion. Si no
-    matchea ninguna conocida (marca que Motordil tiene y nosotros no curamos
-    todavia), se conserva la pedida, mismo criterio conservador que ML.
-    """
-    if not make:
-        return requested_marca
-    compact_known = {compact(m): m for m in known_marcas}
-    return compact_known.get(compact(make), requested_marca)
+# wdxtkg39pw: la normalizacion de marca al slug curado se movio a
+# extraction/common.py cuando DeRuedas (tercera fuente) necesito exactamente lo
+# mismo. Se mantiene el alias privado para no tocar los tests que ya lo usaban
+# por este nombre.
+_resolve_marca_slug = resolve_marca_slug
 
 
 def _title(listing: dict) -> str | None:

@@ -129,6 +129,16 @@ class SourceConfig:
     detail_spider: str
     discovery_interval_hours: int
     detail_batch_size: int
+    # Segundos que cuesta una request de esta fuente. Por defecto 1s, que es el
+    # ritmo del token bucket (ANTIBLOCK_TOKEN_BUCKET_REFILL_PER_SEC=1.0, por
+    # dominio). Una fuente con DOWNLOAD_DELAY propio cuesta mas y hay que
+    # decirlo aca, o el presupuesto del tick queda mal calculado: DeRuedas con
+    # delay 5 tarda 5x lo que sugiere su batch_size.
+    seconds_per_request: float = 1.0
+
+    @property
+    def estimated_detail_seconds(self) -> float:
+        return self.detail_batch_size * self.seconds_per_request
 
 
 SOURCES = (
@@ -144,10 +154,25 @@ SOURCES = (
         discovery_spider="motordil_discovery",
         detail_spider="motordil_detail",
         discovery_interval_hours=5,
-        # Arranca chico a proposito: Motordil es un sitio mucho mas chico que
-        # ML y todavia no hay medicion real de cuanto tarda su Detail. Subirlo
-        # con dato de la primera corrida, no antes.
+        # Medido en la primera corrida real (2026-08-27): el inventario entero
+        # de Motordil son ~5.400 avisos y se drenaron en una noche. En regimen
+        # estable (re-Detail cada DETAIL_TIER_HOURS) necesita ~20 por tick, asi
+        # que 200 sobra de lejos.
         detail_batch_size=200,
+    ),
+    SourceConfig(
+        slug="deruedas",
+        discovery_spider="deruedas_discovery",
+        detail_spider="deruedas_detail",
+        discovery_interval_hours=5,
+        # El mas chico de los tres a proposito: los spiders de DeRuedas suman
+        # DOWNLOAD_DELAY=5 propio para respetar el Crawl-delay que pide su
+        # robots.txt, asi que cada request cuesta ~5s en vez de ~1s. Con 40
+        # avisos son ~150s: deja ~100s de margen sobre el tick de 15 min una vez
+        # descontados ML (500s) y Motordil (200s). El margen es a proposito - el
+        # calculo asume paceo perfecto y sin reintentos.
+        detail_batch_size=30,
+        seconds_per_request=5.0,
     ),
 )
 

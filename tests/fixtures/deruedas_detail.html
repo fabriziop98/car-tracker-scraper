@@ -1,0 +1,2966 @@
+
+
+<html>
+<head> 
+
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"> 		
+	
+  <meta name="google" content="notranslate">
+  <!-- NECESARIO PARA DESCARGAR APP -->	
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <meta name="theme-color" content="#333333">
+  <meta name="MobileOptimized" content="width">
+  <meta name="HandheldFriendly" content="true">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
+  <link rel="shortcut icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="/images/design/icon_192.png">
+  <link rel="apple-touch-startup-image" href="/images/design/icon_512.png">
+  <link rel="manifest" href="/manifest.json">
+  
+	
+  
+	<meta name="Keywords" content="AUTOS, CAMIONETAS, MOTOS, CUATRICICLOS, CAMIONES, PLANES, AUTOS NUEVOS, AUTOS USADOS, AUTOS EN CUOTAS, AUTOS FINANCIADOS, AUTOS EN MENDOZA, AUTOS EN BUENOS AIRES, AUTOS EN CATAMARCA, AUTOS EN CHACO, AUTOS EN CHUBUT, AUTOS EN CORDOBA, AUTOS EN CORRIENTES, AUTOS EN ENTRE RIOS, AUTOS EN FORMOSA, AUTOS EN JUJUY, AUTOS EN LA PAMPA, AUTOS EN LA RIOJA, AUTOS EN MISIONES, AUTOS EN NEUQUEN, AUTOS EN RIO NEGRO, AUTOS EN SALTA, AUTOS EN SAN JUAN, AUTOS EN SAN LUIS, AUTOS EN SANTA CRUZ, AUTOS EN SANTA FE, AUTOS EN SANTIAGO DEL ESTERO, AUTOS EN TIERRA DEL FUEGO, AUTOS EN TUCUMAN">
+	
+	<!-- TEMPORAL PARA FORZAR LA ACTUALIZACION DEL FAVICON -->
+	<link rel="shortcut icon" href="https://www.deruedas.com.ar/favicon.ico?v=3" /> 
+	<link rel='stylesheet' type='text/css' href='/scripts/fontAwesome/css/font-awesome.min.css' />
+<link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700,800&display=swap" rel="stylesheet">
+<link href="https://www.deruedas.com.ar/scripts/bootstrap/bootstrap_4.css?version=1.0.0" rel="stylesheet">
+<style type="text/css">
+body 													{font-family:'Nunito', sans-serif; overflow-x: hidden; background-color: #F2F2F2; }
+@media screen and (max-width: 600px){ /*DESACTIVAR LA SELECCION DE TEXTO EN MOVILES (PARA QUE AL HACER TAP NO PINTE EL TEXTO) */
+	body {-webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;}
+}
+.pantalla 										{width:100%; margin:auto;}
+.ventana 											{width:98%; max-width:1100px; margin:auto;}
+.ventanaMax										{width:98%; max-width:1280px; margin:auto;}
+.ventanaMid										{width:98%; max-width:1160px; margin:auto;}
+.ventana.limitAR							{min-width:980px;}
+.redondear	 									{border-radius:6px 6px 6px 6px; -moz-border-radius:6px 6px 6px 6px; -webkit-border-radius:6px 6px 6px 6px;}
+
+/*SACO ESTILOS A H1, H2 Y H3 PARA POSICIONAMIENTO WEB*/
+h1, h2, h3										{display:inline; font-size:inherit;	font-weight:inherit; margin-block-start:inherit; margin-block-end:inherit; margin-inline-start:inherit; margin-inline-end:inherit;}
+
+/* TITULOS */
+.titulo			  								{font-family:'Nunito', sans-serif; font-size:16px; color:#666666; font-weight:bold; text-decoration:none; cursor:default;}
+.titulo.mini									{font-size:12px;}
+.titulo.ultra                 {font-size:26px;}
+.titulo.super									{color:#FFFFFF;}
+.titulo.off										{color:#666666;}
+.titulo.resaltar							{color:#FF6C00;}
+a.titulo:hover								{color:#FF6C00; cursor:pointer;}
+a.titulo.super:hover					{color:#E1E1E1; cursor:pointer;}
+
+/* TEXTO */
+.texto												{font-size:15px; color: #666666; text-decoration:none; cursor:default;}
+.texto.mini	  								{font-size:11px;}
+.texto.super	  							{font-size:16px;}
+.texto.obligatorio						{font-weight:bold;}
+.texto.resaltar								{color:#FF6C00 !important; font-weight:bold;}
+.texto.alerta									{color:#FF1E2C; font-weight:bold;}
+.texto.error									{color:#FF1E2C; padding-top:3px;}
+.texto.success								{color:#1DB954; padding-top:3px;}
+.texto.nota										{color:#2463DE;}
+.texto.inv										{color:#FFFFFF;}
+a.texto:hover 							 	{color:#000000; cursor:pointer;}
+a.texto.resaltar:hover 			 	{color:#000000; cursor:pointer;}
+
+.link   											{font-size:15px; color:#009EE3; text-decoration:none; cursor:pointer;}
+.link span  									{color:#009EE3;}
+.link.inv											{color:#FFFFFF;}
+a.link:hover									{color:#FF6C00;}
+a.toggleVersionLink:hover				{color:#000000 !important;}
+.link.inv_2										{color:#FFFFFF;}
+a.link.inv_2:hover						{color:#000000;}
+.linkBlack    								{color:#000000; text-decoration:none; cursor:pointer;}
+a.linkBlack:hover    					{color:#FF6C00;}
+.text-orange                  {color:#FF6C00;}
+.text-yellow                  {color:#FFFFCC;}
+
+/* RECUADROS */
+.recuadro											{border:1px solid #FFFFFF; background-color:white; border-radius:6px 6px 6px 6px; -moz-border-radius:6px 6px 6px 6px; -webkit-border-radius:6px 6px 6px 6px;}
+.recuadro.super								{border:1px solid #E1E1E1;}
+.recuadro.sombra							{box-shadow:0px 0px 4px #999999;}
+.recuadro.sombra_2						{box-shadow: 1px 1px 3px #999999;}
+.recuadro.resaltar:hover			{border-color:#FF6C00;}
+.recuadro.resaltar_2:hover		{border-color:#009EE3;}
+.recuadro.off:hover						{border-color:#666666;}
+
+/* RESALTADORES */
+.fondo												{margin:3px; padding:8px 20px 8px 20px; border-radius:3px 3px 3px 3px; -moz-border-radius:3px 3px 3px 3px; -webkit-border-radius:3px 3px 3px 3px;}
+.naranja											{background:linear-gradient(to right, #F05F22, #FF354D);}
+.verde												{background-color:#1DB954;}
+.verdeClaro										{background-color:#A9F5A9;}
+.gris													{background-color:#F0F0F0;}
+.amarillo 										{background-color:#FFFFCC;}
+.rojo													{background-color:#FF1E2C;}
+.azul													{background-color:#2463DE;}
+.grisOscuro										{background-color:#333333;}
+.fondoResaltar								{background-color:#F0F0F0; border-radius:3px 3px 3px 3px; -moz-border-radius:3px 3px 3px 3px; -webkit-border-radius:3px 3px 3px 3px;}
+.oculto												{display:none;}
+.visible											{display:block;}
+
+/* BOTONES */
+.boton, .botPlus											 		{font-family:'Nunito', sans-serif; white-space:nowrap; cursor:pointer; 
+																				 		border:0;	border-bottom:rgba(0, 0, 0, .1) 1px solid; 
+																				 		/*box-shadow:1px 1px 2px 0px #999999;*/
+																					  transition: all 1s cubic-bezier(0.19, 1, 0.22, 1);
+																					}																						
+.boton span, .botPlus									 		{color:#FFFFFF; text-align:center;}
+.boton, .boton span, .botPlus		 					{display:inline-block; border-radius: 6px;}
+.boton:hover, .botPlus:hover							{background:-moz-linear-gradient(center top, rgba(255, 255, 255, .2) 0%, rgba(255, 255, 255, .1) 100%);	background:-webkit-gradient(linear, center bottom,	center top,	from(rgba(255, 255, 255, .1)), to(rgba(255, 255, 255, .2)));}
+.boton.pequeno span, .botPlus.pequeno			{font-size:12px; padding:6px 10px 6px 10px;}
+.boton.mediano span, .botPlus.mediano			{font-size:14px; padding:9px 20px 9px 20px;}
+.boton.grande span, .botPlus.grande				{font-size:20px; padding:12px 30px 12px 30px;}
+.boton.rojo, .botPlus.rojo								{background-color:#FF1E2C;}
+.boton.verde, .botPlus.verde							{background-color:#1DB954;}
+.boton.azul, .botPlus.azul								{background-color: #1A73E9;}
+.boton.naranja, .botPlus.naranja					{background: linear-gradient(41.12deg, #F05F22 -13.09%, #FF354D 127.35%);}
+.boton.gris, .botPlus.gris								{background-color:#E1E1E1;}
+.boton.grisOscuro, .botPlus.grisOscuro		{background-color:#666666;}
+.boton.transparente												{border: 2px solid #FFFFFF; box-sizing: border-box;}
+.botPlus:disabled													{background-color:#999999;}
+.boton:disabled														{opacity:0.55; cursor:default; pointer-events:none;}
+
+/* ESPECIALES BUS */
+.cerrarItem										{font-size:15px; color:#666666; text-decoration:none; background-color:#E1E1E1; padding:5px 0 5px 10px; border-radius:0px 10px 10px 0px; -moz-border-radius:0px 10px 10px 0px; -webkit-border-radius:0px 10px 10px 0px;}
+.cerrarItem:hover							{color:#000000; cursor:pointer;}
+.cerrarItem_2									{background: #FFF3F0; border: 1px solid #F3562C; min-height:35px; box-sizing: border-box; border-radius: 6px;font-size:15px; color:#F3562C; text-decoration:none; padding:5px 0 5px 10px; float:left;}
+.cerrarItem_2:hover						{color:#000000; cursor:pointer;}
+.cerrarItem_3									{font-size:15px; color:#FFFFFF; height:23px; border: 1px solid #F3562C; text-decoration:none; background-color:#333333; padding:5px 0 5px 10px; float:left;}
+.cerrarItem_3:hover						{color:#FF6C00; cursor:pointer;}
+.cerrarItem_4								  {background: #FFF3F0; border: 1px solid #F3562C; box-sizing: border-box; border-radius: 6px;font-size:15px; color:#F3562C; text-decoration:none; padding:5px 0 5px 10px; width:fit-content;}
+.cerrarItem_4:hover						{color:#000000; cursor:pointer;}
+.cerrarItem_5									{border: 1px solid #F0F0F0; min-height:35px; box-sizing: border-box; border-radius: 6px;font-size:15px; color:#009EE3; text-decoration:none; padding:5px 0 5px 10px; float:left;}
+.cerrarItem_5:hover						{color:#FF6C00; cursor:pointer; border-color:#E1E1E1;}
+.fancyCheck                   {transform: scale(1.4) !important; margin-right:8px;}
+.slider												{font-family:'Nunito', sans-serif; font-size:15px; color:#009EE3; text-decoration:none; font-weight:normal; background-color:transparent; margin-bottom:12px; letter-spacing: -0.02em; text-align:center; width:100%; border:0;margin-left: 2px;}
+input.slider:disabled					{color:#009EE3;}
+.aviso-limite-fancy           {padding: 5px;}
+/* PAGINACION */
+.pagina				  							{font-size:14px; color:#FFFFFF; text-decoration:none; cursor:default; background-color:#1DB954; padding:5px 10px 5px 10px; border-radius:3px 3px 3px 3px; -moz-border-radius:3px 3px 3px 3px; -webkit-border-radius:3px 3px 3px 3px;}
+a.pagina:hover								{color:#000000; cursor:pointer; background-color:#FF6C00;}
+span.pagina:hover							{color:#000000; cursor:pointer; background-color:#FF6C00;}
+.paginaSel		  							{padding:5px 10px 5px 10px; border:1px solid #1DB954; border-radius:3px 3px 3px 3px; -moz-border-radius:3px 3px 3px 3px; -webkit-border-radius:3px 3px 3px 3px;}
+
+/* TABLAS */
+.tabla 												{font:85% "Lucida Grande", "Lucida Sans Unicode", "Trebuchet MS", sans-serif; border-collapse:collapse; color:#333; background:#F3F5F7; border-collapse: collapse; overflow:hidden; border-radius:3px 3px 3px 3px; -moz-border-radius:3px 3px 3px 3px; -webkit-border-radius:3px 3px 3px 3px;}
+.tabla tbody 									{border-bottom:1px solid #EAECEE;}
+.tabla tr 										{background-color:#F3F5F7;}
+.tabla tr.odd 								{background-color:#F0F2F4;}
+.tabla tr.oddUp								{background-color:#FFF0F0;}
+.tabla tr:hover 							{background:#EAECEE; color:#111;}
+.tabla tr.division 						{background-color:#CEF6F5;}
+.tabla tr.important 					{background-color:#A9F5A9;}
+.tabla td 										{padding:10px; background:url("images/design/td_back.gif") repeat-x;}
+.tabla th											{padding:15px; background:url("images/design/td_back.gif") repeat-x; background-color:#FFFFCC; font-size:10px; text-align:center; font-weight:normal;}
+.tabla a											{color:#009EE3; text-decoration:none; cursor:pointer;}
+.tabla td.columna							{border-left:1px solid #E1E1E1; border-right:1px solid #E1E1E1}
+
+/* FORMULARIOS */
+.formTitulo		  							{font-size:16px; color:#666666; padding-top:8px; text-align:right; vertical-align:top;}
+.formCheck					  				{font-size:16px; color:#666666; line-height:25px; padding-left:5px;}
+.formBox 											{font-family:'Nunito', sans-serif; font-size:16px; color:#990000; background-color: #F0F0F0; border-width:0; padding:5px; border-radius:3px 3px 3px 3px; -moz-border-radius:3px 3px 3px 3px; -webkit-border-radius:3px 3px 3px 3px}
+.formBox.blanco								{background-color:#FFFFFF;}
+.formBox.mini									{font-size:14px;}
+.formBox.mini.blanco					{background-color:#FFFFFF;} 
+.formBox.trabajando 					{background: white url("images/design/trabajando_1.gif") right center no-repeat;}
+input.formBox:disabled				{color:#666666;}
+
+/* Agrandar Checkboxes */
+input[type=checkbox] {
+	-ms-transform: scale(1.2); /* IE */
+	-moz-transform: scale(1.2); /* FF */
+	-webkit-transform: scale(1.2); /* Safari and Chrome */
+	-o-transform: scale(1.2); /* Opera */
+}
+
+/* Sacar estilos de input number*/
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+
+/* Sacar estilos de input number*/
+input[type=number] {
+	-moz-appearance:textfield;
+}
+
+/* Parpadeo */
+.parpadea {
+  
+  animation-name: parpadeo;
+  animation-duration: 3s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+
+  -webkit-animation-name:parpadeo;
+  -webkit-animation-duration: 3s;
+  -webkit-animation-timing-function: linear;
+  -webkit-animation-iteration-count: infinite;
+}
+
+@-moz-keyframes parpadeo{  
+  0% { opacity: 1.0; }
+  50% { opacity: 0.0; }
+  100% { opacity: 1.0; }
+}
+
+@-webkit-keyframes parpadeo {  
+  0% { opacity: 1.0; }
+  50% { opacity: 0.0; }
+   100% { opacity: 1.0; }
+}
+
+@keyframes parpadeo {  
+  0% { opacity: 1.0; }
+   50% { opacity: 0.0; }
+  100% { opacity: 1.0; }
+}
+
+.div_td_1_width		{width:25%;}
+
+.div_tr						{display:flex; align-items:center;}
+.div_td_1					{float:left; text-align:right;}
+.div_td_2					{float:left; padding-left:2%; min-width: 400px;}
+.div_clear				{clear:both; height:20px;}
+
+@media screen and (max-width: 600px){
+	.div_tr					{display:inherit;}
+	.div_td_1				{width:90%; text-align:left; padding-left:5%}
+	.div_td_2				{width:90%; padding-left:5%; min-width:auto; max-width:320px;} 
+}
+
+
+@media screen and (max-width: 350px) {.v350 {display:none;}}
+@media screen and (min-width: 351px) {.i350 {display:none;}}
+@media screen and (max-width: 400px) {.v400 {display:none;}}
+@media screen and (min-width: 401px) {.i400 {display:none;}}
+@media screen and (max-width: 450px) {.v450 {display:none;}}
+@media screen and (min-width: 451px) {.i450 {display:none;}}
+@media screen and (max-width: 500px) {.v500 {display:none;}}
+@media screen and (min-width: 501px) {.i500 {display:none;}}
+@media screen and (max-width: 550px) {.v550 {display:none;}}
+@media screen and (min-width: 551px) {.i550 {display:none;}}
+@media screen and (max-width: 600px) {.v600 {display:none;}}
+@media screen and (min-width: 601px) {.i600 {display:none;}}
+@media screen and (max-width: 650px) {.v650 {display:none;}}
+@media screen and (min-width: 651px) {.i650 {display:none;}}
+@media screen and (max-width: 700px) {.v700 {display:none;}}
+@media screen and (min-width: 701px) {.i700 {display:none;}}
+@media screen and (max-width: 750px) {.v750 {display:none;}}
+@media screen and (min-width: 751px) {.i750 {display:none;}}
+@media screen and (max-width: 800px) {.v800 {display:none;}}
+@media screen and (min-width: 801px) {.i800 {display:none;}}
+@media screen and (max-width: 850px) {.v850 {display:none;}}
+@media screen and (min-width: 851px) {.i850 {display:none;}}
+@media screen and (max-width: 900px) {.v900 {display:none;}}
+@media screen and (min-width: 901px) {.i900 {display:none;}}
+@media screen and (max-width: 950px) {.v950 {display:none;}}
+@media screen and (min-width: 951px) {.i950 {display:none;}}
+@media screen and (max-width: 1000px) {.v1000 {display:none;}}
+@media screen and (min-width: 1001px) {.i1000 {display:none;}}
+@media screen and (max-width: 1100px) {.v1100 {display:none;}}
+@media screen and (min-width: 1101px) {.i1100 {display:none;}}
+
+
+
+
+
+
+</style>
+
+	<script type="text/javascript" src="/scripts/jQuery/jquery.min.js" ></script>
+	<link rel='stylesheet' href='/scripts/fancyBox2/jquery.fancybox.min.css?v=2.1.5' type='text/css' media='screen' />
+	<script type="text/javascript" src="/scripts/fancyBox2/jquery.fancybox.pack.js?v=2.1.5"></script>
+	<style type="text/css">
+		html.fancyLockScroll,
+		body.fancyLockScroll {
+			overflow: hidden !important;
+		}
+
+		body.fancyLockScroll {
+			width: 100%;
+		}
+
+		#fancybox-wrap,
+		#fancybox-outer,
+		#fancybox-content,
+		.fancybox-inner {
+			-webkit-overflow-scrolling: touch;
+			overscroll-behavior: contain;
+		}
+
+		.fancybox-inner {
+			overflow-x: auto !important;
+		}
+
+		.fancyScrollArea {
+			max-height: calc(100vh - 160px);
+			overflow-y: auto !important;
+			-webkit-overflow-scrolling: touch;
+			overscroll-behavior: contain;
+			touch-action: pan-y;
+		}
+
+		/* CON EL TECLADO DEL MOVIL ABIERTO EL FANCY SE PEGA ARRIBA DE LA ZONA VISIBLE
+		   EN VEZ DE QUEDAR CENTRADO (Y TAPADO) SOBRE EL VIEWPORT COMPLETO. EL VALOR DE
+		   --fancyTecladoTop LO CALCULA EL JS SEGUN EL visualViewport. VA POR VARIABLE Y
+		   NO INLINE PORQUE CADA $.fancybox.update() PISA EL style.top DEL WRAP */
+		body.fancyTecladoAbierto .fancybox-wrap {
+			position: fixed !important;
+			top: var(--fancyTecladoTop, 8px) !important;
+			margin-top: 0 !important;
+			bottom: auto !important;
+		}
+
+		body.fancyTecladoAbierto .fancybox-inner {
+			overflow-y: auto !important;
+			-webkit-overflow-scrolling: touch;
+			overscroll-behavior: contain;
+		}
+	</style>
+
+	<!-- FANCY VIEJO
+	<link rel="stylesheet" href="/scripts/fancyBox/css/jquery.fancybox-1.3.4.css" type="text/css" media="screen" />
+	<script type="text/javascript" src="/scripts/fancyBox/jquery.fancybox-1.3.4.pack.js"></script>
+	<script type="text/javascript" src="/scripts/fancyBox/jquery.easing-1.3.pack.js"></script>
+	<script type="text/javascript" src="/scripts/fancyBox/jquery.mousewheel-3.0.4.pack.js"></script>
+	-->
+	
+	<script language="JavaScript" type="text/JavaScript"> 
+		//APERTURA DEL FANCY
+		$(document).ready(function() {
+			var fancyLockClass = 'fancyLockScroll';
+			var fancyTecladoClass = 'fancyTecladoAbierto';
+			var fancyResizeTimer = null;
+			var fancyMargenTeclado = 8; //MARGEN ENTRE EL BORDE DE LA ZONA VISIBLE Y EL FANCY
+			var fancyScrollDuracion = 1000; //DURACION DEL SCROLL HASTA EL CAMPO ENFOCADO
+			var fancyCampoFoco = null; //CAMPO DEL FANCY QUE TIENE EL FOCO, null SI NO HAY NINGUNO
+			var fancyAltoBase = 0; //ALTO DE LA ZONA VISIBLE MEDIDO SIN TECLADO
+			var fancyTecladoPrevio = false; //ESTADO ANTERIOR DEL TECLADO, PARA DETECTAR LA APERTURA
+
+			//LA BASE ES EL ALTO DISPONIBLE CON EL TECLADO CERRADO. NO SE MIDE SI HAY UN CAMPO
+			//ENFOCADO: UNA MEDICION HECHA CON EL TECLADO ARRIBA DEJARIA LA BASE CHICA Y A PARTIR
+			//DE AHI NO SE DETECTARIA MAS LA APERTURA
+			function medirAltoBaseFancy() {
+				if (fancyCampoFoco) return;
+				fancyAltoBase = Math.max(altoVentanaFancy(), altoViewportFancy());
+			}
+
+			function bloquearScrollFancy() {
+				$('html, body').addClass(fancyLockClass);
+				//AL ABRIR EL FANCY TODAVIA NO HAY TECLADO: ES EL MOMENTO EXACTO PARA FIJAR LA BASE
+				medirAltoBaseFancy();
+			}
+
+			function desbloquearScrollFancy() {
+				$('html, body').removeClass(fancyLockClass);
+				$('body').css({ 'padding-right': '', 'margin-right': '', 'width': '' });
+				$('.fancyScrollArea').css('max-height', '');
+				fancyCampoFoco = null;
+				fancyTecladoPrevio = false;
+				soltarFancyTeclado();
+			}
+
+			function esFancyMovil() {
+				return (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) || $(window).width() <= 768;
+			}
+
+			function altoViewportFancy() {
+				if (window.visualViewport && window.visualViewport.height) return window.visualViewport.height;
+				return $(window).height();
+			}
+
+			function altoVentanaFancy() {
+				return window.innerHeight || $(window).height();
+			}
+
+			//HAY DOS COMPORTAMIENTOS DISTINTOS AL ABRIR EL TECLADO:
+			// - iOS Y CHROME ANDROID (interactive-widget=resizes-visual, EL DEFAULT): SE ACHICA EL
+			//   visualViewport Y innerHeight QUEDA IGUAL
+			// - WEBVIEW EMBEBIDO EN UNA APP CON adjustResize (META/FACEBOOK/INSTAGRAM): SE ACHICAN
+			//   LAS DOS MEDIDAS A LA VEZ
+			//POR ESO NO SE PUEDEN RESTAR ENTRE SI: EN EL SEGUNDO CASO LA DIFERENCIA DA CERO Y EL
+			//TECLADO NUNCA SE DETECTABA. SE COMPARA CONTRA UNA BASE TOMADA SIN TECLADO, QUE SIRVE
+			//PARA LOS DOS. EN NAVEGADORES QUE NO ACHICAN NINGUNA MEDIDA SOLO QUEDA MIRAR EL FOCO.
+			function tecladoAbiertoFancy() {
+				if (!$('.fancybox-wrap').length) return false;
+				if (fancyAltoBase && (fancyAltoBase - altoViewportFancy()) > 150) return true;
+				if (!window.visualViewport) return !!fancyCampoFoco;
+				return false;
+			}
+
+			function fijarTopTeclado(arriba) {
+				var body = document.body;
+				if (body.style.setProperty) body.style.setProperty('--fancyTecladoTop', arriba + 'px');
+			}
+
+			//PEGA EL FANCY ARRIBA DE LO QUE QUEDA VISIBLE Y LE LIMITA EL ALTO
+			function pegarFancyTeclado() {
+				var vv = window.visualViewport;
+				var arriba = (vv && vv.offsetTop ? vv.offsetTop : 0) + fancyMargenTeclado;
+				//SIN visualViewport NO SE CUANTO OCUPA EL TECLADO: ESTIMO POCO MAS DE LA MITAD
+				var altoVisible = (vv ? altoViewportFancy() : Math.round(altoVentanaFancy() * 0.55)) - (fancyMargenTeclado * 2);
+
+				fijarTopTeclado(arriba);
+				$('body').addClass(fancyTecladoClass);
+				//DESCUENTO EL PADDING/BORDE DEL skin PARA QUE EL CONTENIDO ENTRE COMPLETO
+				$('.fancybox-inner').css('max-height', Math.max(140, altoVisible - 60) + 'px');
+				$('.fancyScrollArea').css('max-height', Math.max(120, altoVisible - 120) + 'px');
+			}
+
+			//DEVUELVE EL CONTENEDOR DEL FANCY QUE REALMENTE SCROLLEA PARA ESE CAMPO
+			function contenedorScrollFancy(campo) {
+				var cont = $(campo).closest('.fancyScrollArea');
+				if (cont.length && cont[0].scrollHeight > cont[0].clientHeight + 2) return cont;
+				cont = $(campo).closest('.fancybox-inner');
+				if (cont.length && cont[0].scrollHeight > cont[0].clientHeight + 2) return cont;
+				return $([]);
+			}
+
+			//SCROLLEA DENTRO DEL FANCY HASTA DEJAR EL CAMPO A LA VISTA
+			function scrollFancyAlCampo(campo) {
+				var $campo = $(campo);
+				if (!$campo.length || !$campo.is(':visible')) return;
+
+				var cont = contenedorScrollFancy($campo);
+				if (!cont.length) return;
+
+				var alto = cont[0].clientHeight;
+				var margen = Math.min(40, Math.round(alto * 0.25)); //DEJO ALGO DE CONTEXTO ARRIBA DEL CAMPO
+				var maximo = Math.max(0, cont[0].scrollHeight - alto);
+				var destino = cont.scrollTop() + ($campo.offset().top - cont.offset().top) - margen;
+
+				destino = Math.max(0, Math.min(destino, maximo));
+				if (Math.abs(destino - cont.scrollTop()) < 2) return;
+
+				cont.stop(true).animate({ scrollTop: destino }, fancyScrollDuracion);
+			}
+
+			//VUELVE TODO AL CENTRADO NORMAL DE FANCYBOX
+			function soltarFancyTeclado() {
+				if (!$('body').hasClass(fancyTecladoClass)) return;
+				$('body').removeClass(fancyTecladoClass);
+				if (document.body.style.removeProperty) document.body.style.removeProperty('--fancyTecladoTop');
+				//CORTO EL SCROLL AL CAMPO SI SEGUIA CORRIENDO, SI NO QUEDA SALTANDO
+				$('.fancybox-inner, .fancyScrollArea').stop(true);
+				$('.fancybox-inner').css('max-height', '');
+				$('.fancyScrollArea').css('max-height', '');
+				if ($.fancybox && $.fancybox.isOpen && $.fancybox.reposition) $.fancybox.reposition();
+			}
+
+			function redimensionarFancyMovil() {
+				if (!esFancyMovil()) return;
+
+				//EL TECLADO SE APLICA SIN DEMORA, SI NO SE VE EL SALTO
+				if (tecladoAbiertoFancy()) {
+					pegarFancyTeclado();
+					//EL SCROLL AL CAMPO SE DISPARA CUANDO EL VIEWPORT CAMBIO DE VERDAD, NO A LOS 450ms
+					//FIJOS DEL focusin: EN EL WEBVIEW DE META EL TECLADO TARDA MAS EN SUBIR Y EL SCROLL
+					//LLEGABA ANTES DE QUE EL FANCY SE REACOMODARA, DEJANDO EL CAMPO IGUAL ABAJO.
+					//SOLO EN LA TRANSICION CERRADO -> ABIERTO, PARA NO PELEAR CON EL SCROLL DEL USUARIO
+					if (!fancyTecladoPrevio && fancyCampoFoco) scrollFancyAlCampo(fancyCampoFoco);
+					fancyTecladoPrevio = true;
+					return;
+				}
+				fancyTecladoPrevio = false;
+				soltarFancyTeclado();
+				//CON EL TECLADO CERRADO LA MEDIDA ACTUAL ES UNA BASE VALIDA (LA BARRA DEL NAVEGADOR
+				//APARECE Y DESAPARECE AL SCROLLEAR, ASI QUE CONVIENE REFRESCARLA)
+				medirAltoBaseFancy();
+
+				clearTimeout(fancyResizeTimer);
+				fancyResizeTimer = setTimeout(function() {
+					var altoDisponible = Math.max(180, altoViewportFancy() - 160);
+					$('.fancybox-inner .fancyScrollArea, .fancyScrollArea:visible').css('max-height', altoDisponible + 'px');
+					if ($.fancybox && $.fancybox.update) $.fancybox.update();
+				}, 60);
+			}
+
+			//AL ENFOCAR UN CAMPO ACOMODO EL FANCY Y LO SCROLLEO HASTA EL CAMPO
+			//OJO: ESTA jQuery ES 1.6.1, NO EXISTE .on() -> VA CON .delegate()
+			var camposFancy = '.fancybox-wrap input, .fancybox-wrap textarea, .fancybox-wrap select';
+
+			$(document).delegate(camposFancy, 'focusin', function() {
+				if (!esFancyMovil()) return;
+				var campo = this;
+				fancyCampoFoco = campo;
+				//RESPALDO POR SI EL NAVEGADOR NO EMITE NINGUN resize AL ABRIR EL TECLADO. SI SI LO
+				//EMITE, redimensionarFancyMovil YA HIZO EL SCROLL Y ACA NO QUEDA NADA POR CORRER
+				setTimeout(function() {
+					if (fancyCampoFoco !== campo) return;
+					redimensionarFancyMovil();
+					scrollFancyAlCampo(campo);
+				}, 450);
+			});
+
+			$(document).delegate(camposFancy, 'focusout', function() {
+				if (!esFancyMovil()) return;
+				setTimeout(function() {
+					//SI EL FOCO SALTO A OTRO CAMPO DEL MISMO FANCY NO BAJO NADA
+					if ($('.fancybox-wrap').find('input:focus, textarea:focus, select:focus').length) return;
+					fancyCampoFoco = null;
+					if (tecladoAbiertoFancy()) return;
+					soltarFancyTeclado();
+				}, 300);
+			});
+
+			var fancyBaseConfig = {
+				helpers: {
+					overlay: {
+						locked: true,
+						css: {
+							'overflow': 'hidden'
+						}
+					}
+				},
+				beforeShow: bloquearScrollFancy,
+				afterShow: redimensionarFancyMovil,
+				afterClose: desbloquearScrollFancy
+			};
+
+			$(window).bind('resize orientationchange', redimensionarFancyMovil);
+			if (window.visualViewport) {
+				window.visualViewport.addEventListener('resize', redimensionarFancyMovil);
+				window.visualViewport.addEventListener('scroll', redimensionarFancyMovil);
+			}
+
+			//AL ROTAR CAMBIA EL ALTO DISPONIBLE Y LA BASE ANTERIOR DEJA DE SERVIR. SI HAY UN CAMPO
+			//ENFOCADO NO SE TOCA: MEDIRIA CON EL TECLADO ARRIBA
+			$(window).bind('orientationchange', function() {
+				setTimeout(function() {
+					if (fancyCampoFoco) return;
+					fancyAltoBase = 0;
+					medirAltoBaseFancy();
+				}, 400);
+			});
+
+			medirAltoBaseFancy();
+
+			$(".fancy").fancybox({
+				type: 'ajax',
+				padding: 10,
+				margin: 15,
+				helpers: fancyBaseConfig.helpers,
+				beforeShow: fancyBaseConfig.beforeShow,
+				afterShow: fancyBaseConfig.afterShow,
+				afterClose: fancyBaseConfig.afterClose
+			});
+
+			$(".fancyIn").fancybox({
+				helpers: fancyBaseConfig.helpers,
+				beforeShow: fancyBaseConfig.beforeShow,
+				afterShow: fancyBaseConfig.afterShow,
+				afterClose: fancyBaseConfig.afterClose
+			});
+		});
+	</script>
+	
+	
+	<script src="/scripts/flexSlider/jquery.flexslider-min.js" type="text/javascript"></script>
+	<link href='/scripts/flexSlider/flexslider.min.css' type='text/css' rel='stylesheet' />
+	<script type="text/javascript" src="/scripts/blockUI/blockui_2024.js"></script> 
+	<!-- <script type="text/javascript" src="/scripts/blockUI/blockui-2.7.js"></script> -->
+	
+	<script language="JavaScript" type="text/JavaScript">
+	function guardarAjax(myForm, block) {
+		if(block) {$.blockUI();}
+		var datos = myForm.serialize();
+		$.ajax({
+			url: "https://www.deruedas.com.ar/ajax.asp",
+			type: 'GET',
+			data: datos,
+			success: function(msg) {
+				if(block) {$.unblockUI();}
+			}
+		})		
+	}
+	</script>
+	
+	<link href="/scripts/swalalert/swalalert2.min.css" rel="stylesheet" />
+	<script src="/scripts/swalalert/swalalert2.min.js"></script>
+	<link rel='stylesheet' type='text/css' href='/scripts/ui/css/ui-lightness/jquery-ui-1.8.21.custom.css?ver=4'/>
+	<script  type="text/javascript" src="/scripts/ui/js/jquery-ui-1.9.1.min.js"></script>
+	<script  type="text/javascript" src="/scripts/ui/js/tooltip.js"></script>
+	<!-- <script type="text/javascript" src="/scripts/ui/js/jquery-ui-1.8.21.custom.min.js"></script>  LO COMENTO PARA VER SI CON 1.9.1 NO SE ROMPE NADA -->
+	<script type="text/javascript" src="/scripts/ui/js/jquery.ui.touch-punch.min.js"></script>
+	
+	<script>
+	$(document).ready(function() {
+		$('.limitarCaracteres').bind('input', function() {
+			var caracteresMaximos = parseInt($(this).attr("maxlength"));
+			if($(this).val().length > caracteresMaximos){
+				var valorTruncado = $(this).val().toString().substr(0, caracteresMaximos);
+				$(this).val(valorTruncado);
+			}
+		});
+	})
+	</script>
+	
+	<script>
+	$(document).ready(function() {
+		$(".toggeable").bind("click", function() {
+			
+			var elementToggle = $(this).attr("elementToggle");
+			var leyendaArray = $(this).text().split("<i");
+	
+			if($('#'+elementToggle).css("display") == "none"){
+				$(this).html(leyendaArray[0] + "<i style='margin-left: 5px;' class='fa fa-chevron-up' aria-hidden='true'></i>");
+			}else{
+				$(this).html(leyendaArray[0] + "<i style='margin-left: 5px;' class='fa fa-chevron-down' aria-hidden='true'></i>");
+			}
+			
+			$('#'+elementToggle).fadeToggle('fast', 'linear');
+		})
+	})
+	</script>
+	
+
+<style type="text/css">
+  .custom-tooltip {
+      display: none;
+      margin-left: 10px;
+      padding: 5px 12px;
+      background-color: #000000df;
+      border-radius: 4px;
+      color: #fff;
+  }
+
+	#divFichaVehiculo				{width:64%;}
+	#divContactoVehiculo		{width:33%; margin-top:0;}
+	#divFicha_1							{width:48%;}
+	#divFicha_2							{width:48%;}
+	#divInfoPrincipal 			{width:80%;}
+	#divRtaSimulacion 			{/*float:right; width:220px;*/}
+	#divOpinion							{margin-top:20px;}
+	
+	@media screen and (max-width: 650px){
+		#divRtaSimulacion 		{/*float:none; width:100%;*/}
+		#divFicha_1						{width:100%;}
+		#divFicha_2						{width:100%;}
+	}
+	@media screen and (max-width: 900px){
+		#divInfoPrincipal 		{width:100%;}
+	}
+	@media screen and (max-width: 951px){
+		#divFichaVehiculo			{width:100%;}
+		#divContactoVehiculo	{width:100%; margin-top:20px;}
+		#divOpinion						{margin-top:0px;}		
+	}
+	.select-tuauto {
+		color: #FF6C00 !important;
+		margin-bottom: 1em;
+		border: 0;
+		border-radius: 0;
+		font-weight: bold;
+    font-family: 'Nunito', sans-serif;
+	}
+	.select-tuauto option {
+    font-family: 'Nunito', sans-serif;
+	}
+	.span-tuauto{
+		color: #FF6C00 !important;
+		font-weight: bold;
+    font-family: 'Nunito', sans-serif;
+	}
+	.fancybox-inner {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+
+  .elemento {
+    position: relative;
+    display: inline-block;
+  }
+
+  .aviso {
+    position: absolute;
+    top: 0;
+    left: 30;
+    padding: 5px;
+    border: 1px solid black;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    min-width: 100px;
+    min-height: 100%;
+    z-index: 999;
+  }
+  .box-destacado{
+    background-color: #F2F2F2;
+    padding:5px;
+  }
+
+  .box-destacado img {
+      height: 25px;  /* Tamaño de imagen ajustado */
+      vertical-align: middle;  /* Alineación vertical con el texto */
+      padding:5px;
+  }
+</style> 
+
+
+  <meta name="format-detection" content="telephone=yes">
+	<meta name="description" content="En deRuedas tenemos tu Audi Q5. Somos el portal N°1 en compra/venta de vehículos Nuevos y Usados de la Argentina. Compra y vende autos, motos, cuatris, utilitarios, camionetas, planes, camiones, botes y otros vehículos. Compra financiado. Simulá tu crédito. Vehículos usados o nuevos 0km">
+	<meta property="og:title" content="Audi Q5 Usado Financiado en Córdoba, deRuedas">
+	<meta property="og:url" content="https://www.deruedas.com.ar/vendo/Audi/Q5/Usado/Cordoba?cod=802906" />
+	<meta property="og:type" content="article" />
+	<meta property="og:locale" content="es_AR" />
+	<link rel="canonical" href="https://www.deruedas.com.ar/vendo/Audi/Q5/Usado/Cordoba?cod=802906">
+	<title>Audi Q5 Usado Financiado en Córdoba, deRuedas</title>
+
+
+<script language="JavaScript" type="text/JavaScript">
+	//MONTO ENTREGA
+	//TODA INTERPOLACION SIN COMILLAS VA CON NumJS(): SI LA VARIABLE ASP QUEDA VACIA O NULL SE
+	//GENERA "var x = ;" Y EL SyntaxError TIRA ABAJO ESTE bloque SCRIPT ENTERO (LINEAS 289-1567),
+	//CON LO CUAL NUNCA CORRE EL ready Y NO SE MUESTRA NINGUN BLOQUE DE CONTACTO.
+	var valorMinimoReal = 22711500;
+	var rMontoEntrega = 22711500;
+	var precioVehiculo = 37852500;
+	var valorMinimoSlider = 22711000;
+  var cotizarAutomaticamente = false;
+  var actualizarCotizacion = false;
+
+  function openWindowUsingAnchor(url) {
+      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if(isIOS){
+        //url = url.replace("https://api.whatsapp.com/", "whatsapp://");
+        window.location.href = url;
+        return;
+      }
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.target = '_blank';
+      a.style.visibility = 'hidden'; // Hacer que el enlace sea invisible
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      //a.remove(); // Eliminar el enlace 
+  }
+
+	if(rMontoEntrega > 22711000 && rMontoEntrega < 22712000){
+		rMontoEntrega = 22711000;
+	}
+
+	if(rMontoEntrega < valorMinimoSlider ){
+		rMontoEntrega = valorMinimoSlider;
+	}
+
+  function copiarAlPortapapeles(elemento) {
+    // Crea un campo de texto "oculto"
+    var aux = document.createElement("input");
+    // Asigna el contenido del elemento especificado al valor del campo
+    aux.setAttribute("value", $(elemento).data('link'));
+    // Añade el campo a la página
+    document.body.appendChild(aux);
+    // Selecciona el contenido del campo
+    aux.select();
+    // Copia el texto seleccionado
+    document.execCommand("copy");
+    // Elimina el campo de la página
+    document.body.removeChild(aux);
+    document.getElementById($(elemento).data('tooltip')).style.display = "inline-block";
+    document.getElementById($(elemento).data('tooltip')).style.margin = "5px 0 0 10px";
+    setTimeout( function() {
+        document.getElementById($(elemento).data('tooltip')).style.display = "none";
+    }, 1000);
+
+    return false;
+  }
+
+	$(document).ready(function() {
+
+		// VERIFICACION DE COOKIE DE GOOGLE. EL SERVIDOR NO PUEDE DECIDIR ESTO EN EL RENDER PORQUE
+		// gtag.js SE CARGA async AL FINAL DEL BODY Y LA COOKIE _ga TODAVIA NO EXISTE. POR ESO SE
+		// PREGUNTA AL SERVIDOR DESPUES DE CARGAR, ESPERANDO A QUE _ga APAREZCA (HASTA 3 SEGUNDOS).
+		//
+		// LA LOGICA ES POR DESCARTE, NO POR REVELADO: EL HTML YA TRAE #bloqueContacto VISIBLE Y ESTE
+		// CODIGO LO TAPA SOLO SI EL SERVIDOR DICE sin_cookie O bloqueado. ANTES ERA AL REVES (LOS
+		// TRES OCULTOS Y ACA SE MOSTRABA UNO), PERO ASI CUALQUIER FALLA DE JS -UN SyntaxError EN
+		// ESTE bloque SCRIPT DE ~1300 LINEAS, jQuery QUE NO CARGA, JS DESHABILITADO, UN AJAX COLGADO-
+		// DEJABA LA CAJA DE CONTACTO COMPLETAMENTE VACIA, SIN TELEFONO Y SIN NINGUN CARTEL.
+		// EL MODO DEGRADADO AHORA ES "SE VE EL CONTACTO": IGUAL LO PROTEGE EL SERVIDOR, QUE
+		// REVALIDA EsClienteBloqueado EN CADA AJAX QUE ENTREGA UN TELEFONO (ver ajax.asp).
+		(function verificarCookieContacto() {
+			var intentos = 0;
+
+			function taparContacto(idBloque) {
+				// SE APARECE CON fadeIn PARA QUE EL CAMBIO SE NOTE: EL BLOQUE SE MUESTRA DESPUES DE QUE
+				// LA PAGINA YA ESTA CARGADA, Y SIN TRANSICION EL USUARIO NO REGISTRA QUE ALGO CAMBIO
+				// SIN ANIDAR EN UN callback: SI #bloqueContacto NO ESTUVIERA EN EL DOM, EL callback NUNCA
+				// CORRERIA Y EL CARTEL NO LLEGARIA A MOSTRARSE
+				$('#bloqueContacto').fadeOut(150);
+				$('#' + idBloque).delay(150).fadeIn(350);
+			}
+
+			// TEST DIRECTO DE ESCRITURA. SI EL NAVEGADOR NO PUEDE GUARDAR UNA COOKIE PROPIA, ENTONCES
+			// _ga NO VA A EXISTIR NUNCA Y ESPERARLA HASTA 3 SEGUNDOS SOLO RETRASA EL CARTEL, JUSTO EN
+			// EL CASO EN QUE EL USUARIO MAS NECESITA LA EXPLICACION. SE EVALUA UNA SOLA VEZ.
+			function puedeGuardarCookies() {
+				try {
+					document.cookie = 'drTestCookie=1; path=/; SameSite=Lax';
+					var ok = document.cookie.indexOf('drTestCookie=') !== -1;
+					document.cookie = 'drTestCookie=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+					return ok;
+				} catch (e) {
+					return false;
+				}
+			}
+
+			function preguntarAlServidor() {
+				$.ajax({
+					type: "POST",
+					url: "https://www.deruedas.com.ar/ajax.asp",
+					// codCar VIAJA PARA QUE EL SERVIDOR SEPA SI EL AVISO ES DE UNA AGENCIA: EN ESE CASO
+					// LA CONSULTA NO SE REGISTRA EN CONSULTAS_TELEFONO Y NO SE EXIGE COOKIE
+					data: { accion: 'verificarCookie', codCar: '802906' },
+					// SIN timeout UNA CONEXION COLGADA NO DISPARA NI success NI error Y LA DECISION
+					// NUNCA SE TOMA. NO ES CRITICO DESDE QUE EL DEFAULT ES MOSTRAR EL CONTACTO,
+					// PERO EVITA DEJAR LA PETICION ABIERTA INDEFINIDAMENTE.
+					timeout: 8000,
+					success: function (response) {
+						// SE COMPARA POR indexOf Y NO POR IGUALDAD PORQUE ajax.asp ARRASTRA SALIDA DE SUS
+						// INCLUDES, IGUAL QUE EL RESTO DE LOS HANDLERS DE ESTA PAGINA
+						response = $.trim(response);
+						if (response.indexOf('sin_cookie') !== -1) {
+							taparContacto('bloqueSinCookie');
+						} else if (response.indexOf('bloqueado') !== -1) {
+							var horas = response.match(/bloqueado,(\d+)/);
+							if (horas) $('#horasRestantesBloqueo').text(horas[1]);
+							taparContacto('bloqueBloqueado');
+						}
+						// "ok" O CUALQUIER RESPUESTA INESPERADA: SE DEJA #bloqueContacto COMO VINO
+					}
+					// SIN error(): ANTE UN FALLO DE RED O UN TIMEOUT TAMBIEN SE DEJA EL CONTACTO VISIBLE
+				});
+			}
+
+			// SI EL NAVEGADOR NO ACEPTA COOKIES NO TIENE SENTIDO ESPERAR A gtag.js: SE PREGUNTA YA.
+			// NO SE RESUELVE DIRECTO EN EL CLIENTE PORQUE EL SERVIDOR ES EL QUE SABE SI LA CONSULTA
+			// ESTA EXENTA (AVISO DE AGENCIA O VISITANTE LOGUEADO COMO AGENCIA), CASO EN EL QUE NO HAY
+			// QUE TAPAR NADA AUNQUE NO HAYA COOKIE.
+			if (!puedeGuardarCookies()) {
+				preguntarAlServidor();
+			} else {
+				(function esperarGa() {
+					// document.cookie PUEDE LANZAR EN CONTEXTOS RESTRINGIDOS (IFRAME CON sandbox).
+					// SI PASA, SE CORTA EL CHEQUEO Y QUEDA EL CONTACTO VISIBLE.
+					var tieneGa = false;
+					try { tieneGa = document.cookie.indexOf('_ga=') !== -1; } catch (e) { return; }
+					if (tieneGa || intentos >= 15) {
+						preguntarAlServidor();
+						return;
+					}
+					intentos++;
+					setTimeout(esperarGa, 200);
+				})();
+			}
+		})();
+
+    	var datos = {
+        accion: 'apiDR',
+        tipo: 'result',
+        codVer: '33298',
+        codCar: '802906',
+      }
+    /*$.ajax({
+      type: "GET",
+      url: "https://www.deruedas.com.ar/ajax.asp",
+      async: true,
+			data: datos,
+      dataType: "json",
+      complete: function (response){},
+      success: function (response) {},
+      error: function (response){}
+    })*/;
+    
+		//$(":input").inputmask();
+      $(".sliderflex").height($(".flexslider").width() * 0.7);
+
+    $(window).resize(function() {
+      $(".sliderflex").height($(".flexslider").width() * 0.7);
+    });
+
+    $('.elemento').click(function() {
+      $("#avisoCookie").toggleClass('oculto');
+    });
+
+    $('#closeAvisoCookie').click(function() {
+      $("#avisoCookie").addClass('oculto');
+    });
+
+		
+		
+		$('.sliderflex').flexslider({
+			animation: "slide",
+			pauseOnHover: true,
+			slideshowSpeed: 15000, 
+			animationSpeed: 300 
+		});
+
+		$('.similares').flexslider({
+			animation: "slide",
+			pauseOnHover: true,
+			slideshowSpeed: 15000, 
+			animationSpeed: 300, 
+			itemWidth: 212,                   
+			minItems: 2
+		});
+		
+		$('#goCalcular').bind('click', function() {		
+			$('html, body').animate({scrollTop: $("#divCalcular").offset().top}, 1000);
+		});
+		
+		$('#goOfertar').bind('click', function() {		
+			$('html, body').animate({scrollTop: $("#divOfertar").offset().top}, 1000);
+		});
+
+		//Elimino las variables de Session Store para que no haga foco al vehículo que se había seleccionado
+		$(document).delegate(".buscarMas","click", function(){
+			sessionStorage.clear();
+		})
+		
+		var documento = '';
+    
+      documento = ''
+    
+		function simularCredito() {	
+			if(documento == ""){
+				$('#accion').val('simularCredito');
+				var datos = {
+					accion: $('#accion').val(),
+					cod: $('#cod').val(),
+					segmento: $('#segmento').val(),
+					precio: $('#precio').val(),
+					anio: $('#anio').val(),
+					kilometraje: $('#kilometraje').val(),
+					ingresos: 0,
+					entrega: rMontoEntrega,
+					rProvincia: '6'
+				}
+				$.ajax({
+					url: "https://www.deruedas.com.ar/ajax.asp",
+					type: 'GET',
+					data: datos,
+					success: function(msg) {
+						var mResult = msg.split(",");
+						if(mResult[0] == "ni"){
+							$('#divPosible').hide('fast', function() {
+								$('#divImposible').html(mResult[1]);
+								$('#divImposible').show('slow');
+							});
+						} else {
+              $('#divImposible').hide('fast', function() {
+                console.log(mResult);
+								var valorEntrega = parseFloat(mResult[2]).toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+								$('#divEntrega').hide();
+								$('#divMostrar').html(mResult[3]);
+								$("#divPosible").effect("highlight", 300);
+                $("#span_precio_vehiculo").text(" $" + parseFloat(mResult[10]).toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.'));
+                $("#span_gastos_entrega").text(" $" + parseFloat(mResult[11]).toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.'));
+                $("#span_financia").text(" $" + parseFloat(mResult[12]).toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.'));
+							});
+						}
+					}
+				})
+			}else{
+				
+						buscarTasa();
+				
+			}
+		}
+
+    $("#solicitar-cotizacion-btn").click(function (e) { 
+      e.preventDefault();
+      cotizarAutomaticamente = true;
+      buscarTasa();
+    });
+
+
+		function buscarTasa(){
+			$("#div-dictamen").hide();
+			var datos = {
+				accion: 'buscarTasa',
+				ingresos: 0,
+				entrega: (rMontoEntrega < valorMinimoReal) ? valorMinimoReal : rMontoEntrega,
+				documento: documento,
+				telefono: ($("#celular").val()) ? $("#celular").val().replaceAll('-', '') : '2613041965',
+				estadoCivil: 0,
+				funcionTexto: 'textoOferta',
+        codCar: '802906'
+			};
+
+			$.ajax({
+				url: "https://www.deruedas.com.ar/ajax.asp",
+				type: 'GET',
+				data: datos,
+				beforeSend: function(){$.blockUI();},
+				complete: function(){
+					$.unblockUI();
+					$("#celular").val('')
+				},
+				success: function(msg) {
+					var mResult = msg.split(",");
+					$(".formTitulo").css('color', '#666666');
+					$(".formTitulo").css('fontWeight', 'normal');
+					$(".formD").css('display', 'none');
+					$('#divEntrega').hide();
+					$('#divMostrar').html(mResult[3])
+					
+				}
+			});
+		}
+		
+		if(documento != ""){
+			simularCredito();
+		}
+    
+		//si es un celular muestra el boton para hacer llamadas
+		var isMobile = {
+			Android: function() {return navigator.userAgent.match(/Android/i);},
+			BlackBerry: function() {return navigator.userAgent.match(/BlackBerry/i);},
+			iOS: function() {return navigator.userAgent.match(/iPhone|iPad|iPod/i);},
+			iOSApp: function() {return navigator.userAgent.match(/iPhone|iPad|iPod/i) && !navigator.userAgent.match(/Safari/i);},
+			Opera: function() {return navigator.userAgent.match(/Opera Mini/i);},
+			Windows: function() {return navigator.userAgent.match(/IEMobile/i);},
+			any: function() {return (isMobile.Android() || isMobile.BlackBerry() || isMobile.iOS() || isMobile.Opera() || isMobile.Windows());}
+		};
+
+    $(".btn-ofrecer").bind('click', function (e) {
+      
+          e.preventDefault();
+          let bandera = $(this).attr("bandera");
+          var datos = {
+            accion: 'ObtenerTelWhatsapp',
+            codCar: '802906',
+            bandera: bandera
+          };
+          $.ajax({
+            url: "https://www.deruedas.com.ar/ajax.asp",
+            type: 'GET',
+            data: datos,
+            success: function (response) {
+              if(response == 'bloqueado'){
+                $.fancybox({
+                  'type': 'ajax',
+                  'href': 'https://www.deruedas.com.ar/multi.asp?con=bloqueoUsuario'
+                });
+                reportarUbicacion();
+              }else if(response.includes('whatsapp')){
+                $.fancybox({
+                  'type': 'ajax',
+                  'href': 'https://www.deruedas.com.ar/multi.asp?con=validarWhatsapp&disparador=.btn-ofrecer&tipo=jq'
+                });
+              }else if(response.includes('sin_cookie')){
+                $.fancybox({
+                  'type': 'ajax',
+                  'href': 'https://www.deruedas.com.ar/multi.asp?con=usuarioSinCookie'
+                });
+              }else if(response.includes('advertir')){
+                $.fancybox({
+                  'type': 'ajax',
+                  'href': 'https://www.deruedas.com.ar/multi.asp?con=contadorVerTelefono'
+                });
+                // Divide la respuesta por coma y toma el segundo término, si existe
+              var partes = response.split(",");
+              if (partes.length > 1) {
+                var infoAdicional = partes[1].trim(); // Elimina espacios en blanco
+                let url = $('.btn-ofrecer').attr("href");
+                urlActualizada = url.replace("[TELEFONO_OCULTO]",infoAdicional);
+                openWindowUsingAnchor(urlActualizada);
+              }
+              }else if(response != ""){
+                let url = $('.btn-ofrecer').attr("href");
+                urlActualizada = url.replace("[TELEFONO_OCULTO]",response);
+                //urlActualizada = (isMobile.iOS()) ? urlActualizada.replace("https://api.whatsapp.com/","whatsapp://") : urlActualizada;
+                openWindowUsingAnchor(urlActualizada);
+              }
+            }, complete: function (){
+                var iframe = document.createElement('iframe');
+                iframe.style.width = '0px';
+                iframe.style.height = '0px';
+                iframe.src = 'https://www.deruedas.com.ar/makeConversion.asp?con=all';
+                document.body.appendChild(iframe);
+            }
+          });
+        
+    });    
+		
+
+		if(isMobile.any() && !isMobile.iOSApp()){
+			$(".llamarTelefono").css("visibility","visible");
+		}
+		
+
+
+    $('.tasa_subsidiada').bind('click', function() {		
+			var datos = {
+				accion: "agregarStatTasaSubsidiada",
+				entidad: $(this).attr("bandera"),
+				codCar: 802906
+			}
+			$.ajax({
+				url: "https://www.deruedas.com.ar/ajax.asp",
+				type: 'GET',
+				data: datos
+			})
+		});
+		
+		//CUALQUIERA DE LOS BOTONES PARA LLAMAR
+		$('.llamarTelefono').bind('click', function (e) {
+			e.preventDefault();
+      var datos = {
+				accion: 'ObtenerPrimerTel',
+				codCar: '802906',
+        bandera: $(this).attr("bandera")
+      };
+      $.ajax({
+        url: "https://www.deruedas.com.ar/ajax.asp",
+				type: 'GET',
+				data: datos,
+        success: function (response) {
+          if(response == 'bloqueado'){
+            $.fancybox({
+              'type': 'ajax',
+              'href': 'https://www.deruedas.com.ar/multi.asp?con=bloqueoUsuario'
+            });
+            reportarUbicacion();
+          }else if(response.includes('whatsapp')){
+            $.fancybox({
+              'type': 'ajax',
+              'href': 'https://www.deruedas.com.ar/multi.asp?con=validarWhatsapp&disparador=.llamarTelefono&tipo=jq'
+            });
+          }else if(response.includes('sin_cookie')){
+            $.fancybox({
+              'type': 'ajax',
+              'href': 'https://www.deruedas.com.ar/multi.asp?con=usuarioSinCookie'
+            });
+          }else if(response.includes('advertir')){
+            $.fancybox({
+              'type': 'ajax',
+              'href': 'https://www.deruedas.com.ar/multi.asp?con=contadorVerTelefono'
+            });
+            // Divide la respuesta por coma y toma el segundo término, si existe
+            var partes = response.split(",");
+            if (partes.length > 1) {
+              var infoAdicional = partes[1].trim(); // Elimina espacios en blanco
+              if (isSafari()) {
+                window.location.href = `tel:+54${infoAdicional}`;
+              } else {
+                window.open(`tel:+54${infoAdicional}`, 'Llamar');
+              }
+            }
+          }else if(response != ""){
+            if (isSafari()) {
+              window.location.href = `tel:+54${response}`;
+            } else {
+              window.open(`tel:+54${response}`, 'Llamar');
+            }
+          }
+        }
+      });
+		});
+
+    //CAPTURAR CLICK DE GOOGLE MAPS
+    $('#linkMapsGoogle').bind('click', function (e) {
+      var datos = {
+				accion: 'linkGoogleMaps',
+				codCar: '802906',
+        bandera: $(this).attr("bandera")
+      };
+      $.ajax({
+        url: "https://www.deruedas.com.ar/ajax.asp",
+				type: 'GET',
+				data: datos,
+        async: true,
+        success: function (response) {
+        }
+      });
+		});
+
+		//VER TELEFONO
+		$('#ver').bind('click', function() {
+      let bandera = $(this).attr("bandera");
+      setearTels(bandera);
+			if(isMobile.any() && !isMobile.iOSApp()){
+				$(".llamarTelefono").css("visibility","visible");
+			}
+      if(isMobile.any() && isMobile.iOS() ){
+        $(".copiarTelefono").show();
+      }
+		})
+		
+		$('#enviar').bind('click', function() {
+			$.blockUI();
+			var datos = {
+				accion: 'enviarMensaje',
+				cod: $("#codEnviar").val(),
+				tipo: $("#tipoEnviar").val(),
+				nombre: $("#nombreEnviar").val(),
+				mail: $("#mailEnviar").val(),
+				telefono: $("#telefonoEnviar").val(),
+				texto: $("#textoEnviar").val(),
+				captchaVal: $("#captchaVal").val()
+			}
+			$.ajax({
+				url: "https://www.deruedas.com.ar/ajax.asp",
+				type: 'GET',
+				data: datos,
+				success: function(msg) {
+          if (msg === 'bloqueado') {
+              $.fancybox({
+                  'type': 'ajax',
+                  'href': 'https://www.deruedas.com.ar/multi.asp?con=bloqueoUsuario',
+              });
+              reportarUbicacion();
+              $('#divMail').hide('slow');
+          } else if (msg.includes('advertir')) {
+              $.fancybox({
+                  'type': 'ajax',
+                  'href': 'https://www.deruedas.com.ar/multi.asp?con=contadorVerTelefono',
+              });
+            $('#divMail').toggle('slow');
+						$('#divRta').toggle('slow');
+          } else if (msg.includes('whatsapp')) {
+              $.fancybox({
+                  'type': 'ajax',
+                  'href': 'https://www.deruedas.com.ar/multi.asp?con=validarWhatsapp&disparador=.enviar_whatsapp_mobile&tipo=jq',
+              });
+          }
+					else if(msg == 'ok'){
+						$('#divMail').toggle('slow');
+						$('#divRta').toggle('slow');
+					} else {
+						grecaptcha.reset();
+						var mResult = msg.split(",");
+						$(".formTituloAlt").css('color', '#666666');
+						$(".formTituloAlt").css('fontWeight', 'normal');
+						$('#textoL').html('Tu Mensaje:');
+						for(var I in mResult){
+							if(mResult[I] == 'texto') {$('#textoL').html('Mensaje no permitido');}						
+							$('#'+mResult[I]+'L').css('color', '#FF0000');
+							$('#'+mResult[I]+'L').css('font-weight', 'bold');
+						}
+					}
+					$.unblockUI();
+				}
+			})	
+		})
+
+		$(document).delegate(".enviar_whatsapp_mobile", 'click', function (e) {
+        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        var urlCapturada = $(this).attr("href");
+        let bandera = $(this).attr("bandera");
+
+        var datos = {
+            accion: 'ObtenerTelWhatsapp',
+            codCar: '802906',
+            bandera: bandera
+        };
+
+        // Realizar la solicitud AJAX
+        $.ajax({
+            url: "https://www.deruedas.com.ar/ajax.asp",
+            type: 'GET',
+            data: datos,
+             async: false, 
+            success: function (response) {
+                if (response === 'bloqueado') {
+                    e.preventDefault(); // Solo detener si está bloqueado
+                    $.fancybox({
+                        'type': 'ajax',
+                        'href': 'https://www.deruedas.com.ar/multi.asp?con=bloqueoUsuario',
+                    });
+                    reportarUbicacion();
+                } else if (response.includes('advertir')) {
+                    $.fancybox({
+                        'type': 'ajax',
+                        'href': 'https://www.deruedas.com.ar/multi.asp?con=contadorVerTelefono',
+                    });
+                    // Redirigir después de la advertencia
+                    window.location.href = urlCapturada;
+                } else if (response.includes('whatsapp')) {
+                    e.preventDefault(); // Detener para mostrar validación
+                    $.fancybox({
+                        'type': 'ajax',
+                        'href': 'https://www.deruedas.com.ar/multi.asp?con=validarWhatsapp&disparador=.enviar_whatsapp_mobile&tipo=jq',
+                    });
+                }else{
+                  if(isIOS){
+                    e.preventDefault(); // Detener para mostrar validación
+                    window.location.href = urlCapturada;
+                  }
+                }
+            }, complete: function (){
+                var iframe = document.createElement('iframe');
+                iframe.style.width = '0px';
+                iframe.style.height = '0px';
+                iframe.src = 'https://www.deruedas.com.ar/makeConversion.asp?con=all';
+                document.body.appendChild(iframe);
+            },
+            error: function () {
+                // En caso de error, permitir que el enlace se ejecute normalmente
+                window.location.href = urlCapturada;
+            }
+        });
+        
+    });
+
+		$(".enviar_whatsapp").bind('click', function(e) {
+      e.preventDefault();
+       let bandera = $(this).attr("bandera");
+       var datos = {
+				accion: 'ObtenerTelWhatsapp',
+				codCar: '802906',
+        bandera: bandera
+      };
+      $.ajax({
+        url: "https://www.deruedas.com.ar/ajax.asp",
+				type: 'GET',
+				data: datos,
+        success: function (response) {
+          if(response == 'bloqueado'){
+            $.fancybox({
+              'type': 'ajax',
+              'href': 'https://www.deruedas.com.ar/multi.asp?con=bloqueoUsuario'
+            });
+            reportarUbicacion();
+          }else if(response.includes('whatsapp')){
+            $.fancybox({
+              'type': 'ajax',
+              'href': 'https://www.deruedas.com.ar/multi.asp?con=validarWhatsapp&disparador=.enviar_whatsapp&tipo=jq'
+            });
+          }else if(response.includes('sin_cookie')){
+            $.fancybox({
+              'type': 'ajax',
+              'href': 'https://www.deruedas.com.ar/multi.asp?con=usuarioSinCookie'
+            });
+          }else if(response.includes('advertir')){
+            $.fancybox({
+              'type': 'ajax',
+              'href': 'https://www.deruedas.com.ar/multi.asp?con=contadorVerTelefono'
+            });
+            // Divide la respuesta por coma y toma el segundo término, si existe
+            var partes = response.split(",");
+            if (partes.length > 1) {
+              var infoAdicional = partes[1].trim(); // Elimina espacios en blanco
+              let url = $('.enviar_whatsapp').attr("href");
+              urlActualizada = url.replace("[TELEFONO_OCULTO]",infoAdicional);
+              openWindowUsingAnchor(urlActualizada);
+            }
+          }else if(response != ""){
+						let url = $('.enviar_whatsapp').attr("href");
+            urlActualizada = url.replace("[TELEFONO_OCULTO]",response);
+            //urlActualizada = (isMobile.iOS()) ? urlActualizada.replace("https://api.whatsapp.com/","whatsapp://") : urlActualizada;
+            openWindowUsingAnchor(urlActualizada);
+
+          }
+        }, complete: function (){
+            var iframe = document.createElement('iframe');
+                iframe.style.width = '0px';
+                iframe.style.height = '0px';
+                iframe.src = 'https://www.deruedas.com.ar/makeConversion.asp?con=all';
+                document.body.appendChild(iframe);
+        }
+      });
+		})
+		
+    var mueveSliderCredito = false;
+    var step = 10000; // Paso inicial de 5000
+    //VERSION NUEVA DE SLIDER
+    $("#entrega_slider").slider({
+      range: "min",
+      min: 22711000,
+      max: 36852500,
+      value: rMontoEntrega,
+      step: step,
+      slide: function (event, ui) {
+        var monto = ui.value; 
+        if (monto % step !== 0) {
+          // Calcular el monto hasta el próximo múltiplo de step
+          var montoRestante = step - (monto % step);
+          // Verificar si el montoRestante supera el valor máximo
+          if (montoRestante > (36852500 - monto)) {
+            // Establecer el montoRestante como el valor máximo
+            monto = monto + (36852500 - monto);
+          } else {
+            // Agregar el montoRestante al monto actual
+            monto = monto + montoRestante;
+          }
+        }
+        $("#p_entrega").val(mostrarEntrega(monto));
+        if (monto < valorMinimoReal) {
+          $("#span_entrega").text(" $" + (valorMinimoReal).toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.'));
+          $("#span_financia").text(" $" + (precioVehiculo - valorMinimoReal).toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.'));
+        } else {
+          $("#span_entrega").text(" $" + (monto).toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.'));
+          $("#span_financia").text(" $" + (precioVehiculo - monto).toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.'));
+        }
+      }
+    });
+
+		$("#p_entrega").val(mostrarEntrega(rMontoEntrega));
+		
+    $("#entrega_slider").bind("slidechange", function (event, ui) {
+      if ($("#entrega_slider").slider("value") != rMontoEntrega) {
+        var montoEntrega = $("#entrega_slider").slider("value"); 
+        if (montoEntrega % step !== 0) {
+          var montoRestante = step - (montoEntrega % step);
+          if (montoRestante > (36852500 - montoEntrega)) {
+            montoEntrega = montoEntrega + (36852500 - montoEntrega);
+          } else {
+            montoEntrega = montoEntrega + montoRestante;
+          }
+        }
+				rMontoEntrega = montoEntrega;
+				if(rMontoEntrega < valorMinimoReal){
+					rMontoEntrega = valorMinimoReal;
+				}
+        mueveSliderCredito = true;
+			  simularCredito();
+			}
+		});
+		
+		//CUENTA REGRESIVA DEL BOTON DE REENVIO DE CODIGO DE WHATSAPP
+		var cSegundosReintentoCredito = 20;
+		var timerReintentoCredito = null;
+
+		function textoContadorCredito(segundos){
+			var m = Math.floor(segundos / 60);
+			var s = segundos % 60;
+			return m + ":" + (s < 10 ? "0" + s : s);
+		}
+
+		//DESACTIVA EL BOTON DE ENVIO Y LO CONVIERTE EN "Reintentar (0:20)" HASTA LLEGAR A 0:00
+		function iniciarCuentaRegresivaCredito(){
+			var restantes = cSegundosReintentoCredito;
+			clearInterval(timerReintentoCredito);
+			$("#btn-enviar-dni").attr('disabled', true).find('span').text("Reintentar (" + textoContadorCredito(restantes) + ")");
+
+			timerReintentoCredito = setInterval(function(){
+				restantes--;
+				if(restantes <= 0){
+					clearInterval(timerReintentoCredito);
+					timerReintentoCredito = null;
+					$("#btn-enviar-dni").removeAttr('disabled').find('span').text("Reintentar");
+					return;
+				}
+				$("#btn-enviar-dni").find('span').text("Reintentar (" + textoContadorCredito(restantes) + ")");
+			}, 1000);
+		}
+
+		//DEJA LA BOTONERA COMO AL PRINCIPIO (UN SOLO BOTON "Enviar" HABILITADO)
+		function reiniciarBotoneraCredito(){
+			clearInterval(timerReintentoCredito);
+			timerReintentoCredito = null;
+			$("#btn-validar-codigo-credito").hide().removeAttr('disabled');
+			$("#btn-enviar-dni").removeAttr('disabled').find('span').text("Enviar");
+		}
+
+		$("#preaprobar-btn").bind('click', function (e) {
+        $(".codigo-telefono").hide();
+        $("#documento").val('')
+        $("#celular").val('')
+        $("#codigo-telefono").val('')
+        $("#text-aviso-credito").html('')
+        $(".celular-wsp").hide();
+        reiniciarBotoneraCredito();
+        $("#btn-enviar-dni").show();
+		});
+
+		$("#btn-enviar-dni").bind('click', function() {
+			enviarDatosCredito($(this), false);
+		});
+
+		$("#btn-validar-codigo-credito").bind('click', function() {
+			enviarDatosCredito($(this), true);
+		});
+
+		function enviarDatosCredito(btn, conCodigo){
+			$('#btn-enviar-dni').show();
+       cotizarAutomaticamente = true;
+			var datos = {
+				accion: "verificarDocumentoCredito",
+				documento: $("#documento").val().replaceAll('.', ''),
+				celular: $("#celular").val().replaceAll('-', ''),
+				codigo: conCodigo ? $("#codigo-telefono").val() : "",
+				//SI EL CODIGO YA SE HABIA PEDIDO Y NO MANDAMOS CODIGO, ES UN REENVIO EXPLICITO
+				reenviar: (!conCodigo && $(".codigo-telefono").is(":visible")) ? "1" : ""
+			};
+
+			if(!datos.documento) return;
+			if(conCodigo && !datos.codigo){ $("#codigo-telefono").focus(); return; }
+
+			btn.attr('disabled', true);
+
+			$.ajax({
+				url: "https://www.deruedas.com.ar/ajax.asp",
+				type: 'GET',
+				data: datos,
+				success: function (data) {
+					$("#text-aviso-credito").html('');
+					if(data == "ok"){
+						documento = $("#documento").val().replaceAll('.', '');
+						simularCredito();
+						$.fancybox.close();
+					}else if(data == "celular"){
+						$(".celular-wsp").show();
+						$("#celular").focus();
+						$.fancybox.update();
+					}else{
+						exp = parseInt(data,10);
+						switch (exp) {
+								case 0:
+								//SE ENVIO EL CODIGO POR WHATSAPP: APARECE "Validar" Y "Enviar" PASA A SER EL REINTENTO
+								$(".codigo-telefono").show();
+								$("#btn-validar-codigo-credito").show();
+								$("#codigo-telefono").focus();
+								iniciarCuentaRegresivaCredito();
+								$.fancybox.update();
+								break;
+							case 1:
+								documento = $("#documento").val().replaceAll('.', '');
+								simularCredito();
+								$.fancybox.close();
+								break;
+							case 2:
+								$("#text-aviso-credito").html("Posee una validación de teléfono expirada.");
+								break;
+							case 3:
+                $("#codigo-telefono").val("")
+                $(".codigo-telefono").hide();
+                $("#btn-validar-codigo-credito").hide();
+								$("#text-aviso-credito").html("Whatsapp ó Código no existente.");
+								break;
+								case 4:
+                reiniciarBotoneraCredito();
+                $("#mostrar-bloqueo").show();
+                $("#preaprobar-btn").hide();
+                $("#btn-enviar-dni").hide();
+                $.fancybox.update();
+								$("#text-aviso-credito").html("Posee muchos teléfonos sin validar.");
+								break;
+							case 5:
+								$("#text-aviso-credito").html("Posee muchos teléfonos asociados.");
+								break;
+							case 7:
+								$("#text-aviso-credito").html("Has intentado validar demasiadas veces.");
+									$("#celular").val('')
+									$("#codigo-telefono").val('')
+								 $(".codigo-telefono").hide();
+									$(".celular-wsp").hide();
+									reiniciarBotoneraCredito();
+									$('#btn-enviar-dni').hide();
+								break;
+							case 8:
+								$("#text-aviso-credito").html("El teléfono tiene demasiados DNI asociados.");
+								 $(".codigo-telefono").hide();
+									$("#codigo-telefono").val('')
+									$("#btn-validar-codigo-credito").hide();
+								break;
+							default:
+								$("#text-aviso-credito").html("No podemos validar su documento/teléfono.");
+						}
+					}
+				},
+				complete: function (){
+					$("#btn-validar-codigo-credito").removeAttr('disabled');
+					//EL BOTON DE ENVIO SOLO SE REHABILITA SI NO ESTA CORRIENDO LA CUENTA REGRESIVA
+					if(!timerReintentoCredito){
+						$("#btn-enviar-dni").removeAttr('disabled');
+					}
+				}
+			});
+
+		}
+
+		$("#codigo-telefono").bind('keyup', function (e) {
+			$("#text-aviso-credito").html('');
+		});
+
+		$("#celular").bind('keyup', function (e) {
+			$("#text-aviso-credito").html('');
+		});
+		
+		//MOSTRAR EQUIPAMIENTO OCULTO
+		$('.spanEquipamiento').bind('click', function() {	
+			var codVer = $(this).attr("spanCodVer");
+			if($('.divEquipamiento[divCodVer='+codVer+']').css("display") == "none"){
+				$(this).html("Ocultar Adicionales <i class='fa fa-chevron-up' aria-hidden='true'></i>");
+				$('.divEquipamiento[divCodVer='+codVer+']').css("display","block");
+			}else{
+				$(this).html("Ver Adicionales <i class='fa fa-chevron-down' aria-hidden='true'></i>");
+				$('.divEquipamiento[divCodVer='+codVer+']').css("display","none");
+			}
+		});
+		
+		//var arriba = $("#equipamientoBase").offset().top;
+		
+		//IR AL EQUIPAMIENTO DE SERIE
+		$('.equipamientoDeSerie').bind('click', function() {	
+			$("html, body").animate({scrollTop:arriba+150+"px"});
+		});
+		
+		$('#etiquetaHorarios').bind('click', function() {		
+			if($(this).html() == 'Ver Horarios <i class="fa fa-chevron-down" aria-hidden="true"></i>'){
+				$(this).html("Ocultar Horarios <i class='fa fa-chevron-up' aria-hidden='true'></i>");
+				$('#horariosTodos').css("display","block");
+			}else{
+				$(this).html("Ver Horarios <i class='fa fa-chevron-down' aria-hidden='true'></i>");
+				$('#horariosTodos').css("display","none");
+			}
+		});
+		
+		//si se cambia aca tmb cambiar en panelDR
+		
+		
+		$("#verMail").bind('click', function() {
+			if ($('#divMail').is(':visible')) {
+					$(this).html('<span><i aria-hidden="true" class="fa fa-envelope fa-fw"></i>Enviar eMail<i class="fa fa-chevron-down fa-fw" aria-hidden="true"></i></span>');
+					$('#divMail').toggle('slow');
+			} else {
+					$(this).html('<span><i aria-hidden="true" class="fa fa-envelope fa-fw"></i>Enviar eMail<i class="fa fa-chevron-up fa-fw" aria-hidden="true"></i></span>');
+					$('#divMail').toggle('slow');
+					$('html, body').animate({scrollTop: $("#divMail").offset().top}, 1000);
+			}
+		});
+		
+		$(".administrarOferta").bind('click', function() {
+			var valor = $(this).attr("valor");
+			var estado = 1;
+			var oferta = $("#oferta").val();
+			var banderaEnviar = true;
+			if(valor == "eliminarOferta"){
+				estado = 0;
+				oferta = 0;
+			}else if(oferta < parseInt('25470000') || oferta > parseInt('37852500')){
+				banderaEnviar = false;
+			}
+			var datos = {
+				accion: 'administrarOferta',
+				oferta: oferta,
+				codCar: '802906',
+				codUsr: '0',
+				estado: estado,
+				mail: 'alexbazanbroscars@gmail.com',
+				nombreUsr: '',
+				codUsrParticular: '294391',
+				marca: 'Audi',
+				modelo: 'Q5',
+				anio: '2014'
+			}
+			if('0' > 0){
+				if(banderaEnviar == true){
+					$.ajax({
+						url: "https://www.deruedas.com.ar/ajax.asp",
+						type: 'GET',
+						data: datos,
+						success: function(msg) {
+							if(valor == "agregarOferta"){
+								var textoPrimeraOferta = "El vendedor ha recibido tu oferta junto con tus datos, te contactará si esta interesado.";
+								$(".administrarOferta").css("display","inline-block");
+								$(".administrarOferta[valor='" + valor + "']").css("display","none");
+								$("#ofertaTexto").html("La oferta actual es de $ " + parseFloat(oferta).toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.') + ".<br><br><span style='font-weight: normal;' class='texto'>" + textoPrimeraOferta + "</span>");
+							}else if(valor == "eliminarOferta"){
+								$(".administrarOferta").css("display","none");
+								$(".administrarOferta[valor='agregarOferta']").css("display","inline-block");
+								$("#oferta").val("");
+								$("#ofertaTexto").html("Has dejado de ofertar.");
+							}else{
+								$("#ofertaTexto").html("La nueva oferta es de $ " + parseFloat(oferta).toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.') + ".");
+							}
+						}
+					})//fin ajax
+				}else{
+					(oferta < parseInt('25470000'))
+					? $("#ofertaTexto").html("No podés ofertar menos de $ " + parseFloat("25470000").toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.') + "." )
+					: $("#ofertaTexto").html("No ofertes más de $ " + parseFloat("37852500").toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.') + "." ) ;
+				}
+			}else{
+				$("#ofertaTexto").html("TENÉS QUE ESTAR LOGUEADO COMO CLIENTE PARA HACER UNA OFERTA!!!"); 
+			}
+				
+		});
+
+		var activar_zoom = false;
+		//ACTIVAR O DESACTIVAR ZOOM
+		$(document).delegate('#zoom-btn','click',function (e) { 
+			e.preventDefault();
+			$.blockUI();
+			let codcar = 802906;
+			let img_nro = $(".imgs-zoom").find( '.flex-active-slide' ).find('img').data("img");
+			let destino = '/result_img.asp?codcar=' + codcar + '#imagen_' + img_nro
+			window.location.href = destino
+		});
+
+
+    $(document).delegate("#ver-cotizacion",'click',function (e) { 
+      e.preventDefault();
+      openOrRefreshWindow($(this).attr("redirect"),'verCotizacion')
+    });
+			
+	});//FIN DOCUMENT
+	
+	//FUNCION QUE REPORTA LA UBICACION SEGUN LA IP
+	 function reportarUbicacion() {
+
+		var apiKey = 'fcd61a28ab1848878eac9a0d54464c92';
+		$.ajax({
+			type: "GET",
+			url: 'https://api.ipgeolocation.io/ipgeo?apiKey=' + apiKey,
+			success: function (jsonData) {
+				$.ajax({
+					type: "POST",
+					url: "https://www.deruedas.com.ar/ajax.asp",
+					data: {
+						accion : 'guardarPosicion',
+						
+						ip :  '186.0.219.37',
+						cookie :  '',
+						data_posicion : JSON.stringify(jsonData, null, 2)
+					},
+					success: function (response) {}
+				});
+			},error: function (response) {
+				$.ajax({
+					type: "POST",
+					url: "https://www.deruedas.com.ar/ajax.asp",
+					data: { 	
+						accion : 'guardarPosicion',
+						ip :  '186.0.219.37',
+						cookie :  '',
+						data_posicion : 'Falló la api de posición.' 
+					},
+					success: function (response) {}
+				});
+			}
+		});
+		
+	}
+
+  function cotizacionAutomatica(datos){
+      datos.accion = 'cotizacionAutomatica';
+      datos.financia = precioVehiculo - rMontoEntrega;
+      
+      delete datos.funcionTexto;
+      if(cotizarAutomaticamente){
+        actualizarCotizacion = true;
+        $.ajax({
+          url: "https://www.deruedas.com.ar/ajax.asp",
+          type: 'GET',
+          data: datos,
+          success: function(msg) {
+            cotizarAutomaticamente = false;
+            var mResult = msg.split(",");
+            if(mResult[0] == 'ok'){
+              $("#solicitar-cotizacion-btn").hide()
+              openOrRefreshWindow('https://www.deruedas.com.ar/cotizacion.asp?codCot='+mResult[1]+'&token='+mResult[2],'ventanaCotizacion'+mResult[1]);
+              $("#ver-cotizacion").attr("redirect",'https://www.deruedas.com.ar/cotizacion.asp?codCot='+mResult[1]+'&token='+mResult[2]).show()
+            }else if (mResult[0] == 'telefono'){
+              $("#preaprobar-btn").click();
+            }
+          }
+        });
+      }
+			
+  }
+
+  function openOrRefreshWindow(url, windowName) {
+    var openedWindow = window.open(url, windowName);
+    if (!openedWindow || openedWindow.closed) {
+        // La ventana no está abierta o ha sido cerrada, abre una nueva
+        openedWindow = window.open(url, windowName);
+        if (!openedWindow || openedWindow.closed) {
+            // La ventana no se pudo abrir, muestra un mensaje de aviso con SweetAlert2
+            Swal.fire({
+                icon: 'warning',
+                title: 'Ventanas emergentes bloqueadas',
+                html: 'Las ventanas emergentes están bloqueadas en su navegador. <br><br>' +
+                      'Por favor, siga los siguientes pasos para habilitar las ventanas emergentes: <br><br>' +
+                      '1. Haga clic en el ícono de bloqueo en la barra de direcciones. <br>' +
+                      '2. En el menú desplegable, busque la opción que dice "Permitir ventanas emergentes". <br>' +
+                      '3. Seleccione "Permitir" o "Siempre permitir en este sitio". <br><br>' +
+                      'Una vez habilitadas las ventanas emergentes, puede intentar nuevamente.',
+                confirmButtonText: 'Aceptar'
+            });
+        }
+    } else {
+        // La ventana ya está abierta, refresca su contenido
+        openedWindow.location.href = url;
+        openedWindow.focus();
+    }
+  }
+
+	function recaptchaCallback(response) {
+		$("#captchaVal").val(response);
+	}
+	
+	function refreshImage(valImageId) {
+		var objImage = document.getElementById(valImageId)
+		if (objImage == undefined) {
+			return;
+		}
+		var now = new Date();
+		objImage.src = objImage.src.split('?')[0] + '?x=' + now.toUTCString();
+	}
+	
+	function getParameterByName(name) {
+		name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+		var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+		results = regex.exec(location.search);
+		return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+	}
+
+	function mostrarEntrega(entrega) {
+		if(entrega <= 22711500){
+			return "Entrega mínima para este vehículo " + '$ 22.711.500';
+		}else if(entrega > 36852000 && 500 > 0){ 
+			return "Entrega máxima para este vehículo " + '$ 36.852.500';
+		}else if(entrega >= 36852000 && 500 == 0){ 
+			return "Entrega máxima para este vehículo " + '$ 36.852.500';
+		}else if(entrega > 0){
+			return "Puedo entregar $ " + entrega.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+		}
+	}	
+
+	function volverAtras(){
+		//mPrevPage ES EL HTTP_REFERER CRUDO (funciones.asp:prevPage), NO PASA POR QS(). SE ESCAPA
+		//PARA QUE UNA COMILLA NO ROMPA EL PARSEO DE TODO ESTE bloque SCRIPT, Y SE VALIDA EL ESQUEMA
+		//PORQUE UN REFERER ARBITRARIO PODRIA TRAER UN "javascript:".
+		var prev = 'https://www.deruedas.com.ar/bus.asp?segmento=0&marca=Audi';
+		if(!/^https?:\/\//i.test(prev)) prev = '/';
+		(history.length > 1) ? history.back() : window.location.href = prev;
+	}
+
+  function isSafari() {
+    var ua = navigator.userAgent.toLowerCase();
+      // Verificar si es Safari y no Chrome
+    var isSafariBrowser = (ua.indexOf('safari') !== -1 && ua.indexOf('chrome') === -1);
+    // Verificar si está en un WebView de Apple
+    var isAppleWebView = (ua.indexOf('applewebkit') !== -1 && ua.indexOf('mobile') !== -1);
+    // Verificar si está en un iphone
+    var isIphone = (ua.indexOf('iphone;') !== -1);
+
+    return isSafariBrowser || isAppleWebView || isIphone;
+  }
+
+  function setearTels(bandera = null){
+       var datos = {
+				accion: 'ObtenerTels',
+				codCar: '802906',
+        bandera: bandera
+      };
+      $.ajax({
+        url: "https://www.deruedas.com.ar/ajax.asp",
+				type: 'GET',
+				data: datos,
+        success: function (response) {
+          if(response.includes('bloqueado')){
+            $.fancybox({
+              'type': 'ajax',
+              'href': 'https://www.deruedas.com.ar/multi.asp?con=bloqueoUsuario'
+            });
+            reportarUbicacion();
+          }else if(response.includes('whatsapp')){
+            $.fancybox({
+              'type': 'ajax',
+              'href': 'https://www.deruedas.com.ar/multi.asp?con=validarWhatsapp&disparador=setearTels&tipo=f'
+            });
+          }else if(response.includes('sin_cookie')){
+            $.fancybox({
+              'type': 'ajax',
+              'href': 'https://www.deruedas.com.ar/multi.asp?con=usuarioSinCookie'
+            });
+          }else if(response.includes('advertir')){
+            $.fancybox({
+              'type': 'ajax',
+              'href': 'https://www.deruedas.com.ar/multi.asp?con=contadorVerTelefono'
+            });
+            // Divide la respuesta por coma y toma el segundo término, si existe
+            var partes = response.split(",");
+            if (partes.length > 1) {
+              var infoAdicional = partes[1].trim(); // Elimina espacios en blanco
+              $('#telefono').html(`<span class='titulo'>${infoAdicional}</span>`);
+            }
+          }else if(response != ""){
+			      $('#telefono').html(`<span class='titulo'>${response}</span>`);
+          }
+        }, complete: function (){
+            var iframe = document.createElement('iframe');
+                iframe.style.width = '0px';
+                iframe.style.height = '0px';
+                iframe.src = 'https://www.deruedas.com.ar/makeConversion.asp?con=all';
+                document.body.appendChild(iframe);
+        }
+      });
+  }
+
+</script>
+
+
+<!-- META PARA IMAGEN DE FACEBOOK -->
+
+	<meta property="og:image" itemprop="image" content="https://www.deruedas.com.ar/images/autos/802/802906_1_im.jpg" />
+
+<meta property="fb:app_id" content="240894185966102" /> 
+</head>
+
+<body topmargin="0" rightmargin="0" bottommargin="0" leftmargin="0">
+
+	<script>
+		$(document).ready(function() {
+			$('#bMenuMovil').click(function(){
+				if (parseInt($("#divMain").css("margin-left")) > 0) {
+					closeMenuMovil(true);
+				} else {
+					closeMenuMovil(false);
+				};
+			});
+			
+			var width = $(window).width();
+			$(window).resize(function(){
+				if($(window).width() != width){
+					width = $(window).width();
+					if (parseInt($("#divMain").css("margin-left")) > 0) {
+						closeMenuMovil(true);
+					} 
+				}
+			});
+			
+		});
+
+		function closeMenuMovil(isClose){
+			if(isClose){
+				$('#divMain').animate({marginLeft:'0'}, 300);
+				$('#divBackIcon').animate({width:'0px'}, 300)
+				$("#iconMenuMovil").removeClass("fa-times");
+				$("#iconMenuMovil").addClass("fa-bars");
+			}else{
+				$('#divMain').animate({marginLeft:'260'}, 300);
+				$('#divBackIcon').animate({width:'90px'}, 300);
+				$("#iconMenuMovil").removeClass("fa-bars");
+				$("#iconMenuMovil").addClass("fa-times");					
+			};
+		}
+	</script>
+
+	<div id="divMain" style="width:100%; position:relative;"> <!-- APERTURA DIV MAESTRO -->
+	
+	
+		<div id="divMenu" style="width:260px; position:absolute; left:-260px; top:0; z-index:2; background-color: #333333; height:100%;">
+			
+  <script>
+		$(document).ready(function() {
+			$('#coSucMovil').bind('change', function() {
+				  
+				var aux = $(this).val().split(",");
+				var datos = {
+					accion: "cambiarSucursal",
+					mail: aux[0],
+					pass: aux[1]
+				}
+				$.ajax({
+					url: "https://www.deruedas.com.ar/ajax.asp",
+					type: 'GET',
+					data: datos,
+					success: function(msg) {
+						if(msg == 'ok'){ 
+							window.location.href="/panel.asp";
+						}else{
+							$.unblockUI();
+						}
+					}
+				});
+			});
+
+      $(".link-blockUI").bind('click', function (e) {
+        if ($(this).attr('target') !== '_blank') {
+          $.blockUI();
+        }
+      });
+
+		});
+	</script>
+  
+	<div id="divMenuMovil" style="background-color:#333333;">
+		<div class="texto inv" style="padding:40px 20px 20px 23px; line-height:36px;">
+			
+				<a href="/login.asp" class="boton azul pequeno fancy" style="width:100%; text-align:center; margin-bottom:20px;"><span><i class="fa fa-user fa-fw" aria-hidden="true"></i>Ingresar</span></a>
+			
+			<a href="/publicar.asp" class="boton verde pequeno" style="width:100%; text-align:center; margin-bottom:20px;"><span><i class="fa fa-plus-circle fa-fw" aria-hidden="true"></i>Publicar un Aviso Nuevo</span></a>
+			
+
+			<b>Menú Principal</b>
+			
+	<div style="width:100%; border-bottom:1px solid #E1E1E1; margin:auto;"></div>
+
+				<a href="/index.asp" class="link inv">Ir al Inicio</a>
+				
+	<div style="width:100%; border-bottom:1px solid #E1E1E1; margin:auto;"></div>
+
+			<!-- <a href="https://www.deruedas.seguru.com.ar/" class="link inv">Seguros</a> -->
+			
+			<a href="/info.asp?con=10" class="link inv">Ayuda</a>
+			
+	<div style="width:100%; border-bottom:1px solid #E1E1E1; margin:auto;"></div>
+
+			<a href="/info.asp?con=4" class="link inv">Escribí a deRuedas</a>
+			
+	<div style="width:100%; border-bottom:1px solid #E1E1E1; margin:auto;"></div>
+
+			<a href="descargarApp.asp" class="link inv_2 i700 oculto"><i class="fa fa-mobile-phone fa-fw" aria-hidden="true"></i>Descarga nuestra APP</a>
+			
+	<div style="width:100%; border-bottom:1px solid #E1E1E1; margin:auto;"></div>
+
+			<a href="/servicios.asp" class="link inv"><i class="fa fa-car fa-fw" aria-hidden="true"></i>Subí tu Agencia</a>	
+			
+	<div style="width:100%; border-bottom:1px solid #E1E1E1; margin:auto;"></div>
+
+			<a href="/info.asp?con=9" class="link inv">Términos y Condiciones</a>
+      
+	<div style="width:100%; border-bottom:1px solid #E1E1E1; margin:auto;"></div>
+
+			<a href="/info.asp?con=12" class="link inv">Consejos de seguridad</a>
+			
+	<div style="width:100%; border-bottom:1px solid #E1E1E1; margin:auto;"></div>
+
+			<a href="https://www.facebook.com/deruedas" target="_blank" class="link inv"><i class="fa fa-facebook fa-fw" aria-hidden="true"></i>Seguinos en Facebook</a>
+			
+	<div style="width:100%; border-bottom:1px solid #E1E1E1; margin:auto;"></div>
+
+			<a href="https://www.instagram.com/deruedas_ar/" class="link inv_2" target="_blank"><i class="fa fa-instagram fa-fw" aria-hidden="true"></i>Seguinos en Instagram</a>
+			
+	<div style="width:100%; border-bottom:1px solid #E1E1E1; margin:auto;"></div>
+
+			<a href="https://www.proyecto4patas.org/" class="link inv_2" target="_blank"><i class="fa fa-paw fa-fw" aria-hidden="true"></i>Conocé Proyecto 4 Patas</a>
+			
+		</div>
+	</div>
+	
+		</div>	
+	
+
+	<div class="pantalla" style="background:linear-gradient(to right, #F05F22, #FF354D); box-shadow: 0px 20px 30px rgba(0, 0, 0, 0.15); margin-bottom:20px;">
+		<div class="ventana" style="position:relative;">
+			<!-- LOGO -->
+			<table width="94%" border="0" cellspacing="0" cellpadding="0" align="center">
+				<tr>
+					<td width="40%" valign="middle" align="left">
+						<!-- BOTON APERTURA MENU MOVIL -->
+						<div id="divBackIcon" style="position:absolute; z-index:0; left:-10px; top:0; height:100%; width:0px; background-color:#333333; border-radius:0px 20px 20px 0px; -moz-border-radius:0px 20px 20px 0px; -webkit-border-radius:0px 20px 20px 0px;"></div>
+						
+							<div id="bMenuMovil" class="i800" style="color:#FFFFFF; position:relative; z-index:1;">
+								<i id="iconMenuMovil" class="fa fa-bars fa-2x" aria-hidden="true"></i>
+							</div>
+						
+						<!-- AR -->
+																
+					</td>
+					<td width="20%" height="90" valign="middle" align="center">
+            
+						<a id="hrefLogo" href="https://www.deruedas.com.ar/"><img src="/images/design/logo_11.png"></a>
+					</td>
+					<td width="40%" valign="middle" align="right">
+						<div>			
+							<!-- LOGIN -->
+							
+								<a href="/login.asp" class="boton mediano transparente v800 fancy"><span>Ingresar</span></a>
+								
+									<a href="/login.asp" class="fancy">
+										<div class="i800">
+											<div style="color:#FFFFFF"><i class="fa fa-user fa-2x" aria-hidden="true"></i></div>
+										</div>
+									</a>
+								
+						</div>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+	
+
+
+<div itemtype="https://schema.org/Vehicle" itemscope>
+	<meta itemprop="sku" content="802906" />
+	<link itemprop="additionalType" href="https://schema.org/Product"/>
+	<meta itemprop="mpn" content="925872" />
+	<meta itemprop="name" content="Audi Q5" />
+	<meta itemprop="description" content="Encontrá tu Audi Q5 2.0T S-tronic Quattro 225cv en deRuedas." />
+	<div itemprop="review" itemtype="https://schema.org/Review" itemscope>
+		<meta itemprop="image" content="https://www.deruedas.com.ar/images/autos/Audi-Q5-2014/802/802906_1_im.jpg"/>
+		<div itemprop="author" itemtype="https://schema.org/Person" itemscope>
+				<meta itemprop="name" content="BZ Bros Cars"/>
+				<meta itemprop="address" content="Córdoba, Capital"/>
+		</div>
+		<div itemprop="reviewRating" itemtype="https://schema.org/Rating" itemscope>
+			<meta itemprop="ratingValue" content="5" />
+			<meta itemprop="bestRating" content="5" />
+		</div>
+	</div>
+	<div itemprop="aggregateRating" itemscope itemtype="http://schema.org/AggregateRating">
+		<meta itemprop="ratingCount" content="12"/>
+		<meta itemprop="ratingValue" content="5"/>
+		<meta itemprop="bestRating" content="5" />
+	</div>
+	<link itemprop="thumbnailUrl" href="https://www.deruedas.com.ar/images/autos/Audi-Q5-2014/802/802906_1_im.jpg">
+		<span itemprop="thumbnail" itemscope itemtype="http://schema.org/ImageObject">
+		<link itemprop="url" href="https://www.deruedas.com.ar/images/autos/Audi-Q5-2014/802/802906_1_im.jpg">
+	</span>
+	<link itemprop="url" href="www.deruedas.com.ar/vendo/Audi/Q5/Usado/Cordoba?cod=802906" />
+	<meta itemprop="image" content="https://www.deruedas.com.ar/images/autos/Audi-Q5-2014/802/802906_1_im.jpg"/>
+	<meta itemprop="model" content="Q5" />
+	<meta itemprop="mileageFromOdometer" content="KMT 109000" />
+	<meta itemprop="modelDate" content="2014" />
+	<div itemprop="offers" itemtype="https://schema.org/Offer" itemscope>
+			<link itemprop="url" href="www.deruedas.com.ar/vendo/Audi/Q5/Usado/Cordoba?cod=802906" />
+			<meta itemprop="image" content="https://www.deruedas.com.ar/images/autos/Audi-Q5-2014/802/802906_1_im.jpg"/>
+			
+				<meta itemprop="availability" content="https://schema.org/InStock" />
+			
+			<meta itemprop="priceCurrency" content="ARS" />
+			<meta itemprop="price" content="37852500" />
+			<meta itemprop="priceValidUntil" content="27/09/2026 12:11:13" />
+	</div>
+	<div itemprop="brand" itemtype="https://schema.org/Brand" itemscope>
+		<meta itemprop="name" content="Audi" />
+	</div>
+</div>
+
+<div class="ventana">
+	<div class="recuadro" style="position:relative; background-color:white; margin:20px 0 20px 0; padding:20px;">
+		<div class='v950' style='position:absolute; bottom:-21px; right:60px; z-index:1;'><img style='max-height: 220px;' src='/images/intros/simon_3.png'></div> 
+
+		<div id="divInfoPrincipal">
+			<div style="line-height:30px;">
+					
+					<a href="javascript:volverAtras();" class="link"><i class="fa fa-arrow-circle-left" aria-hidden="true"></i> Volver a resultados de búsqueda</a>
+				
+					<span class="v600" style="border-left: #E1E1E1 1px solid; padding-left:20px; margin-left:20px;"></span>
+					<br class="i600">
+					<a class="link buscarMas" href="/bus.asp?segmento=0&marca=Audi&modelo=Audi%3AQ5"><i class="fa fa-search-plus" aria-hidden="true"></i> Buscar más Audi Q5</a>
+				
+				
+			</div>
+
+			<!-- VEHICULO -->
+			<div style="padding-top:25px;">
+				<span class="titulo resaltar" style="font-size:22px;"><h1>Audi Q5</h1><span style="color:#666666;"> 2.0T S-tronic Quattro 225cv</span></span>
+				<br><span class="titulo" style="font-weight:normal; line-height:26px;">2014</span><span class="titulo" style="font-weight:normal; line-height:26px;border-left: #666666 1px solid; padding-left:10px; margin-left:10px;">Nafta</span>
+					<br><span class="texto resaltar" style="font-size:22px;">U$ 24.500</span>
+					
+						<a id="goCalcular" class="link" style="padding-left:20px; vertical-align:text-top;"><i class="fa fa-calculator fa-fw" aria-hidden="true"></i>Calculá tu cuota</a>
+					
+			</div>
+		</div>
+	</div>
+</div>
+
+
+<div class="ventana">
+	<div id="divFichaVehiculo" style="float:left;">
+  
+		
+			<div class="flexslider sliderflex" style="border:0; height: 495px;">
+        <button id="zoom-btn" class="boton" style="position: absolute; cursor:pointer; z-index: 1;right: 10px;top: 10px; border-radius: 100%; padding:15px 17px; font-size:18px; background-color:black; opacity:.7;"><span><i class="fa fa-arrows-alt" aria-hidden="true"></i></span></button>
+				<ul class="slides imgs-zoom">						
+          
+            <li>
+              <img style="border-radius:3px 3px 3px 3px; -moz-border-radius:3px 3px 3px 3px; -webkit-border-radius:3px 3px 3px 3px; width: 100%; height: 100%; object-fit: cover;" data-img="1" alt="Audi Q5 Usado Financiado en Córdoba, deRuedas" src="https://www.deruedas.com.ar/images/autos/Audi-Q5-2014/802/802906_1_im.jpg?edit=2">
+            </li>
+            
+            <li>
+              <img style="border-radius:3px 3px 3px 3px; -moz-border-radius:3px 3px 3px 3px; -webkit-border-radius:3px 3px 3px 3px; width: 100%; height: 100%; object-fit: cover;" data-img="2" alt="Audi Q5 Usado Financiado en Córdoba, deRuedas" src="https://www.deruedas.com.ar/images/autos/Audi-Q5-2014/802/802906_2_im.jpg?edit=2">
+            </li>
+            
+            <li>
+              <img style="border-radius:3px 3px 3px 3px; -moz-border-radius:3px 3px 3px 3px; -webkit-border-radius:3px 3px 3px 3px; width: 100%; height: 100%; object-fit: cover;" data-img="3" alt="Audi Q5 Usado Financiado en Córdoba, deRuedas" src="https://www.deruedas.com.ar/images/autos/Audi-Q5-2014/802/802906_3_im.jpg?edit=2">
+            </li>
+            
+            <li>
+              <img style="border-radius:3px 3px 3px 3px; -moz-border-radius:3px 3px 3px 3px; -webkit-border-radius:3px 3px 3px 3px; width: 100%; height: 100%; object-fit: cover;" data-img="4" alt="Audi Q5 Usado Financiado en Córdoba, deRuedas" src="https://www.deruedas.com.ar/images/autos/Audi-Q5-2014/802/802906_4_im.jpg?edit=2">
+            </li>
+            
+            <li>
+              <img style="border-radius:3px 3px 3px 3px; -moz-border-radius:3px 3px 3px 3px; -webkit-border-radius:3px 3px 3px 3px; width: 100%; height: 100%; object-fit: cover;" data-img="5" alt="Audi Q5 Usado Financiado en Córdoba, deRuedas" src="https://www.deruedas.com.ar/images/autos/Audi-Q5-2014/802/802906_5_im.jpg?edit=2">
+            </li>
+            
+            <li>
+              <img style="border-radius:3px 3px 3px 3px; -moz-border-radius:3px 3px 3px 3px; -webkit-border-radius:3px 3px 3px 3px; width: 100%; height: 100%; object-fit: cover;" data-img="6" alt="Audi Q5 Usado Financiado en Córdoba, deRuedas" src="https://www.deruedas.com.ar/images/autos/Audi-Q5-2014/802/802906_6_im.jpg?edit=2">
+            </li>
+            
+            <li>
+              <img style="border-radius:3px 3px 3px 3px; -moz-border-radius:3px 3px 3px 3px; -webkit-border-radius:3px 3px 3px 3px; width: 100%; height: 100%; object-fit: cover;" data-img="7" alt="Audi Q5 Usado Financiado en Córdoba, deRuedas" src="https://www.deruedas.com.ar/images/autos/Audi-Q5-2014/802/802906_7_im.jpg?edit=2">
+            </li>
+            
+            <li>
+              <img style="border-radius:3px 3px 3px 3px; -moz-border-radius:3px 3px 3px 3px; -webkit-border-radius:3px 3px 3px 3px; width: 100%; height: 100%; object-fit: cover;" data-img="8" alt="Audi Q5 Usado Financiado en Córdoba, deRuedas" src="https://www.deruedas.com.ar/images/autos/Audi-Q5-2014/802/802906_8_im.jpg?edit=2">
+            </li>
+            
+				</ul>
+			</div>
+
+    
+
+		<div class="recuadro" style="padding:20px;">
+			<div class="titulo">Datos del Vehículo</div>
+			<div style="margin-top:10px;">
+				<div id="divFicha_1" style="float:left;">
+					<table width="100%" border="0" cellpadding="0" cellspacing="0" class="texto" style="line-height:30px;">
+						
+						<tr>
+							<td>Año: <b>2014</b></td>
+						</tr>
+						<tr>
+							<td colspan="2">
+								
+	<div style="width:100%; border-bottom:1px solid #E1E1E1; margin:auto;"></div>
+
+							</td>
+						</tr>								
+						<tr>
+							<td>Kilometraje: <b>109000 Km</b></td>
+						</tr>
+						<tr>
+							<td>
+								
+	<div style="width:100%; border-bottom:1px solid #E1E1E1; margin:auto;"></div>
+
+							</td>
+						</tr>						
+						<tr>
+							<td>Precio: <b>U$ 24.500</b></td>
+						</tr>
+						<tr>
+						<tr>
+							<td colspan="2">
+								
+	<div style="width:100%; border-bottom:1px solid #E1E1E1; margin:auto;"></div>
+
+							</td>
+						</tr>		            
+						<tr>
+							<td>Ubicación:
+								<a class="link buscarMas" href="/bus.asp?segmento=0&provincia=6">
+									<i class="fa fa-search-plus fa-fw" aria-hidden="true" title="Buscar más vehículos en Córdoba"></i>
+									<b><h2>Córdoba</h2></b>
+								</a>
+							</td>
+						</tr>
+							<td class="i600">
+								
+	<div style="width:100%; border-bottom:1px solid #E1E1E1; margin:auto;"></div>
+
+							</td>
+						</tr>				
+					</table>
+				</div>
+				<div id="divFicha_2" style="float:right;">			
+					<table width="100%" border="0" cellpadding="0" cellspacing="0" class="texto" style="line-height:30px;">
+						<tr>
+							<td>Permuta por menor: <b>SI</b></td>
+						</tr>
+						<tr>
+							<td>
+								
+	<div style="width:100%; border-bottom:1px solid #E1E1E1; margin:auto;"></div>
+
+							</td>
+						</tr>					
+						<tr>
+							<td>Permuta por mayor: <b>SI</b></td>
+						</tr>
+						<tr>
+							<td>
+								
+	<div style="width:100%; border-bottom:1px solid #E1E1E1; margin:auto;"></div>
+
+							</td>
+						</tr>					
+						<tr>
+							<td>Última actualización: <b>Ayer</b></td>
+						</tr>
+						<tr>
+							<td>
+								
+	<div style="width:100%; border-bottom:1px solid #E1E1E1; margin:auto;"></div>
+
+							</td>
+						</tr>								
+						<tr>
+							<td>Visitas: <b>12</b></td>
+						</tr>
+					</table>
+				</div>
+				<div style="clear:both;"></div>
+			</div>
+		</div>
+
+		<!-- EQUIPAMIENTO -->
+		
+			<div class="recuadro" style="margin-top:20px; padding:20px;">
+				<div id="equipamientoBase" class="titulo" style="line-height:30px;">Equipamiento
+          
+        </div> 
+				
+	<div style="width:100%; border-bottom:1px solid #E1E1E1; margin:auto;"></div>
+
+     
+        <!-- EQUIPAMIENTO DESTACADO-->
+         
+
+
+				<div class="texto" style="margin-top:10px;">
+          No Especificado
+        </div>
+			</div>
+		 
+    
+    <!-- EQUIPAMIENTO -->
+		 
+    
+    <!-- COMPARACION DE VERSIONES -->
+    
+	
+		<!-- COMENTARIOS DEL VENDEDOR -->
+		<div class="recuadro" style="padding:20px; margin-top:20px;">
+			<div class="titulo" style="line-height:30px;">Comentarios del Vendedor</div>
+			
+	<div style="width:100%; border-bottom:1px solid #E1E1E1; margin:auto;"></div>
+
+			<div class="texto" style="margin:10px 0 40px 0; font-size:17px;">
+				Ninguno
+			</div>
+		</div>
+			
+		<!-- APURADO POR VENDER -->
+		
+				
+		<!-- SIMULADOR -->
+		
+			<div class="recuadro" style="padding:20px; margin-top:20px;">
+					<div>
+						<div id="divCalcular" class="titulo" style="line-height:30px;">Calculá tu Cuota</div>
+						
+	<div style="width:100%; border-bottom:1px solid #E1E1E1; margin:auto;"></div>
+
+					</div>
+					<div>
+						<div class="texto" style="margin:10px 0 20px 0;">
+							<form id="frmSimulador">
+								<input type="hidden" name="accion" id="accion" value="">
+								<input type="hidden" name="cod" id="cod" value="802906">
+								<input type="hidden" name="segmento" id="segmento" value="0">
+								<input type="hidden" name="precio" id="precio" value="37852500">
+								<input type="hidden" name="anio" id="anio" value="2014">
+								<input type="hidden" name="kilometraje" id="kilometraje" value="109000">	
+                <div>
+                                    
+                  Simulá tu cuota señalando el monto que podrías entregar para comprar este vehículo. 
+                  
+                </div>
+							</form>
+						</div>
+					</div>
+					<div>
+						<table border="0" class="recuadro texto mx-auto" cellpadding="0" cellspacing="0" class="texto" style="background-color:#F2F2F2; padding:10px 40px 30px 40px;" align="center">
+							<tr>
+								<td width="150">Valor Vehículo:</td>
+								<td align="right" style="font-size:15px;"><b id="span_precio_vehiculo">$ 37.852.500</b></td>
+							</tr>
+              
+							<tr>
+								<td>Entregá:</td>
+								<td align="right" style="font-size:15px;"><b><span id="span_entrega">$ 22.711.500</span></b></td>
+							</tr>	
+							<tr>
+								<td>Financiá:</td>
+								<td align="right" style="font-size:15px;"><b><span id="span_financia">$ 15.141.000</span></b></td>
+							</tr>
+						</table>
+						<div id="divRtaSimulacion" class="mx-auto" style="margin-top:-20px;">
+							<div id="divPosible" class="recuadro visible mx-auto" style="background-color:#212F40;width: max-content; white-space: nowrap; padding: 15px 25px; wr">
+								<div id="divEntrega" class="fondo titulo super naranja" style="font-size:16px; line-height:25px; display:none;">Entregá $ 22.711.500</div>
+								<div id="divMostrar" class="texto inv" style="line-height:20px;">y 12 cuotas de $ 2.119.740<br>ó 24 cuotas de $ 1.483.818<br>ó 36 cuotas de $ 1.315.147</div>
+							</div>
+							<div id="divImposible" class="recuadro texto alerta oculto" style="padding:10px; background-color:#FFFFFF;">y 12 cuotas de $ 2.119.740<br>ó 24 cuotas de $ 1.483.818<br>ó 36 cuotas de $ 1.315.147</div>
+							<br>
+						</div>
+					</div>
+					<div>
+						<table border="0" cellpadding="0" cellspacing="0" class="texto mx-auto">
+							<tr>
+								<td align="center">
+									<span class="titulo">¿Cuánto podés entregar?</span>
+									<input type="text" id="p_entrega" class="slider" disabled>
+									<div style="max-width: 600px; width: 95%;" id="entrega_slider"></div><br>
+								</td>
+							</tr>
+							
+						</table>
+					</div>
+					<div style="margin-top:40px;">
+						<div class="texto">
+							<div id="div-dictamen" class="recuadro" style="background-color: aliceblue; padding:20px; display:none;">
+							</div>
+						</div>
+					</div>
+					<div class="mt-4">
+						<div class="texto mini">
+              <b>Cuota Estimada.</b> Los valores de financiación que estás viendo fueron estimados a partir de la media en la que prestan hoy en día diferentes Entidades Financieras y Bancos en Argentina para ayudarte a conocer tu proximidad a adquirir este vehículo. Consulta con el vendedor los valores finales para tu caso.
+						</div>
+					</div>
+			</div>
+
+			<!-- FANCY PREAPROBAR -->
+				<div id="div-preaprobar-credito" style="max-width:600px; overflow:hidden; display:none;">
+					<div style="text-align: -webkit-center;">  
+						<div class="content">
+							<div class="row mt-2 mb-2">
+								<div class="col-sm-10 mx-auto">
+									<div class="recuadro">
+										<div class="card-body">
+											<div class="row">
+                        <span id="avisoCookie" class="titulo oculto aviso grisOscuro">
+                          <a title="Close" id="closeAvisoCookie" style="margin-top: 6px; left:3px;" class="fancybox-close" href="javascript:;"></a>
+                          <label class="texto inv">
+                              <p>Pasos a seguir según tu navegador</p>
+                              <p>Google Chrome: Haz clic en los tres puntos en la esquina superior derecha, selecciona "Configuración", ve a "Avanzado" y activa la opción "Permitir que todos los sitios guarden y lean datos de cookies".</p>
+                              <p>Mozilla Firefox: Haz clic en las tres líneas en la esquina superior derecha, selecciona "Preferencias", ve a "Privacidad y seguridad" y marca la opción "Aceptar cookies y datos del sitio web".</p>
+                              <p>Microsoft Edge: Haz clic en los tres puntos en la esquina superior derecha, selecciona "Configuración", ve a "Privacidad y servicios" y activa la opción "Permitir todos los cookies".</p>
+                          </label>
+                        </span>
+												<div class="col-md-3 col-sm-11 mt-2 mb-2">
+													<img class="mx-auto companiero pointer" src="/images/design/specialLink_1.png" style="width:70px;"/>
+												</div>
+												<div class="col-md-7 col-sm-11 my-auto mt-2 mb-2"> 
+													<div class="texto text-center">
+														<span class="titulo">Obtené una Calificación Crediticia</span>
+														<br/><br/>Ingresá tu DNI o CUIT y conocé hasta que monto financiado podrías aplicar para este o cualquier otro vehículo publicado en deRuedas.
+														<br/>
+														<div class="mt-3" style="display: inline-flex;">
+															<div class="mr-4">DNI o CUIT:</div>
+															<div class="ml-2">
+															<input id="documento" data-mask="" name="documento" type="number" maxlength="12" class="formBox inputNumber limitarCaracteres" style="width:95%; max-width:120px; text-align:center; background-color:#cac9c9;" value=""/>
+															</div>
+														</div>
+														<br/>
+														<div class="mt-3 celular-wsp" style="display:none;">
+															Necesitamos validar tu teléfono <br/>
+															<span class="texto mini">Colocar código de área sin 0 y número sin 15</span><br/><br/>
+															<div class="mr-4" style="display: inline-flex;">
+                               
+                                WHATSAPP:
+                              
+                              </div>
+															<div class="ml-2"  style="display: inline-flex;">
+                                <input type="text" disabled value="+549" class="formBox" style="max-width: 50px;">
+																<input id="celular"  data-mask="" name="celular" type="number" maxlength="12" class="formBox inputNumber limitarCaracteres" style="width:95%; max-width:120px; text-align:center;background-color:#cac9c9;" value=""/>
+															</div>
+														</div>
+															<br/>
+														<div class="mt-4 codigo-telefono" style="display:none;">
+															Ingresá el código que te enviamos <br/><br/>
+															<div class="mr-4" style="display: inline-flex;">CODIGO:</div>
+															<div class="ml-2" style="display: inline-flex;">
+																<input id="codigo-telefono" placeholder="*******" name="codigo" type="number" maxlength="6" class="formBox inputNumber limitarCaracteres" style="width:95%; max-width:120px; text-align:center;background-color:#cac9c9;" value=""/><br/>
+															</div>
+														</div>
+														<div>
+                              <div style="clear:both;"></div>
+                              <div id="text-aviso-credito" class="texto error mt-4"></div>
+                            </div>
+                            
+                            <div id="mostrar-bloqueo" style="display:none;">
+                              <div class="recuadro grisOscuro" style="padding:10px; margin-top:20px;">
+                                <span class="texto mini inv">
+                                  Hemos bloqueado las posibilidad de seguir consultando, ya que has superado la cantidad permitida de contactos. Durante 72 hs no podrás contactar a más vendedores. 
+                                  <br><br>¿Consideras que esto es un error? <a class="link" style="font-size:11px;" href="/info.asp?con=4">Escribinos.</a>
+                                  <br>Tiempo restante: 72 Hs </b> 
+                                </span>
+                              </div>
+                            </div>
+                            
+														  <br/><button class="boton mediano verde mt-3 mr-2" id="btn-validar-codigo-credito" style="display:none;"><span>Validar</span></button>
+														  <button class="boton mediano azul mt-3" id="btn-enviar-dni"><span>Enviar</span></button>
+													</div>
+												</div>	
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>			
+						</div>
+					</div>
+				</div>
+					
+	</div>
+		
+	<!-- DATOS DEL VENDEDOR -->
+	
+	<div id="divContactoVehiculo" style="float:right;">
+		
+			<!-- DIRECCION Y TELEFONO -->
+			<div>
+				<div style="background-image:url(/images/design/fondoVendedor_6.png); border-radius: 6px; border:3px solid white;">
+					<div class="fondo naranja titulo super" style="margin:0px;"><i aria-hidden='true' class='fa fa-comments'></i>&nbsp;&nbsp;Contactá al Vendedor</div>
+					<div class="texto" style="padding:20px 10px 40px 15px;">
+						
+						<table width="100%" border="0">
+							<tr>
+								
+									<td width="125">
+										<a class="buscarMas" href="/bus.asp?codUsr=294391"><img alt="BZ Bros Cars" src="/images/clientes/cli_294391.jpg" width="110" style="border:1px solid #E1E1E1; padding:2px;"></a>
+									</td>
+								
+								<td valign="middle">
+                  
+                    <a class="buscarMas titulo" href="/bus.asp?codUsr=294391">BZ Bros Cars</a>
+                  
+								</td>
+							</tr>
+						</table>
+						
+            <div style="margin-top:25px;">
+              
+                    <a target="_blank" rel="nofollow" href="https://maps.app.goo.gl/Qek9tJZMrCfLH8Uk8?g_st=ic " bandera="googleMaps" class="link" id="linkMapsGoogle">
+											<img class="devsite-product-logo" alt="Google&nbsp;Maps" src="/images/design/maps-icon.svg" style="width: 14px;"> Av. Julio A. Roca 493,  Bº Guemes
+                      <br/><b><h2><span style="font-size:20px;">Córdoba, Capital</h2></b>
+                    </a>
+                  
+            </div><br>
+            
+						 
+						<div id="horariosTodos" style="display: none;"></div>
+						
+						<div id="bloqueContacto">
+							<div id="telefono" style="margin:35px 0 25px 0;"><span class="titulo">351 - </span><a id="ver" bandera="verTelefono" class="boton azul mediano estadistica" rel="nofollow"><span><i aria-hidden="true" class="fa fa-phone fa-fw"></i>Ver teléfonos</span></a>
+              </div>
+             
+							
+								  <a target="_blank" href="https://api.whatsapp.com/send?phone=54[TELEFONO_OCULTO]&text=Hola%20te%20escribo%20por%20tu%20Audi%20Q5%20Nafta%202014%20publicado%20en%20U$%2024.500%20en%20deRuedas.com.ar%0A%0AVehículo: https://www.deruedas.com.ar/result.asp?cod%3D802906" bandera="whatsapp" class="boton verde mediano estadistica enviar_whatsapp" style="margin:0 20px 20px 0;" rel="nofollow"><span><i aria-hidden="true" class="fa fa-whatsapp fa-fw"></i>Enviar Whatsapp</span></a>
+                  
+							<a style="visibility: hidden; margin-bottom:25px;" href="#" bandera="llamar" class="boton azul mediano llamarTelefono estadistica" rel="nofollow"><span><i aria-hidden="true" class="fa fa-phone fa-fw"></i>Llamar</span></a>
+							<div>
+								<a id="verMail" class="link" rel="nofollow"><span><i aria-hidden="true" class="fa fa-envelope fa-fw"></i>Enviar eMail<i class='fa fa-chevron-down fa-fw' aria-hidden='true'></i></span></a>
+							</div>
+
+						</div><!-- /bloqueContacto -->
+
+						
+						<div id="bloqueSinCookie" class="recuadro grisOscuro" style="padding:10px; margin-top:20px; display:none;">
+							<span class="texto mini inv">
+								Para mostrarte los datos de contacto del vendedor necesitamos que tu navegador acepte cookies, y detectamos que están desactivadas.
+								<br><br>Activalas y volvé a cargar la página.<br/><br/>
+								
+								<div class="row"><a href="/multi.asp?con=usuarioSinCookie" class="link fancy texto mini text-center w-100">¿Cómo las activo? <i class="fa fa-question-circle"></i></a></div>
+								<div class="row"><a onclick="javascript:parent.location.reload();" class="link texto mini text-center w-100">Recargar <i class="fa fa-refresh"></i></a></div>
+							</span>
+						</div>
+
+						
+						<div id="bloqueBloqueado" class="recuadro grisOscuro" style="padding:10px; margin-top:20px; display:none;">
+							<span class="texto mini inv">
+								Hemos bloqueado las posibilidad de seguir consultando, ya que has superado la cantidad permitida de contactos. Durante 72 hs no podrás contactar a más vendedores.
+								<br><br>¿Consideras que esto es un error? <a class="link" style="font-size:11px;" href="/info.asp?con=4">Escribinos.</a>
+								<br>Tiempo restante: <span id="horasRestantesBloqueo">72</span> Hs
+							</span>
+						</div>
+					</div>
+				</div>
+
+				<!-- DIV PARA ENVIARLE MAIL AL VENDEDOR -->
+				
+					<div id="divMail" class="texto v650" style="padding:15px 15px 20px 15px; border-top: #E1E1E1 1px solid; background-color:white; border-radius:6px; display:none;">
+						<form id="frmEnviarMensaje">
+							<input type="hidden" id="codEnviar" name="cod" value="802906">
+							<input type="hidden" id="tipoEnviar" name="tipo" value="1">						
+							<span class="titulo">Pedí más información:</span>
+							<br><br>Escribile al vendedor tu consulta y recibí la respuesta en tu eMail
+							<br><br><span id="nombreL" class="formTituloAlt">Tu Nombre:</span>
+							<br><input id="nombreEnviar" name="nombre" type="text" class="formBox" maxlength="25" style="width:95%;" value="">
+							<br><br><span id="mailL" class="formTituloAlt">Tu eMail (donde recibirás la respuesta):</span>
+							<br><input id="mailEnviar" name="mail" type="email" class="formBox" maxlength="50" style="width:95%;" value="">
+							
+							<br><br><span id="textoL" class="formTituloAlt">Tu Mensaje:</span>
+							<br><textarea id="textoEnviar" name="texto" rows="6" class="formBox" style="width:95%;"></textarea>
+							<br><br><span id="capL" class="formTituloAlt">¿Eres un Robot?</span> 
+							<br>
+							<div>
+								<form id="formCaptcha" method="get">
+									<input type="hidden" id="captchaVal">
+									<div id="botonCaptcha" data-callback="recaptchaCallback" class="g-recaptcha" data-sitekey="6LdJ9TYUAAAAAOkaUYjgGe-_MRIcw1hFQ_t2O_Yo"></div>
+								</form>
+								<script src='https://www.google.com/recaptcha/api.js'></script>
+							</div>
+							<br><a id="enviar" class="boton azul mediano"><span><i class="fa fa-paper-plane fa-fw" aria-hidden="true"></i>Enviar</span></a>  
+						</form>
+
+					</div>
+					<div id="divRta" class="texto" style="padding:20px 15px 20px 15px; display:none;">
+						<span class="texto alerta">Tu mensaje fue enviado con éxito...</span>
+						<br><br>Si no recibieses respuesta del vendedor te recomendamos comunicarte telefónicamente
+					</div>
+				
+
+				<!-- OFRECER TU USADO -->
+				
+			</div>
+
+			<div style="margin-bottom:20px;">
+				<div class='i950' style='width:100%; text-align:center;'><img style='max-height: 210px; margin: 20px 0 0px;' src='/images/intros/simon_3.png'></div>
+				<div class="recuadro" id="divOpinion">
+					<table width="100%" border="0" cellpadding="0" cellspacing="15">
+						<tr>
+							<td class="titulo text-center" height="60">La opinión de un amigo siempre cuenta...</td>
+						</tr>
+						
+						<tr>
+							<td>
+								<a class="boton pequeno verde" style="font-family:Helvetica, Arial, sans-serif;" target="_blank" href="https://api.whatsapp.com/send?text=Mirá%20este%20Audi%20Q5%20publicado%20en%20deRuedas:%20https://www.deruedas.com.ar/result.asp?cod=802906" data-action="share/whatsapp/share"><span style="font-weight:bold; font-size:13px;"><i aria-hidden="true" class="fa fa-whatsapp fa-fw"></i>Compartir</span></a> 
+							</td>
+						</tr>
+						<tr class="i700">
+							<td>
+	<div style="width:100%; border-bottom:1px solid #E1E1E1; margin:auto;"></div>
+</td> 
+						</tr>
+						<tr class="i700 oculto">
+							<td><a href="/descargarApp.asp" class="link"><i class="fa fa-mobile-phone fa-fw" aria-hidden="true"></i>Descarga nuestra APP</a></td>
+						</tr>
+						<tr class="v700">
+							<td>
+	<div style="width:100%; border-bottom:1px solid #E1E1E1; margin:auto;"></div>
+</td> 
+						</tr>
+						<tr>
+							<td valign="middle">
+								<a class="link buscarMas" href="https://www.deruedas.com.ar/precio/Autos/Audi/Q5/2014/Usados/bus.asp?segmento=0&marca=Audi&modelo=Audi%3AQ5&anio_1=2014&anio_2=2014"><i class="fa fa-search-plus fa-fw" aria-hidden="true"></i>Buscar más Audi Q5 2014</a>
+							</td>
+						</tr>
+            <tr class="oculto">
+							<td>
+	<div style="width:100%; border-bottom:1px solid #E1E1E1; margin:auto;"></div>
+</td> 
+						</tr>
+            
+						<tr>
+							<td valign="middle"><a href="/multi.asp?con=denunciarAviso&cod=802906&codUsr=294391" class="link fancy"><i aria-hidden='true' class='fa fa-exclamation-triangle fa-fw'></i>Denunciar este Aviso</a></td>
+						</tr>				
+					</table>
+				</div>
+			</div>		
+		
+		
+	</div>
+	<div style="clear:both;"></div>
+</div>
+
+<!-- PUBLICACIONES SIMILARES -->
+
+    <div class="pantalla" style="margin: 15px 0 10px 0;">
+      <div class="ventanaMax" style="padding:25px 0 25px 0; position:relative; text-align:center;">
+        <div class="titulo" style="font-size:24px;">Publicaciones Similares</div>
+        <div class="flexslider similares" style="margin-top:20px; border:0; background-color: #F2F2F2;">
+          <ul class="slides">						
+            
+              <li style="text-align:-webkit-center;">
+                <a href="/vendo/Volkswagen/Tiguan/Usado/Cordoba?cod=802560" class="texto">
+                  <img src="/images/autos/802/802560_1_tr.jpg?edit=4" alt="Volkswagen Tiguan" border="0" class="redondear" style="margin-bottom:5px; width:94%; height:145px; object-fit:cover;">
+                  <span style="font-size:18px;"><b>Volkswagen</b></span>
+                  <br>Tiguan 2019
+                  <span class="texto resaltar" style="cursor:pointer;">
+                    <br>U$ 24.900
+                  </span>
+                </a>
+                
+              </li>
+              
+              <li style="text-align:-webkit-center;">
+                <a href="/vendo/Ford/Territory/Usado/Cordoba?cod=784407" class="texto">
+                  <img src="/images/autos/784/784407_1_tr.jpg?edit=2" alt="Ford Territory" border="0" class="redondear" style="margin-bottom:5px; width:94%; height:145px; object-fit:cover;">
+                  <span style="font-size:18px;"><b>Ford</b></span>
+                  <br>Territory 2020
+                  <span class="texto resaltar" style="cursor:pointer;">
+                    <br>$ 37.900.000
+                  </span>
+                </a>
+                
+              </li>
+              
+              <li style="text-align:-webkit-center;">
+                <a href="/vendo/Volkswagen/Taos/Usado/Cordoba?cod=798159" class="texto">
+                  <img src="/images/autos/798/798159_1_tr.jpg?edit=2" alt="Volkswagen Taos" border="0" class="redondear" style="margin-bottom:5px; width:94%; height:145px; object-fit:cover;">
+                  <span style="font-size:18px;"><b>Volkswagen</b></span>
+                  <br>Taos 2021
+                  <span class="texto resaltar" style="cursor:pointer;">
+                    <br>$ 37.900.000
+                  </span>
+                </a>
+                
+              </li>
+              
+              <li style="text-align:-webkit-center;">
+                <a href="/vendo/Fiat/Fastback/Nuevo/Cordoba?cod=819404" class="texto">
+                  <img src="/images/autos/819/819404_1_tr.jpg?edit=2" alt="Fiat Fastback" border="0" class="redondear" style="margin-bottom:5px; width:94%; height:145px; object-fit:cover;">
+                  <span style="font-size:18px;"><b>Fiat</b></span>
+                  <br>Fastback 0 Km
+                  <span class="texto resaltar" style="cursor:pointer;">
+                    <br>$ 37.900.000
+                  </span>
+                </a>
+                
+              </li>
+              
+              <li style="text-align:-webkit-center;">
+                <a href="/vendo/Ford/Territory/Usado/Cordoba?cod=801004" class="texto">
+                  <img src="/images/autos/801/801004_1_tr.jpg?edit=2" alt="Ford Territory" border="0" class="redondear" style="margin-bottom:5px; width:94%; height:145px; object-fit:cover;">
+                  <span style="font-size:18px;"><b>Ford</b></span>
+                  <br>Territory 2021
+                  <span class="texto resaltar" style="cursor:pointer;">
+                    <br>$ 37.800.000
+                  </span>
+                </a>
+                
+              </li>
+              
+              <li style="text-align:-webkit-center;">
+                <a href="/vendo/Jeep/Compass/Usado/Cordoba?cod=816966" class="texto">
+                  <img src="/images/autos/816/816966_1_tr.jpg?edit=2" alt="Jeep Compass" border="0" class="redondear" style="margin-bottom:5px; width:94%; height:145px; object-fit:cover;">
+                  <span style="font-size:18px;"><b>Jeep</b></span>
+                  <br>Compass 2022
+                  <span class="texto resaltar" style="cursor:pointer;">
+                    <br>$ 38.000.000
+                  </span>
+                </a>
+                
+              </li>
+              
+              <li style="text-align:-webkit-center;">
+                <a href="/vendo/Toyota/C-HR/Usado/Cordoba?cod=816952" class="texto">
+                  <img src="/images/autos/816/816952_1_tr.jpg?edit=2" alt="Toyota C-HR" border="0" class="redondear" style="margin-bottom:5px; width:94%; height:145px; object-fit:cover;">
+                  <span style="font-size:18px;"><b>Toyota</b></span>
+                  <br>C-HR 2020
+                  <span class="texto resaltar" style="cursor:pointer;">
+                    <br>$ 38.000.000
+                  </span>
+                </a>
+                
+              </li>
+              
+              <li style="text-align:-webkit-center;">
+                <a href="/vendo/Kia/Sportage/Usado/Cordoba?cod=795357" class="texto">
+                  <img src="/images/autos/795/795357_1_tr.jpg?edit=2" alt="Kia Sportage" border="0" class="redondear" style="margin-bottom:5px; width:94%; height:145px; object-fit:cover;">
+                  <span style="font-size:18px;"><b>Kia</b></span>
+                  <br>Sportage 2017
+                  <span class="texto resaltar" style="cursor:pointer;">
+                    <br>$ 37.636.000
+                  </span>
+                </a>
+                
+              </li>
+              
+              <li style="text-align:-webkit-center;">
+                <a href="/vendo/Jeep/Compass/Usado/Cordoba?cod=782775" class="texto">
+                  <img src="/images/autos/782/782775_1_tr.jpg?edit=3" alt="Jeep Compass" border="0" class="redondear" style="margin-bottom:5px; width:94%; height:145px; object-fit:cover;">
+                  <span style="font-size:18px;"><b>Jeep</b></span>
+                  <br>Compass 2023
+                  <span class="texto resaltar" style="cursor:pointer;">
+                    <br>$ 37.550.000
+                  </span>
+                </a>
+                
+              </li>
+              
+              <li style="text-align:-webkit-center;">
+                <a href="/vendo/Volkswagen/T-Cross/Usado/Cordoba?cod=787990" class="texto">
+                  <img src="/images/autos/787/787990_1_tr.jpg?edit=2" alt="Volkswagen T-Cross" border="0" class="redondear" style="margin-bottom:5px; width:94%; height:145px; object-fit:cover;">
+                  <span style="font-size:18px;"><b>Volkswagen</b></span>
+                  <br>T-Cross 2025
+                  <span class="texto resaltar" style="cursor:pointer;">
+                    <br>$ 38.200.000
+                  </span>
+                </a>
+                
+              </li>
+              
+              <li style="text-align:-webkit-center;">
+                <a href="/vendo/Fiat/Pulse/Nuevo/Cordoba?cod=794551" class="texto">
+                  <img src="/images/autos/794/794551_1_tr.jpg?edit=2" alt="Fiat Pulse" border="0" class="redondear" style="margin-bottom:5px; width:94%; height:145px; object-fit:cover;">
+                  <span style="font-size:18px;"><b>Fiat</b></span>
+                  <br>Pulse 0 Km
+                  <span class="texto resaltar" style="cursor:pointer;">
+                    <br>$ 37.500.000
+                  </span>
+                </a>
+                
+              </li>
+              
+              <li style="text-align:-webkit-center;">
+                <a href="/vendo/Fiat/Pulse/Nuevo/Cordoba?cod=736138" class="texto">
+                  <img src="/images/autos/736/736138_1_tr.jpg?edit=3" alt="Fiat Pulse" border="0" class="redondear" style="margin-bottom:5px; width:94%; height:145px; object-fit:cover;">
+                  <span style="font-size:18px;"><b>Fiat</b></span>
+                  <br>Pulse 0 Km
+                  <span class="texto resaltar" style="cursor:pointer;">
+                    <br>$ 37.500.000
+                  </span>
+                </a>
+                
+              </li>
+              
+          </ul>
+        </div>
+      </div>
+    </div>
+    <script>
+      $(document).ready(function () {
+        setTimeout(() => {
+          $('.similares').find('.flex-viewport').css({'display':'inline-table'})
+        }, 300);
+      });
+    </script>
+    
+
+<!-- DISCLAIMER -->
+<div class="ventana">
+	<div class="texto mini" style="margin:10px 10px 20px; text-align:center;">
+		deRuedas no comercializa vehículos, solo es un medio de difusión e información. Nunca hagas pagos, ni des señas hasta verificar el vehículo personalmente. Si el vendedor te responde que el vehículo se encuentra en una ubicación diferente a Córdoba, Argentina, denuncia el aviso.
+	</div>
+</div>
+
+
+  <!-- <script type="text/javascript" src="scripts/chat/chat.js" ></script>-->
+	<script language="JavaScript" type="text/JavaScript">
+    // Detectar si está en WebView o TWA
+      function getAppType() {
+          const ua = navigator.userAgent;
+          
+          // TWA tiene este header específico
+          if (document.referrer.includes('android-app://com.ideasonlinesa.deruedas')) {
+              return 'TWA';
+          }
+          
+          // WebView tiene estos indicadores
+          if (ua.includes('wv') || ua.includes('WebView')) {
+              return 'WebView';
+          }
+          
+          return 'Browser';
+      }
+
+		$(document).ready(function() {
+			$(window).resize(function() {
+				$('#divAncho').html('Ancho: '+$(window).width());
+			});
+
+            // Forzar actualización si están en WebView
+      if (getAppType() === 'WebView' && false) {
+          // Mostrar modal de actualización obligatoria
+          showForceUpdateDialog();
+          // Bloquear toda la aplicación
+          document.body.innerHTML = `
+              <div style="text-align:center; padding:50px;">
+                  <h2>Actualización Requerida</h2>
+                  <p>Por favor actualiza a la nueva versión de deRuedas</p>
+                  <a href="market://details?id=com.ideasonlinesa.deruedas">
+                      Actualizar Ahora
+                  </a>
+              </div>
+          `;
+      }
+
+      // Si es TWA, forzar que todos los enlaces _blank se abran en la misma página
+      if (getAppType() === 'TWA') {
+          // Remover target="_blank" de todos los enlaces al cargar
+          $('a').removeAttr('target');
+          
+          // Interceptar clicks para enlaces agregados dinámicamente
+          $(document).delegate('a', 'click', function(e) {
+              var target = $(this).attr('target');
+              
+              // Si tiene target="_blank", quitarlo y dejar que navegue normalmente
+              if (target === '_blank') {
+                  $(this).removeAttr('target');
+                  // NO hacer preventDefault, dejar que el navegador maneje el click normalmente
+              }
+          });
+      }
+		});
+	</script>		
+
+	<style type="text/css">
+		.divPie_1				{width:33%; border-right:1px solid white;}
+		.divPie_2				{width:33%; border-right:1px solid white;}
+		@media screen and (max-width: 800px){
+			.divPie_1			{width:100%; border:0;}
+			.divPie_2			{width:85%; border:0;}
+		}
+	</style>
+	
+	
+	
+	<div id="divPie" class="pantalla v800" style="margin-top:30px; background:linear-gradient(to right, #F05F22, #FF354D);">
+		<div class="ventana" style="color:#FFFFFF; height: 260px;">
+			
+			<div class="divPie_1" style="float:left; text-align:center; margin-top:40px;">
+				<a href="/index.asp" class="link inv_2">
+					<img src="/images/design/logo_12.png">
+					<br><br>Cambiar tu auto es genial
+				</a>
+			</div>
+			
+			<div class="divPie_2" style="float:left; margin-top:40px;">
+				<div style="padding-left:40px;">
+					<a href="/info.asp?con=10" class="link inv_2">Ayuda</a>
+					<br><a href="/info.asp?con=4" class="link inv_2">Escribí a deRuedas</a>
+					<br><a href="/info.asp?con=9" class="link inv_2">Términos y Condiciones</a>			
+					<br><a href="/info.asp?con=12" class="link inv_2">Consejos de seguridad</a>			
+					<br><br><a href="/servicios.asp" class="link inv_2"><i class="fa fa-car fa-fw" aria-hidden="true"></i>Subí tu Agencia</a>
+					<br><a href="/publicar.asp" class="link inv_2"><i class="fa fa-plus-circle fa-fw" aria-hidden="true"></i>Publicar un Aviso Nuevo</a>
+											
+				</div>
+			</div>
+			
+			<div style="float:left; margin:40px 0 70px 0;">
+				<div style="padding-left:40px;">
+					<!-- <a href="descargarApp.asp" class="link inv_2 i700 oculto"><i class="fa fa-mobile-phone fa-fw" aria-hidden="true"></i>Descarga nuestra APP</a> -->
+					<a href="https://www.facebook.com/deruedas" class="link inv_2" target="_blank"><i class="fa fa-facebook fa-fw" aria-hidden="true"></i>Seguinos en Facebook</a>
+					<br><a href="https://www.instagram.com/deruedas_ar/" class="link inv_2" target="_blank"><i class="fa fa-instagram fa-fw" aria-hidden="true"></i>Seguinos en Instagram</a>
+					<br><br><a href="https://www.proyecto4patas.org/" class="link inv_2" target="_blank"><i class="fa fa-paw fa-fw" aria-hidden="true"></i>Conocé Proyecto 4 Patas</a>
+				</div>
+			</div>
+			
+		</div>
+		<div style="clear:both;"></div>
+	</div> 
+
+	</div><!-- CIERRE DIV MAESTRO -->
+	
+	<!-- Global site tag (gtag.js) - Google Analytics -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-1121632-1"></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag(){dataLayer.push(arguments);}
+		gtag('js', new Date());
+	
+		gtag('config', 'UA-1121632-1');
+		gtag('config', 'AW-1053244374'); //SOLO PARA GOOGLE ADS
+	</script>
+
+	<!-- Google tag (gtag.js) NUEVO CODIGO -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-2LKMTDDMCY"></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag(){dataLayer.push(arguments);}
+		gtag('js', new Date());
+
+		gtag('config', 'G-2LKMTDDMCY');
+	</script>
+
+	
+</body>
+</html>
