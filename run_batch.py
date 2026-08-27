@@ -175,6 +175,16 @@ SOURCES = (
         detail_batch_size=30,
         seconds_per_request=5.0,
     ),
+    SourceConfig(
+        slug="autocity",
+        discovery_spider="autocity_discovery",
+        detail_spider="autocity_detail",
+        discovery_interval_hours=5,
+        # Inventario chico y conocido: 282 usados en total (el sitemap los lista
+        # todos). Con 150 se drena entero en dos ticks; en regimen estable
+        # (re-Detail cada DETAIL_TIER_HOURS=72h) alcanza con ~4 por hora.
+        detail_batch_size=150,
+    ),
 )
 
 

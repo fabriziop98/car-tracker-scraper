@@ -27,10 +27,12 @@ import json
 from pathlib import Path
 
 import pytest
-from scrapy.http import HtmlResponse, Request
+from scrapy.http import HtmlResponse, Request, TextResponse
 
 import run_batch
+from car_tracker_scraper.extraction.autocity import SITEMAP_URL
 from car_tracker_scraper.items import ListingSummaryItem
+from car_tracker_scraper.spiders.autocity_discovery import AutocityDiscoverySpider
 from car_tracker_scraper.spiders.deruedas_discovery import DeruedasDiscoverySpider
 from car_tracker_scraper.spiders.mercadolibre_discovery import MercadolibreDiscoverySpider
 from car_tracker_scraper.spiders.motordil_discovery import MotordilDiscoverySpider
@@ -104,8 +106,25 @@ def _deruedas_case():
     )
 
 
+def _autocity_case():
+    """Unico Discovery que no pagina: descubre por sitemap, asi que sus items
+    salen SIN precio (el sitemap solo tiene URLs). El precio llega en Detail,
+    que es lo unico que se persiste."""
+    return (
+        AutocityDiscoverySpider(marcas="citroen,ford,fiat,peugeot,renault"),
+        TextResponse(
+            url=SITEMAP_URL,
+            body=(FIXTURES / "autocity_sitemap.xml").read_bytes(),
+            encoding="utf-8",
+            request=Request(url=SITEMAP_URL),
+        ),
+        None,  # no filtra por marcas: el sitemap trae el inventario entero
+    )
+
+
 PROVIDER_CASES = {
     "mercadolibre": _mercadolibre_case,
+    "autocity": _autocity_case,
     "motordil": _motordil_case,
     "deruedas": _deruedas_case,
 }
@@ -151,10 +170,11 @@ def test_marca_is_a_curated_slug(slug):
     items, marcas = _items(PROVIDER_CASES[slug])
 
     emitidas = {i["marca"] for i in items}
-    assert emitidas <= set(marcas), (
-        f"{slug}: emitio marcas que no son slugs curados: {emitidas - set(marcas)}. "
-        "Usar resolve_marca_slug() de extraction/common.py."
-    )
+    if marcas is not None:
+        assert emitidas <= set(marcas), (
+            f"{slug}: emitio marcas que no son slugs curados: {emitidas - set(marcas)}. "
+            "Usar resolve_marca_slug() de extraction/common.py."
+        )
     for marca in emitidas:
         assert marca == marca.lower() and " " not in marca, f"{slug}: '{marca}' no tiene forma de slug"
 
@@ -190,13 +210,24 @@ def test_item_carries_the_fields_the_pipeline_needs(slug):
 
 @pytest.mark.parametrize("slug", sorted(PROVIDER_CASES))
 def test_currency_is_read_per_item_never_assumed(slug):
-    """Invariante 4: la moneda se lee de cada aviso. Argentina publica en ARS y
-    en USD mezclado en el mismo listado - asumirla por el contexto de la pagina
-    fue exactamente el error que DeRuedas casi introduce (declara ARS para todo
-    y convierte los USD con su propia cotizacion)."""
+    """Invariante 4: precio y moneda viajan JUNTOS, y la moneda se lee de cada
+    aviso.
+
+    Argentina publica en ARS y en USD mezclado en el mismo listado, asi que
+    asumir la moneda por el contexto de la pagina es el error que DeRuedas casi
+    mete en la serie (declara ARS para todo y convierte los USD con su
+    cotizacion). Lo que NO se exige es que Discovery traiga precio: Autocity
+    descubre por sitemap, que solo tiene URLs, y su precio llega en Detail - que
+    es lo unico que se persiste. Un precio SIN moneda si es siempre un bug.
+    """
     items, _ = _items(PROVIDER_CASES[slug])
 
     for item in items:
+        if item.get("price_amount") is None:
+            assert item.get("price_currency") is None, (
+                f"{slug}: moneda sin precio en {item['source_listing_key']}"
+            )
+            continue
         assert item["price_currency"] in ("ARS", "USD"), (
             f"{slug}: moneda invalida {item['price_currency']!r} en {item['source_listing_key']}"
         )
