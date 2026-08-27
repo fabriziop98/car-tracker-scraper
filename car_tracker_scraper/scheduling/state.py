@@ -15,6 +15,19 @@ Detail (la parte cara - fetch completo + publicacion a RabbitMQ) - correr
 Detail sobre una marca no curada solo llena pending_review sin poder
 resolverse nunca. Un HASH aparte (url -> marca) guarda esa metadata; el
 sorted set de arriba sigue siendo la unica fuente de verdad de "vencido o no".
+
+wdxtkg30xr: con mas de una fuente (MercadoLibre + Motordil) cada una necesita
+su propio keyspace - su propio catalogo de candidatos, su propia cadencia de
+Discovery y su propio ritmo de Detail. Se resuelve con claves sufijadas por
+fuente (ver `keys_for_source`), NO con un campo `source` por candidato: el
+filtrado por keyspace no cuesta un HGET extra por URL en el hot path de
+due_for_detail, que ya hace uno por marca.
+
+**No renombrar las claves de mercadolibre.** La fuente original quedo con los
+nombres SIN sufijo (los de abajo) a proposito: hay decenas de miles de
+candidatos vivos ahi, y renombrarlas equivaldria a tirarlos y re-scrapear todo
+de cero. `keys_for_source("mercadolibre")` devuelve las legacy justamente por
+eso, y hay un test que lo fija.
 """
 from __future__ import annotations
 
@@ -23,6 +36,25 @@ import time
 CANDIDATES_KEY = "scheduling:discovery_candidates"
 CANDIDATE_MARCA_KEY = "scheduling:discovery_candidate_marca"
 LAST_DISCOVERY_KEY = "scheduling:last_discovery_at"
+
+# La fuente que existia antes de que el scheduler fuera multi-fuente, y que por
+# lo tanto se quedo con las claves sin sufijo (ver docstring del modulo).
+LEGACY_UNSUFFIXED_SOURCE = "mercadolibre"
+
+
+def keys_for_source(source: str) -> tuple[str, str, str]:
+    """(candidatos, marcas, ultima-discovery) para una fuente.
+
+    `mercadolibre` devuelve las claves historicas sin sufijo - ver el aviso en
+    el docstring del modulo sobre por que no se pueden renombrar.
+    """
+    if source == LEGACY_UNSUFFIXED_SOURCE:
+        return CANDIDATES_KEY, CANDIDATE_MARCA_KEY, LAST_DISCOVERY_KEY
+    return (
+        f"{CANDIDATES_KEY}:{source}",
+        f"{CANDIDATE_MARCA_KEY}:{source}",
+        f"{LAST_DISCOVERY_KEY}:{source}",
+    )
 
 # Cuanto sobre-pedir a Redis antes de filtrar por marca curada, para que un
 # `limit` pedido siga entregando ~esa cantidad aun con muchos candidatos de
@@ -35,6 +67,12 @@ class DiscoveryCandidateTracker:
         self.redis = redis_client
         self.key = key
         self.marca_key = marca_key
+
+    @classmethod
+    def for_source(cls, redis_client, source: str) -> "DiscoveryCandidateTracker":
+        """Tracker acotado al keyspace de una fuente (wdxtkg30xr)."""
+        candidates_key, marca_key, _ = keys_for_source(source)
+        return cls(redis_client, key=candidates_key, marca_key=marca_key)
 
     def record_discovered(self, url: str, marca: str | None = None) -> None:
         """NX: si la URL ya se conocia, no le pisa el score - no perder cuando se detallo por ultima vez.
@@ -85,3 +123,12 @@ def seconds_since_last_discovery(redis_client, key: str = LAST_DISCOVERY_KEY) ->
 
 def mark_discovery_ran(redis_client, when: float | None = None, key: str = LAST_DISCOVERY_KEY) -> None:
     redis_client.set(key, when if when is not None else time.time())
+
+
+def seconds_since_last_discovery_for(redis_client, source: str) -> float:
+    """Cadencia de Discovery por fuente (wdxtkg30xr) - cada una vence sola."""
+    return seconds_since_last_discovery(redis_client, key=keys_for_source(source)[2])
+
+
+def mark_discovery_ran_for(redis_client, source: str, when: float | None = None) -> None:
+    mark_discovery_ran(redis_client, when=when, key=keys_for_source(source)[2])

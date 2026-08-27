@@ -35,6 +35,19 @@ ambos respetan el mismo limite en Redis). Si el circuit breaker empieza a
 abrirse mas seguido tras este cambio, esa es la señal de revisar esto, no
 de reintroducir un tope chico arbitrario.
 
+wdxtkg30xr (2026-08-26): el scheduler dejo de estar atado a una sola fuente.
+`SOURCES` es el registro de fuentes activas (hoy MercadoLibre + Motordil) y
+main() itera sobre el; cada una tiene su propio keyspace de candidatos en
+Redis, su propia cadencia de Discovery y su propio tamanio de batch de Detail
+(ver SourceConfig). Una fuente que falla no aborta las demas - todo el punto
+de tener mas de una es no depender de ninguna en particular (regla del doc:
+ninguna fuente por encima del 60% del dataset).
+
+Ojo con el tick: las fuentes corren SECUENCIALMENTE (subprocess.run bloquea),
+asi que la suma de los detail_batch_size de todas tiene que entrar en el tick
+de cron de 15 min al ritmo del token bucket (1 req/s, que es POR DOMINIO - por
+eso sumar fuentes suma throughput real en vez de repartirlo).
+
 Tier unico por ahora (DETAIL_TIER_HOURS): la diferenciacion A/B/C por
 volumen real (seccion 3.4 del doc) queda para cuando haya datos reales de
 que modelos tienen mas volumen - no bloquear el scheduler en resolver eso
@@ -66,6 +79,7 @@ import subprocess
 import sys
 import urllib.error
 import urllib.request
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -75,8 +89,8 @@ from dotenv import load_dotenv
 
 from car_tracker_scraper.scheduling.state import (
     DiscoveryCandidateTracker,
-    mark_discovery_ran,
-    seconds_since_last_discovery,
+    mark_discovery_ran_for,
+    seconds_since_last_discovery_for,
 )
 
 load_dotenv()  # cron no carga .env solo - a diferencia de scrapy crawl, que lo hace via settings.py
@@ -90,14 +104,52 @@ DISCOVERY_MAX_PAGES = 30  # wdxtkg398b: ya no es el corte real por marca (eso lo
 # ninguna pagina con value mayor a la actual - confirmado 2026-08-26 contra
 # Toyota real, ver mercadolibre_discovery.py). Esto es solo el backstop de
 # seguridad por si ese calculo no converge nunca.
-DISCOVERY_INTERVAL_HOURS = 5  # seccion 3.4 del doc: cada 4-6h
 
 DETAIL_TIER_HOURS = 72
-DETAIL_BATCH_SIZE = 700  # ritmo del token bucket (1 req/s) en un tick de ~15 min, con margen para no solaparse con el siguiente tick de cron
 
 REDIS_URL = os.environ.get("ANTIBLOCK_REDIS_URL", "redis://localhost:6379/0")
 
 OUTPUT_DIR = Path("output")
+
+
+@dataclass(frozen=True)
+class SourceConfig:
+    """Una fuente scrapeable (wdxtkg30xr).
+
+    El tamanio de batch de Detail es POR FUENTE, no una constante global, y esa
+    es la parte que importa: run_discovery/run_detail son sincronicos, asi que
+    las fuentes corren una despues de la otra dentro del mismo tick de cron. A
+    1 req/s (el token bucket, que es por dominio), 700 URLs son ~12 min; dos
+    fuentes con 700 cada una se pasarian del tick de 15 min. La suma de los
+    batches de todas las fuentes tiene que entrar en un tick.
+    """
+
+    slug: str
+    discovery_spider: str
+    detail_spider: str
+    discovery_interval_hours: int
+    detail_batch_size: int
+
+
+SOURCES = (
+    SourceConfig(
+        slug="mercadolibre",
+        discovery_spider="mercadolibre_discovery",
+        detail_spider="mercadolibre_detail",
+        discovery_interval_hours=5,  # seccion 3.4 del doc: cada 4-6h
+        detail_batch_size=500,
+    ),
+    SourceConfig(
+        slug="motordil",
+        discovery_spider="motordil_discovery",
+        detail_spider="motordil_detail",
+        discovery_interval_hours=5,
+        # Arranca chico a proposito: Motordil es un sitio mucho mas chico que
+        # ML y todavia no hay medicion real de cuanto tarda su Detail. Subirlo
+        # con dato de la primera corrida, no antes.
+        detail_batch_size=200,
+    ),
+)
 
 
 def fetch_discovered_marcas() -> list[str]:
@@ -132,7 +184,7 @@ def fetch_curated_marcas() -> list[str]:
     return list(payload)
 
 
-def run_discovery(now: datetime, tracker: DiscoveryCandidateTracker) -> int:
+def run_discovery(now: datetime, tracker: DiscoveryCandidateTracker, source: SourceConfig) -> int:
     marcas = fetch_discovered_marcas()
     if not marcas:
         # brand_discovery se puebla via BrandDiscoveryJob (car-tracker, Java,
@@ -149,20 +201,20 @@ def run_discovery(now: datetime, tracker: DiscoveryCandidateTracker) -> int:
         print(f"[run_batch] {now.isoformat()} brand_discovery vacio (DNRPA todavia no "
               "corrio) - caigo a marcas curadas para este Discovery.")
 
-    print(f"[run_batch] {now.isoformat()} Discovery para: {', '.join(marcas)}")
-    output_path = OUTPUT_DIR / f"discovery_{now.strftime('%Y%m%dT%H%M%S')}.jsonl"
+    print(f"[run_batch] {now.isoformat()} [{source.slug}] Discovery para: {', '.join(marcas)}")
+    output_path = OUTPUT_DIR / f"discovery_{source.slug}_{now.strftime('%Y%m%dT%H%M%S')}.jsonl"
     result = subprocess.run([
-        sys.executable, "-m", "scrapy", "crawl", "mercadolibre_discovery",
+        sys.executable, "-m", "scrapy", "crawl", source.discovery_spider,
         "-a", f"marcas={','.join(marcas)}",
         "-a", f"max_pages={DISCOVERY_MAX_PAGES}",
         "-O", str(output_path),
     ])
     if result.returncode != 0:
-        print(f"[run_batch] Discovery termino con returncode={result.returncode}, no actualizo el tracker de candidatos")
+        print(f"[run_batch] [{source.slug}] Discovery termino con returncode={result.returncode}, no actualizo el tracker de candidatos")
         return result.returncode
 
     discovered = _record_discovered(output_path, tracker)
-    print(f"[run_batch] {discovered} candidatos nuevos/conocidos registrados (total conocido: {tracker.known_count()})")
+    print(f"[run_batch] [{source.slug}] {discovered} candidatos nuevos/conocidos registrados (total conocido: {tracker.known_count()})")
     return 0
 
 
@@ -183,26 +235,26 @@ def _record_discovered(jsonl_path: Path, tracker: DiscoveryCandidateTracker) -> 
     return count
 
 
-def run_detail(now: datetime, tracker: DiscoveryCandidateTracker) -> int:
+def run_detail(now: datetime, tracker: DiscoveryCandidateTracker, source: SourceConfig) -> int:
     curated_marcas = fetch_curated_marcas()
     if not curated_marcas:
-        print(f"[run_batch] {now.isoformat()} sin marcas curadas todavia "
+        print(f"[run_batch] {now.isoformat()} [{source.slug}] sin marcas curadas todavia "
               f"({CAR_TRACKER_API_URL} no responde o brand esta vacia) - "
               "salteo Detail este tick en vez de correr sin filtro.")
         return 1
 
-    urls = tracker.due_for_detail(older_than_seconds=DETAIL_TIER_HOURS * 3600, limit=DETAIL_BATCH_SIZE, allowed_marcas=set(curated_marcas))
+    urls = tracker.due_for_detail(older_than_seconds=DETAIL_TIER_HOURS * 3600, limit=source.detail_batch_size, allowed_marcas=set(curated_marcas))
     if not urls:
-        print("[run_batch] Ningun candidato vencido de marca curada para Detail en este tick.")
+        print(f"[run_batch] [{source.slug}] Ningun candidato vencido de marca curada para Detail en este tick.")
         return 0
 
-    urls_path = OUTPUT_DIR / f"detail_batch_{now.strftime('%Y%m%dT%H%M%S')}.txt"
+    urls_path = OUTPUT_DIR / f"detail_batch_{source.slug}_{now.strftime('%Y%m%dT%H%M%S')}.txt"
     urls_path.write_text("\n".join(urls) + "\n", encoding="utf-8")
 
-    print(f"[run_batch] Detail sobre {len(urls)} candidatos vencidos.")
-    output_path = OUTPUT_DIR / f"detail_{now.strftime('%Y%m%dT%H%M%S')}.jsonl"
+    print(f"[run_batch] [{source.slug}] Detail sobre {len(urls)} candidatos vencidos.")
+    output_path = OUTPUT_DIR / f"detail_{source.slug}_{now.strftime('%Y%m%dT%H%M%S')}.jsonl"
     result = subprocess.run([
-        sys.executable, "-m", "scrapy", "crawl", "mercadolibre_detail",
+        sys.executable, "-m", "scrapy", "crawl", source.detail_spider,
         "-a", f"urls_file={urls_path}",
         "-O", str(output_path),
     ])
@@ -219,28 +271,44 @@ def run_detail(now: datetime, tracker: DiscoveryCandidateTracker) -> int:
         # candidatos 72h (DETAIL_TIER_HOURS) por una falla de infraestructura
         # (incidente real 2026-08-19: settings.py con ANTIBLOCK_REDIS_URL
         # hardcodeado a localhost tumbo el circuit breaker toda la ventana).
-        print("[run_batch] Detail no produjo ningun item - no marco estos "
+        print(f"[run_batch] [{source.slug}] Detail no produjo ningun item - no marco estos "
               "candidatos como detallados, se reintentan en el proximo tick.")
     return result.returncode
+
+
+def run_source(now: datetime, redis_client, source: SourceConfig) -> int:
+    """Un tick completo (Discovery si vencio + Detail) para UNA fuente."""
+    tracker = DiscoveryCandidateTracker.for_source(redis_client, source.slug)
+
+    exit_code = 0
+    if seconds_since_last_discovery_for(redis_client, source.slug) >= source.discovery_interval_hours * 3600:
+        discovery_rc = run_discovery(now, tracker, source)
+        exit_code = discovery_rc or exit_code
+        if discovery_rc == 0:
+            # Solo si salio bien - una falla transitoria reintenta en el proximo
+            # tick (15-20 min) en vez de esperar discovery_interval_hours enteras.
+            mark_discovery_ran_for(redis_client, source.slug, when=now.timestamp())
+    else:
+        print(f"[run_batch] [{source.slug}] Discovery corrida hace menos de "
+              f"{source.discovery_interval_hours}h, no toca todavia.")
+
+    return run_detail(now, tracker, source) or exit_code
 
 
 def main() -> int:
     now = datetime.now(ART)
     redis_client = redis.Redis.from_url(REDIS_URL)
-    tracker = DiscoveryCandidateTracker(redis_client)
 
     exit_code = 0
-    if seconds_since_last_discovery(redis_client) >= DISCOVERY_INTERVAL_HOURS * 3600:
-        discovery_rc = run_discovery(now, tracker)
-        exit_code = discovery_rc or exit_code
-        if discovery_rc == 0:
-            # Solo si salio bien - una falla transitoria reintenta en el proximo
-            # tick (15-20 min) en vez de esperar DISCOVERY_INTERVAL_HOURS enteras.
-            mark_discovery_ran(redis_client, when=now.timestamp())
-    else:
-        print(f"[run_batch] Discovery corrida hace menos de {DISCOVERY_INTERVAL_HOURS}h, no toca todavia.")
-
-    exit_code = run_detail(now, tracker) or exit_code
+    for source in SOURCES:
+        # Una fuente caida (sitio bloqueando, formato cambiado, spider roto) no
+        # puede impedir que las demas corran - el objetivo entero de tener mas
+        # de una fuente (wdxtkg30xr) es no depender de ninguna en particular.
+        try:
+            exit_code = run_source(now, redis_client, source) or exit_code
+        except Exception as exc:  # noqa: BLE001 - aislamiento deliberado por fuente
+            print(f"[run_batch] [{source.slug}] fallo inesperado, sigo con las demas fuentes: {exc!r}")
+            exit_code = exit_code or 1
     return exit_code
 
 

@@ -57,6 +57,19 @@ class ListingDetailItem(scrapy.Item):
     item_status = scrapy.Field()
     financing_initial_payment = scrapy.Field()
 
+    # wdxtkg30xr: fuentes que exponen el catalogo YA estructurado, en vez de
+    # embebido en un titulo libre como ML (que obliga a parsear
+    # highlighted_specs_raw/subtitle_raw del lado Java). Motordil trae
+    # metadata.make.make / .model / .version y year/odometer como campos
+    # propios - se pasan tal cual para que su extractor no tenga que
+    # re-parsear texto. ML no los setea: quedan ausentes y su extractor sigue
+    # funcionando igual que siempre.
+    model_raw = scrapy.Field()
+    version_raw = scrapy.Field()
+    year_raw = scrapy.Field()
+    km = scrapy.Field()
+    title_raw = scrapy.Field()
+
     fetched_at = scrapy.Field()
 
     # Landing zone (wdxtkg30nm)

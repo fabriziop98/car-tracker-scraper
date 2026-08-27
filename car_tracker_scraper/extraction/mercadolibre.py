@@ -7,33 +7,26 @@ se confirmo esto con datos reales.
 """
 from __future__ import annotations
 
-import json
 import re
 from typing import Any, Iterator
+
+# wdxtkg30xr: el scanner de llaves balanceadas y el lector de JSON-LD se
+# movieron a extraction/common.py (no tienen nada de especifico de ML, los
+# necesita cualquier fuente que embeba JSON en HTML). Se re-exportan aca para
+# no romper los imports existentes de este modulo.
+from car_tracker_scraper.extraction.common import extract_balanced_json, extract_json_ld
+
+__all__ = [
+    "extract_balanced_json",
+    "extract_json_ld",
+    "extract_nordic_ctx",
+    "iter_polycards",
+    "polycard_components",
+]
 
 _NORDIC_CTX_RE = re.compile(
     r'<script id="__NORDIC_RENDERING_CTX__"[^>]*>(.*?)</script>', re.S
 )
-_JSON_LD_RE = re.compile(
-    r'<script[^>]*type="application/ld\+json"[^>]*>(.*?)</script>', re.S
-)
-
-
-def _extract_balanced_json(raw: str) -> Any:
-    """Parsea el primer objeto JSON balanceado al inicio de `raw`.
-
-    Regex simple no alcanza: el blob tiene objetos anidados. Se cuenta
-    profundidad de llaves caracter a caracter hasta volver a 0.
-    """
-    depth = 0
-    for i, ch in enumerate(raw):
-        if ch == "{":
-            depth += 1
-        elif ch == "}":
-            depth -= 1
-            if depth == 0:
-                return json.loads(raw[: i + 1])
-    raise ValueError("no se encontro un objeto JSON balanceado")
 
 
 def extract_nordic_ctx(html: str) -> dict:
@@ -42,7 +35,7 @@ def extract_nordic_ctx(html: str) -> dict:
     if match is None:
         raise ValueError("__NORDIC_RENDERING_CTX__ no encontrado en el HTML")
     raw = match.group(1).split("_n.ctx.r=", 1)[1]
-    return _extract_balanced_json(raw)
+    return extract_balanced_json(raw)
 
 
 def iter_polycards(results: list[dict]) -> Iterator[dict]:
@@ -60,18 +53,3 @@ def iter_polycards(results: list[dict]) -> Iterator[dict]:
 def polycard_components(polycard: dict) -> dict[str, Any]:
     """Convierte la lista components[] de un polycard en un dict indexado por tipo."""
     return {c["type"]: c.get(c["type"]) for c in polycard.get("components", [])}
-
-
-def extract_json_ld(html: str, type_name: str) -> dict | None:
-    """Busca entre los bloques <script type="application/ld+json"> el que
-    tenga @type == type_name (ej. "Vehicle", "BreadcrumbList")."""
-    for match in _JSON_LD_RE.finditer(html):
-        try:
-            data = json.loads(match.group(1))
-        except json.JSONDecodeError:
-            continue
-        candidates = data if isinstance(data, list) else [data]
-        for candidate in candidates:
-            if candidate.get("@type") == type_name:
-                return candidate
-    return None

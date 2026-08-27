@@ -47,11 +47,11 @@ Uso:
 from __future__ import annotations
 
 import re
-import unicodedata
 from datetime import datetime, timezone
 
 import scrapy
 
+from car_tracker_scraper.extraction.common import compact
 from car_tracker_scraper.extraction.mercadolibre import (
     extract_nordic_ctx,
     iter_polycards,
@@ -60,20 +60,16 @@ from car_tracker_scraper.extraction.mercadolibre import (
 from car_tracker_scraper.items import ListingSummaryItem
 
 _ZERO_KM_RE = re.compile(r"^0[.,]?0*\s*km$", re.IGNORECASE)
-_NON_ALNUM_RE = re.compile(r"[^a-z0-9]")
 
 
 def _is_zero_km(attributes_raw: list[str] | None) -> bool:
     return any(_ZERO_KM_RE.match(attr.strip()) for attr in (attributes_raw or []))
 
 
-def _compact(text: str) -> str:
-    """Minusculas y sin caracteres no alfanumericos, para comparar 'Mercedes-Benz'
-    (titulo) con 'mercedes-benz' (slug) sin depender de que ambos usen la misma
-    puntuacion/acentuacion - mismo criterio que _compact() en dnrpa_lookup.py
-    del lado car-tracker (ver su CLAUDE.md, caso real 'C-HR' vs 'CHR')."""
-    ascii_only = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
-    return _NON_ALNUM_RE.sub("", ascii_only.lower())
+# wdxtkg30xr: _compact() se movio a extraction/common.py cuando Motordil
+# necesito el mismo criterio de comparacion de marcas. Se mantiene el alias
+# privado para no tocar los tests que ya lo usaban por este nombre.
+_compact = compact
 
 
 def _resolve_marca(title_raw: str | None, requested_marca: str, known_marcas: list[str]) -> str:

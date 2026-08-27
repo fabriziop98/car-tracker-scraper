@@ -14,10 +14,21 @@ import pytest
 
 import run_batch
 from car_tracker_scraper.scheduling.state import (
+    CANDIDATES_KEY,
+    CANDIDATE_MARCA_KEY,
+    LAST_DISCOVERY_KEY,
     DiscoveryCandidateTracker,
+    keys_for_source,
     mark_discovery_ran,
+    mark_discovery_ran_for,
     seconds_since_last_discovery,
+    seconds_since_last_discovery_for,
 )
+
+# wdxtkg30xr: run_discovery/run_detail son por fuente. Se usa la config real
+# de MercadoLibre del registro (no una inventada) para que estos tests sigan
+# cubriendo exactamente lo que corre en produccion.
+_ML_SOURCE = next(s for s in run_batch.SOURCES if s.slug == "mercadolibre")
 
 # --- DiscoveryCandidateTracker ----------------------------------------------
 
@@ -221,7 +232,7 @@ def test_run_discovery_feeds_the_tracker_on_success(mock_run, mock_fetch_marcas,
 
     from datetime import datetime
 
-    rc = run_batch.run_discovery(datetime(2026, 1, 1, 3, 0, tzinfo=run_batch.ART), tracker)
+    rc = run_batch.run_discovery(datetime(2026, 1, 1, 3, 0, tzinfo=run_batch.ART), tracker, _ML_SOURCE)
 
     assert rc == 0
     assert tracker.known_count() == 1
@@ -238,7 +249,7 @@ def test_run_discovery_does_not_touch_tracker_on_failure(mock_run, mock_fetch_ma
 
     from datetime import datetime
 
-    rc = run_batch.run_discovery(datetime(2026, 1, 1, 3, 0, tzinfo=run_batch.ART), tracker)
+    rc = run_batch.run_discovery(datetime(2026, 1, 1, 3, 0, tzinfo=run_batch.ART), tracker, _ML_SOURCE)
 
     assert rc == 1
     assert tracker.known_count() == 0
@@ -254,7 +265,7 @@ def test_run_discovery_skips_without_crashing_when_no_marcas_are_discovered_yet(
 
     from datetime import datetime
 
-    rc = run_batch.run_discovery(datetime(2026, 1, 1, 3, 0, tzinfo=run_batch.ART), tracker)
+    rc = run_batch.run_discovery(datetime(2026, 1, 1, 3, 0, tzinfo=run_batch.ART), tracker, _ML_SOURCE)
 
     assert rc == 1
     assert tracker.known_count() == 0
@@ -278,7 +289,7 @@ def test_run_discovery_falls_back_to_curated_marcas_when_brand_discovery_is_empt
 
     from datetime import datetime
 
-    rc = run_batch.run_discovery(datetime(2026, 1, 1, 3, 0, tzinfo=run_batch.ART), tracker)
+    rc = run_batch.run_discovery(datetime(2026, 1, 1, 3, 0, tzinfo=run_batch.ART), tracker, _ML_SOURCE)
 
     assert rc == 0
     assert tracker.known_count() == 1
@@ -296,7 +307,7 @@ def test_run_detail_does_nothing_when_no_candidate_is_due(mock_run, mock_fetch_c
 
     from datetime import datetime
 
-    rc = run_batch.run_detail(datetime(2026, 1, 1, 3, 0, tzinfo=run_batch.ART), tracker)
+    rc = run_batch.run_detail(datetime(2026, 1, 1, 3, 0, tzinfo=run_batch.ART), tracker, _ML_SOURCE)
 
     assert rc == 0
     mock_run.assert_not_called()
@@ -322,7 +333,7 @@ def test_run_detail_marks_attempted_urls_as_detailed_on_a_partial_failure(mock_r
 
     from datetime import datetime
 
-    rc = run_batch.run_detail(datetime.now(run_batch.ART), tracker)
+    rc = run_batch.run_detail(datetime.now(run_batch.ART), tracker, _ML_SOURCE)
 
     assert rc == 1
     assert tracker.due_for_detail(older_than_seconds=3600, limit=10) == []
@@ -344,7 +355,7 @@ def test_run_detail_does_not_mark_candidates_on_a_total_failure(mock_run, mock_f
 
     from datetime import datetime
 
-    rc = run_batch.run_detail(datetime.now(run_batch.ART), tracker)
+    rc = run_batch.run_detail(datetime.now(run_batch.ART), tracker, _ML_SOURCE)
 
     assert rc == 0
     assert tracker.due_for_detail(older_than_seconds=3600, limit=10) == ["https://example.com/a"]
@@ -369,7 +380,7 @@ def test_run_detail_only_processes_candidates_of_curated_brands(mock_run, mock_f
 
     from datetime import datetime
 
-    run_batch.run_detail(datetime.now(run_batch.ART), tracker)
+    run_batch.run_detail(datetime.now(run_batch.ART), tracker, _ML_SOURCE)
 
     urls_arg = mock_run.call_args[0][0]
     urls_file = Path(urls_arg[urls_arg.index("-a") + 1].split("=", 1)[1])
@@ -391,7 +402,7 @@ def test_run_detail_skips_the_tick_instead_of_running_unfiltered_when_curated_ma
 
     from datetime import datetime
 
-    rc = run_batch.run_detail(datetime(2026, 1, 1, 3, 0, tzinfo=run_batch.ART), tracker)
+    rc = run_batch.run_detail(datetime(2026, 1, 1, 3, 0, tzinfo=run_batch.ART), tracker, _ML_SOURCE)
 
     assert rc == 1
     mock_run.assert_not_called()
@@ -425,3 +436,114 @@ def test_main_runs_regardless_of_the_hour(mock_run, mock_from_url, mock_fetch_di
         run_batch.main()
 
     mock_run.assert_called()
+
+
+# --- multi-fuente (wdxtkg30xr) ------------------------------------------------
+
+
+def test_mercadolibre_keeps_the_legacy_unsuffixed_redis_keys():
+    """El test mas importante de este modulo.
+
+    MercadoLibre tiene decenas de miles de candidatos vivos guardados bajo las
+    claves SIN sufijo (las que existian antes de que el scheduler fuera
+    multi-fuente). Si `keys_for_source` empezara a devolver
+    'scheduling:discovery_candidates:mercadolibre', el scheduler dejaria de
+    verlos de un dia para el otro, sin ningun error visible, y habria que
+    re-scrapear todo ese inventario de cero.
+    """
+    assert keys_for_source("mercadolibre") == (
+        CANDIDATES_KEY,
+        CANDIDATE_MARCA_KEY,
+        LAST_DISCOVERY_KEY,
+    )
+
+
+def test_a_new_source_gets_its_own_suffixed_keyspace():
+    candidates, marcas, last_discovery = keys_for_source("motordil")
+
+    assert candidates == f"{CANDIDATES_KEY}:motordil"
+    assert marcas == f"{CANDIDATE_MARCA_KEY}:motordil"
+    assert last_discovery == f"{LAST_DISCOVERY_KEY}:motordil"
+
+
+def test_candidates_of_different_sources_do_not_leak_into_each_other():
+    r = fakeredis.FakeRedis()
+    ml = DiscoveryCandidateTracker.for_source(r, "mercadolibre")
+    motordil = DiscoveryCandidateTracker.for_source(r, "motordil")
+
+    ml.record_discovered("https://auto.mercadolibre.com.ar/MLA-1", marca="fiat")
+    motordil.record_discovered("https://www.motordil.com/auto/x", marca="fiat")
+
+    assert ml.known_count() == 1
+    assert motordil.known_count() == 1
+    assert ml.due_for_detail(older_than_seconds=0, limit=10) == ["https://auto.mercadolibre.com.ar/MLA-1"]
+    assert motordil.due_for_detail(older_than_seconds=0, limit=10) == ["https://www.motordil.com/auto/x"]
+
+
+def test_a_tracker_for_mercadolibre_reads_the_pre_existing_legacy_candidates():
+    # Simula el estado real de produccion: candidatos ya guardados bajo las
+    # claves legacy antes de este cambio. El tracker por fuente tiene que
+    # seguir viendolos, no arrancar de cero.
+    r = fakeredis.FakeRedis()
+    legacy = DiscoveryCandidateTracker(r)  # constructor viejo, claves por defecto
+    legacy.record_discovered("https://auto.mercadolibre.com.ar/MLA-legacy", marca="ford")
+
+    ml = DiscoveryCandidateTracker.for_source(r, "mercadolibre")
+
+    assert ml.known_count() == 1
+    assert ml.due_for_detail(older_than_seconds=0, limit=10, allowed_marcas={"ford"}) == [
+        "https://auto.mercadolibre.com.ar/MLA-legacy"
+    ]
+
+
+def test_discovery_cadence_is_tracked_per_source():
+    r = fakeredis.FakeRedis()
+
+    mark_discovery_ran_for(r, "mercadolibre")
+
+    # ML acaba de correr, Motordil nunca -> Motordil sigue vencido.
+    assert seconds_since_last_discovery_for(r, "mercadolibre") < 5
+    assert seconds_since_last_discovery_for(r, "motordil") == float("inf")
+
+
+def test_mercadolibre_cadence_is_the_same_key_the_legacy_helpers_use():
+    r = fakeredis.FakeRedis()
+
+    mark_discovery_ran(r)  # helper legacy, sin fuente
+
+    assert seconds_since_last_discovery_for(r, "mercadolibre") < 5
+
+
+def test_every_registered_source_has_distinct_spiders_and_a_sane_batch_size():
+    slugs = [s.slug for s in run_batch.SOURCES]
+    assert len(slugs) == len(set(slugs)), "slugs de fuente duplicados"
+
+    spiders = [s.discovery_spider for s in run_batch.SOURCES] + [s.detail_spider for s in run_batch.SOURCES]
+    assert len(spiders) == len(set(spiders)), "dos fuentes comparten un spider"
+
+    # Las fuentes corren secuencialmente dentro del mismo tick de cron (15 min)
+    # y el token bucket va a ~1 req/s por dominio: si la suma de los batches se
+    # pasa de eso, los ticks se empiezan a solapar (ver SourceConfig).
+    tick_seconds = 15 * 60
+    assert sum(s.detail_batch_size for s in run_batch.SOURCES) <= tick_seconds
+
+
+def test_one_failing_source_does_not_stop_the_others(monkeypatch, tmp_path: Path):
+    # Todo el punto de tener mas de una fuente es no depender de ninguna: si
+    # Motordil explota, MercadoLibre tiene que correr igual (y viceversa).
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "output").mkdir()
+    ran = []
+
+    def _fake_run_source(now, redis_client, source):
+        ran.append(source.slug)
+        if source.slug == "mercadolibre":
+            raise RuntimeError("spider roto")
+        return 0
+
+    with patch("run_batch.run_source", side_effect=_fake_run_source), \
+         patch("run_batch.redis.Redis.from_url", return_value=fakeredis.FakeRedis()):
+        rc = run_batch.main()
+
+    assert ran == [s.slug for s in run_batch.SOURCES], "una fuente caida corto el resto del tick"
+    assert rc != 0, "una fuente caida tiene que reflejarse en el exit code"
