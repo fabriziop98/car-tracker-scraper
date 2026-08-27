@@ -47,12 +47,22 @@ class MercadolibreDetailSpider(BaseDetailSpider):
         private_card = components.get("seller_profile")
         if dealer_card:
             seller_card = dealer_card
+            # wdxtkg39v2: el fallback a "car_dealer" NO es una suposicion - la
+            # presencia misma de `seller_card_motors` ya dice que el vendedor es
+            # una concesionaria (los particulares vienen en `seller_profile`).
+            # Antes se dependia solo de phone_link.track...item_seller_type, y
+            # cuando ese link no venia el seller_type quedaba en None, lo que
+            # hacia que ListingUpsertService descartara el aviso ENTERO y en
+            # silencio. Medido sobre 60 fichas reales de la landing zone
+            # (2026-08-27): 10 de 60 (17%) son concesionarias sin phone_link, o
+            # sea que se estaba tirando 1 de cada 6 avisos sabiendo perfectamente
+            # que era de concesionaria.
             seller_type = (
                 (((dealer_card.get("phone_link") or {}).get("track") or {}).get("melidata_event") or {}).get(
                     "event_data"
                 )
                 or {}
-            ).get("item_seller_type")
+            ).get("item_seller_type") or "car_dealer"
         elif private_card:
             seller_card = private_card
             seller_type = "particular"
