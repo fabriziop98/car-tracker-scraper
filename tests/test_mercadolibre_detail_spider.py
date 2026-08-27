@@ -6,10 +6,12 @@ from pathlib import Path
 import pytest
 from scrapy.http import HtmlResponse, Request
 
+from car_tracker_scraper.items import DeadListingItem
 from car_tracker_scraper.spiders.mercadolibre_detail import MercadolibreDetailSpider
 
 FIXTURE = Path(__file__).parent / "fixtures" / "ml_detail_sample.html"
 FIXTURE_PARTICULAR = Path(__file__).parent / "fixtures" / "ml_detail_sample2.html"
+FIXTURE_DEAD = Path(__file__).parent / "fixtures" / "ml_detail_dead_sample.html"
 
 
 @pytest.mark.skipif(not FIXTURE.exists(), reason="fixture real no disponible en este checkout")
@@ -66,3 +68,26 @@ def test_parse_real_detail_fixture_particular_seller():
     assert item["seller_id"] == 67156401
     assert item["province_raw"] == "Mendoza"
     assert item["item_status"] == "active"
+
+
+@pytest.mark.skipif(not FIXTURE_DEAD.exists(), reason="fixture real no disponible en este checkout")
+def test_parse_real_dead_listing_fixture_yields_a_dead_signal_not_a_listing():
+    # wdxtkg39vm: fixture real capturado por la landing zone (MinIO,
+    # mercadolibre/2026-08-27/025146_a934231b.html.gz) de una URL de detalle
+    # que ML responde con HTTP 200 pero sirviendo el buscador de la marca
+    # ("Baic") en su lugar - ni Vehicle JSON-LD ni initialState.components.
+    # Confirmado contra 400 HTMLs reales que este es el 100% de los casos
+    # "sin item" de ML (ver comentario en mercadolibre_detail.py), no una
+    # pagina de "publicacion finalizada" separada.
+    spider = MercadolibreDetailSpider(urls="https://auto.mercadolibre.com.ar/fake-url-for-test")
+    url = "https://auto.mercadolibre.com.ar/MLA-1713238925-baic-u5-15-plus-_JM"
+    request = Request(url, meta={"s3_key": "mercadolibre/2026-08-27/test.html.gz", "http_status": 200, "parser_version": "test"})
+    response = HtmlResponse(url=url, body=FIXTURE_DEAD.read_bytes(), encoding="utf-8", request=request)
+
+    items = list(spider.parse(response))
+
+    assert len(items) == 1
+    assert isinstance(items[0], DeadListingItem)
+    assert items[0]["source"] == "mercadolibre"
+    assert items[0]["url"] == url
+    assert items[0]["item_type"] == "dead_listing"

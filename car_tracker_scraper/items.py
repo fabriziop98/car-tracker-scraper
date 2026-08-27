@@ -27,6 +27,19 @@ class ListingSummaryItem(scrapy.Item):
     parser_version = scrapy.Field()
 
 
+class DeadListingItem(scrapy.Item):
+    """Senal de que una URL de Detail ya no corresponde a un aviso vivo
+    (wdxtkg39vm) - deliberadamente NO es un ListingDetailItem, para que
+    RabbitMQPublishPipeline (que filtra por isinstance) nunca la publique.
+    Solo existe para que run_batch.py saque la URL del tracker de candidatos
+    (DiscoveryCandidateTracker.mark_dead) en vez de reintentarla cada
+    DETAIL_TIER_HOURS para siempre."""
+
+    source = scrapy.Field()
+    url = scrapy.Field()
+    item_type = scrapy.Field()  # literal "dead_listing" - discriminador para run_batch.py al leer el jsonl
+
+
 class ListingDetailItem(scrapy.Item):
     """El resultado de Detail Fetch: la ficha completa de un aviso."""
 

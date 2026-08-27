@@ -98,6 +98,53 @@ def test_mark_detailed_with_empty_list_is_a_no_op():
     assert tracker.known_count() == 0
 
 
+def test_mark_dead_removes_the_url_from_due_for_detail():
+    # wdxtkg39vm: una vez confirmada muerta, no puede seguir venciendo cada
+    # DETAIL_TIER_HOURS para siempre - ese era exactamente el bug.
+    r = fakeredis.FakeRedis()
+    tracker = DiscoveryCandidateTracker(r)
+    tracker.record_discovered("https://example.com/dead", marca="fiat")
+
+    tracker.mark_dead(["https://example.com/dead"])
+
+    assert tracker.due_for_detail(older_than_seconds=0, limit=10) == []
+    assert tracker.known_count() == 0
+    assert tracker.dead_count() == 1
+
+
+def test_mark_dead_also_clears_the_marca_metadata():
+    r = fakeredis.FakeRedis()
+    tracker = DiscoveryCandidateTracker(r)
+    tracker.record_discovered("https://example.com/dead", marca="fiat")
+
+    tracker.mark_dead(["https://example.com/dead"])
+
+    assert r.hget(tracker.marca_key, "https://example.com/dead") is None
+
+
+def test_mark_dead_with_empty_list_is_a_no_op():
+    r = fakeredis.FakeRedis()
+    tracker = DiscoveryCandidateTracker(r)
+
+    tracker.mark_dead([])  # no debe tirar excepcion
+
+    assert tracker.dead_count() == 0
+
+
+def test_a_revived_url_is_recoverable_via_a_fresh_discovery():
+    # Si ML revive el aviso, Discovery lo vuelve a ver: record_discovered()
+    # no mira dead_key, asi que la URL vuelve a quedar elegible para Detail
+    # sin ningun paso manual (ver docstring de mark_dead).
+    r = fakeredis.FakeRedis()
+    tracker = DiscoveryCandidateTracker(r)
+    tracker.record_discovered("https://example.com/revived", marca="fiat")
+    tracker.mark_dead(["https://example.com/revived"])
+
+    tracker.record_discovered("https://example.com/revived", marca="fiat")
+
+    assert tracker.due_for_detail(older_than_seconds=0, limit=10) == ["https://example.com/revived"]
+
+
 def test_due_for_detail_without_allowed_marcas_ignores_the_filter_entirely():
     r = fakeredis.FakeRedis()
     tracker = DiscoveryCandidateTracker(r)
@@ -337,6 +384,39 @@ def test_run_detail_marks_attempted_urls_as_detailed_on_a_partial_failure(mock_r
 
     assert rc == 1
     assert tracker.due_for_detail(older_than_seconds=3600, limit=10) == []
+
+
+@patch("run_batch.fetch_curated_marcas", return_value=["fiat"])
+@patch("run_batch.subprocess.run")
+def test_run_detail_marks_a_dead_listing_item_as_dead_not_just_detailed(mock_run, mock_fetch_curated, tmp_path: Path, monkeypatch):
+    # wdxtkg39vm: un DeadListingItem en el jsonl (item_type="dead_listing")
+    # tiene que sacar esa URL del tracker de candidatos, no solo actualizarle
+    # el timestamp de "detallado" (que la dejaria vencer de nuevo en
+    # DETAIL_TIER_HOURS y repetir el ciclo para siempre).
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "output").mkdir()
+    r = fakeredis.FakeRedis()
+    tracker = DiscoveryCandidateTracker(r)
+    tracker.record_discovered("https://example.com/viva", marca="fiat")
+    tracker.record_discovered("https://example.com/muerta", marca="fiat")
+
+    def _fake_run(args, **kwargs):
+        output_path = Path(args[args.index("-O") + 1])
+        with output_path.open("w", encoding="utf-8") as fh:
+            fh.write(json.dumps({"url": "https://example.com/viva", "source_listing_key": "MLA1"}) + "\n")
+            fh.write(json.dumps({"url": "https://example.com/muerta", "item_type": "dead_listing", "source": "mercadolibre"}) + "\n")
+        return MagicMock(returncode=0)
+
+    mock_run.side_effect = _fake_run
+
+    from datetime import datetime
+
+    run_batch.run_detail(datetime.now(run_batch.ART), tracker, _ML_SOURCE)
+
+    due = tracker.due_for_detail(older_than_seconds=3600, limit=10)
+    assert due == []  # ninguna vencida todavia (recien detalladas)
+    assert tracker.known_count() == 1  # solo la viva sigue siendo candidato
+    assert tracker.dead_count() == 1
 
 
 @patch("run_batch.fetch_curated_marcas", return_value=["fiat"])

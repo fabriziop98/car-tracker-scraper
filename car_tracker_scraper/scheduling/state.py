@@ -23,6 +23,12 @@ fuente (ver `keys_for_source`), NO con un campo `source` por candidato: el
 filtrado por keyspace no cuesta un HGET extra por URL en el hot path de
 due_for_detail, que ya hace uno por marca.
 
+wdxtkg39vm: un candidato cuyo Detail confirma que el aviso ya no existe (ver
+mercadolibre_detail.py) se saca del sorted set de arriba - si no, se
+re-fetchearia cada DETAIL_TIER_HOURS para siempre por algo que nunca va a
+rendir nada. Va a un keyspace aparte (`<key>:dead`, ver mark_dead) en vez de
+borrarse sin dejar rastro, para poder auditar cuantos se confirmaron muertos.
+
 **No renombrar las claves de mercadolibre.** La fuente original quedo con los
 nombres SIN sufijo (los de abajo) a proposito: hay decenas de miles de
 candidatos vivos ahi, y renombrarlas equivaldria a tirarlos y re-scrapear todo
@@ -67,6 +73,10 @@ class DiscoveryCandidateTracker:
         self.redis = redis_client
         self.key = key
         self.marca_key = marca_key
+        # wdxtkg39vm: derivado de `key` (no un parametro propio) para que
+        # for_source() lo herede gratis sin tocar su firma - cada fuente ya
+        # tiene su propio keyspace de candidatos, este es el mismo esquema.
+        self.dead_key = f"{key}:dead"
 
     @classmethod
     def for_source(cls, redis_client, source: str) -> "DiscoveryCandidateTracker":
@@ -112,6 +122,26 @@ class DiscoveryCandidateTracker:
 
     def known_count(self) -> int:
         return self.redis.zcard(self.key)
+
+    def mark_dead(self, urls: list[str]) -> None:
+        """wdxtkg39vm: saca `urls` del sorted set de candidatos (dejan de
+        contar como "vencidos" y de re-fetchearse cada DETAIL_TIER_HOURS para
+        siempre) y las deja en un keyspace aparte, no las borra - asi se puede
+        auditar cuantas se confirmaron muertas y cuando.
+
+        Recuperacion si ML revive el aviso: NO hace falta borrarla de
+        `dead_key` a mano - si Discovery la vuelve a ver, record_discovered()
+        la re-agrega al sorted set principal con score 0 (su ZADD es NX,
+        mira solo `self.key`, nunca `dead_key`), y vuelve a quedar elegible
+        para Detail como cualquier candidato nuevo."""
+        if not urls:
+            return
+        self.redis.zrem(self.key, *urls)
+        self.redis.hdel(self.marca_key, *urls)
+        self.redis.zadd(self.dead_key, {url: time.time() for url in urls})
+
+    def dead_count(self) -> int:
+        return self.redis.zcard(self.dead_key)
 
 
 def seconds_since_last_discovery(redis_client, key: str = LAST_DISCOVERY_KEY) -> float:

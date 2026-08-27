@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 
 from car_tracker_scraper.extraction.mercadolibre import extract_json_ld, extract_nordic_ctx
 from car_tracker_scraper.spiders.base import BaseDetailSpider, landing_meta
-from car_tracker_scraper.items import ListingDetailItem
+from car_tracker_scraper.items import DeadListingItem, ListingDetailItem
 
 
 class MercadolibreDetailSpider(BaseDetailSpider):
@@ -37,6 +37,28 @@ class MercadolibreDetailSpider(BaseDetailSpider):
         components = ctx.get("appProps", {}).get("pageProps", {}).get("initialState", {}).get(
             "components", {}
         )
+
+        if not vehicle and not components:
+            # wdxtkg39vm: medido contra 400 HTML reales de la landing zone
+            # (2026-08-12 a 2026-08-27, mercadolibre/ en MinIO) - el 15%
+            # (60/400) sin JSON-LD Vehicle TAMPOCO tenia initialState.components
+            # (0 casos de "sin Vehicle pero con components" en la muestra, el
+            # caso que si seria un fallo de parseo genuino). Para el 100% de
+            # esos 60, ML sirve HTTP 200 en la MISMA url de detalle pero con el
+            # buscador/rescue de la marca en su lugar (initialState trae
+            # results/search_filter/pagination en vez de components/id, y el
+            # filtro interno "notfinalized" en la query) - no una pagina de
+            # "publicacion finalizada" separada como se asumia al abrir el
+            # ticket. Por eso el chequeo es "ni vehicle NI components", no solo
+            # "sin vehicle": confundir un fallo de parseo real con un aviso
+            # muerto tiraria candidatos VIVOS en silencio ante un cambio de
+            # formato de ML - la misma clase de riesgo que wdxtkg39v2 ya mostro
+            # que no es teorico. No se yield-ea ListingDetailItem para este
+            # caso (antes se yieldeaba uno con todos los campos en None, que
+            # SI se publicaba a RabbitMQ - un bug de raiz distinto que esto
+            # tambien corrige de paso).
+            yield DeadListingItem(source="mercadolibre", url=response.url, item_type="dead_listing")
+            return
 
         # El vendedor viene en dos formas distintas segun el tipo (confirmado
         # con 2 fixtures reales, 2026-07-31): concesionaria -> seller_card_motors

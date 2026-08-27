@@ -278,6 +278,22 @@ def _record_discovered(jsonl_path: Path, tracker: DiscoveryCandidateTracker) -> 
     return count
 
 
+def _dead_urls_from_jsonl(jsonl_path: Path) -> list[str]:
+    """wdxtkg39vm: DeadListingItem se serializa en el MISMO jsonl que
+    ListingDetailItem (ambos via -O), discriminado por item_type - no hace
+    falta un output file separado."""
+    dead = []
+    with jsonl_path.open(encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            item = json.loads(line)
+            if item.get("item_type") == "dead_listing" and item.get("url"):
+                dead.append(item["url"])
+    return dead
+
+
 def run_detail(now: datetime, tracker: DiscoveryCandidateTracker, source: SourceConfig) -> int:
     curated_marcas = fetch_curated_marcas()
     if not curated_marcas:
@@ -306,6 +322,16 @@ def run_detail(now: datetime, tracker: DiscoveryCandidateTracker, source: Source
         # item que falla se retoma solo en el proximo ciclo del mismo tier
         # (DETAIL_TIER_HOURS), no hace falta tracking de exito/fracaso por URL.
         tracker.mark_detailed(urls, when=now.timestamp())
+
+        # wdxtkg39vm: un DeadListingItem (hoy solo lo emite mercadolibre_detail)
+        # confirma que la URL ya no es un aviso vivo - sacarla del tracker de
+        # candidatos para que no siga vencidiendo cada DETAIL_TIER_HOURS para
+        # siempre. No pasa nada si otras fuentes nunca emiten este item_type:
+        # dead_urls queda vacia y mark_dead([]) es un no-op.
+        dead_urls = _dead_urls_from_jsonl(output_path)
+        if dead_urls:
+            tracker.mark_dead(dead_urls)
+            print(f"[run_batch] [{source.slug}] {len(dead_urls)} candidatos confirmados muertos, dejan de re-fetchearse.")
     else:
         # Falla total (0 items) en vez de fallos puntuales - scrapy suele
         # devolver returncode 0 igual (IgnoreRequest no es un crash), asi
