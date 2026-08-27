@@ -57,6 +57,7 @@ from car_tracker_scraper.extraction.mercadolibre import (
     iter_polycards,
     polycard_components,
 )
+from car_tracker_scraper.spiders.base import landing_meta
 from car_tracker_scraper.items import ListingSummaryItem
 
 _ZERO_KM_RE = re.compile(r"^0[.,]?0*\s*km$", re.IGNORECASE)
@@ -208,9 +209,7 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
                     else None
                 ),
                 discovered_at=datetime.now(timezone.utc).isoformat(),
-                s3_key=response.meta.get("s3_key"),
-                http_status=response.meta.get("http_status"),
-                parser_version=response.meta.get("parser_version"),
+                **landing_meta(response),
             )
 
         if page_count >= self.max_pages:

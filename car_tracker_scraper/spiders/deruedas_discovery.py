@@ -36,6 +36,7 @@ from car_tracker_scraper.extraction.deruedas import (
     seller_id,
     version_text,
 )
+from car_tracker_scraper.spiders.base import landing_meta
 from car_tracker_scraper.items import ListingSummaryItem
 
 BASE_URL = "https://www.deruedas.com.ar"
@@ -160,9 +161,7 @@ class DeruedasDiscoverySpider(scrapy.Spider):
                 location_raw=prop(card, "addressLocality") or prop(card, "address"),
                 financing_initial_payment=None,
                 discovered_at=datetime.now(timezone.utc).isoformat(),
-                s3_key=response.meta.get("s3_key"),
-                http_status=response.meta.get("http_status"),
-                parser_version=response.meta.get("parser_version"),
+                **landing_meta(response),
             )
             emitted += 1
 

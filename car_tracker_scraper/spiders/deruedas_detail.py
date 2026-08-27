@@ -20,7 +20,6 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-import scrapy
 from parsel import Selector
 
 from car_tracker_scraper.extraction.deruedas import (
@@ -32,32 +31,17 @@ from car_tracker_scraper.extraction.deruedas import (
     prop,
     seller_id,
 )
+from car_tracker_scraper.spiders.base import BaseDetailSpider, landing_meta
 from car_tracker_scraper.items import ListingDetailItem
 
 
-class DeruedasDetailSpider(scrapy.Spider):
+class DeruedasDetailSpider(BaseDetailSpider):
     name = "deruedas_detail"
     allowed_domains = ["www.deruedas.com.ar", "deruedas.com.ar"]
-    sticky_persona = True
     custom_settings = {
         # Mismo respeto al Crawl-delay: 5 del robots.txt que en Discovery.
         "DOWNLOAD_DELAY": 5,
     }
-
-    def __init__(self, urls_file: str | None = None, urls: str | None = None, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._urls: list[str] = []
-        if urls_file:
-            with open(urls_file, encoding="utf-8") as fh:
-                self._urls = [line.strip() for line in fh if line.strip()]
-        if urls:
-            self._urls += [u.strip() for u in urls.split(",") if u.strip()]
-        if not self._urls:
-            raise ValueError("Pasar -a urls_file=path/to/urls.txt o -a urls=url1,url2,...")
-
-    async def start(self):
-        for url in self._urls:
-            yield scrapy.Request(url, callback=self.parse)
 
     def parse(self, response):
         html = response.text
@@ -131,7 +115,5 @@ class DeruedasDetailSpider(scrapy.Spider):
             item_status=None,
             financing_initial_payment=None,
             fetched_at=datetime.now(timezone.utc).isoformat(),
-            s3_key=response.meta.get("s3_key"),
-            http_status=response.meta.get("http_status"),
-            parser_version=response.meta.get("parser_version"),
+            **landing_meta(response),
         )

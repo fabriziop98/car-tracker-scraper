@@ -34,6 +34,7 @@ from car_tracker_scraper.extraction.motordil import (
     extract_rsc_payload,
     iter_objects_with_key,
 )
+from car_tracker_scraper.spiders.base import landing_meta
 from car_tracker_scraper.items import ListingSummaryItem
 
 BASE_URL = "https://www.motordil.com"
@@ -150,9 +151,7 @@ class MotordilDiscoverySpider(scrapy.Spider):
                 ).get("state"),
                 financing_initial_payment=listing.get("downpaymentAmount") or None,
                 discovered_at=datetime.now(timezone.utc).isoformat(),
-                s3_key=response.meta.get("s3_key"),
-                http_status=response.meta.get("http_status"),
-                parser_version=response.meta.get("parser_version"),
+                **landing_meta(response),
             )
             emitted += 1
 

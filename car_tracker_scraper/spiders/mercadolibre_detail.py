@@ -13,38 +13,15 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-import scrapy
 
 from car_tracker_scraper.extraction.mercadolibre import extract_json_ld, extract_nordic_ctx
+from car_tracker_scraper.spiders.base import BaseDetailSpider, landing_meta
 from car_tracker_scraper.items import ListingDetailItem
 
 
-class MercadolibreDetailSpider(scrapy.Spider):
+class MercadolibreDetailSpider(BaseDetailSpider):
     name = "mercadolibre_detail"
     allowed_domains = ["auto.mercadolibre.com.ar"]
-    # wdxtkg30nk: "sticky session en Detail" - AntiBlockingMiddleware
-    # mantiene la misma persona (UA/headers) durante toda la corrida en vez
-    # de rotar por request, ya que un mismo "usuario" navegando varias
-    # fichas de detalle en una sesion es el patron esperado.
-    sticky_persona = True
-
-    def __init__(self, urls_file: str | None = None, urls: str | None = None, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._urls: list[str] = []
-        if urls_file:
-            with open(urls_file, encoding="utf-8") as fh:
-                self._urls = [line.strip() for line in fh if line.strip()]
-        if urls:
-            self._urls += [u.strip() for u in urls.split(",") if u.strip()]
-        if not self._urls:
-            raise ValueError("Pasar -a urls_file=path/to/urls.txt o -a urls=url1,url2,...")
-
-    async def start(self):
-        # start_requests() no despacha requests en Scrapy 2.17 (ver el
-        # comentario equivalente en mercadolibre_discovery.py) - async
-        # start() es el reemplazo que si funciona.
-        for url in self._urls:
-            yield scrapy.Request(url, callback=self.parse)
 
     def parse(self, response):
         html = response.text
@@ -120,9 +97,7 @@ class MercadolibreDetailSpider(scrapy.Spider):
             item_status=top_event_data.get("item_status"),
             financing_initial_payment=financing.get("title", {}).get("text"),
             fetched_at=datetime.now(timezone.utc).isoformat(),
-            s3_key=response.meta.get("s3_key"),
-            http_status=response.meta.get("http_status"),
-            parser_version=response.meta.get("parser_version"),
+            **landing_meta(response),
         )
 
 
