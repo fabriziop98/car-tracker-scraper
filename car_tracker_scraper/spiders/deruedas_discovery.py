@@ -124,6 +124,14 @@ class DeruedasDiscoverySpider(scrapy.Spider):
 
             year = parse_year(prop(card, "vehicleModelDate"))
             km = parse_km(prop(card, "mileageFromOdometer"))
+
+            # 0km fuera (proyecto = mercado de usados). Se filtra por odometro
+            # EXPLICITO en 0 y NO por `itemCondition`: el hallazgo de Fase 0 es
+            # que esta fuente marca NewCondition cuando el vendedor no cargo los
+            # kilometros, asi que filtrar por condicion tiraria usados reales.
+            # km ausente (None) NO se descarta por la misma razon.
+            if km == 0:
+                continue
             # Precio del TEXTO, no del microdata: DeRuedas declara ARS siempre
             # y convierte los avisos en USD con su propia cotizacion. Ver
             # published_price() para el detalle del hallazgo.

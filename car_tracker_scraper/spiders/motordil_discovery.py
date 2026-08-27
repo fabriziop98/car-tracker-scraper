@@ -114,6 +114,16 @@ class MotordilDiscoverySpider(scrapy.Spider):
                 self.logger.warning("Aviso sin slug ni id, no se puede armar URL: %r", listing.get("id"))
                 continue
 
+            # 0km fuera: el proyecto trackea el mercado de USADOS. El Discovery
+            # de ML ya descarta 0km por el texto "0 Km"; Motordil no expone la
+            # condicion en la grilla (`vehicleStatus` solo esta en la ficha),
+            # asi que aca se usa el odometro. Incidente real 2026-08-27: sin
+            # este filtro entraron 114 autos nuevos (0 km, modelos 2024-2026,
+            # titulos "0KM SIN RODAR A PATENTAR") a la serie de precios de
+            # usados, donde distorsionan cualquier cohorte que toquen.
+            if listing.get("odometer") == 0:
+                continue
+
             meta = listing.get("metadata") or {}
             price = listing.get("price")
             currency = (listing.get("currency") or {}).get("symbol")

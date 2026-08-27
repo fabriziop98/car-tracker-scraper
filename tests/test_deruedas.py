@@ -252,3 +252,35 @@ def test_detail_yields_nothing_when_the_vehicle_block_is_missing():
     )
 
     assert list(spider.parse(response)) == []
+
+
+# --- filtro de 0km (wdxtkg39pw) ----------------------------------------------
+
+
+def test_discovery_drops_zero_km_but_keeps_cards_with_unknown_km():
+    """0km fuera (proyecto = usados), pero NO por itemCondition: el hallazgo de
+    Fase 0 es que DeRuedas marca NewCondition cuando el vendedor no cargo los
+    kilometros, asi que filtrar por condicion tiraria usados reales. Se filtra
+    por odometro explicito en 0; km ausente se conserva."""
+    html = (FIXTURES / "deruedas_results.html").read_text(encoding="utf-8")
+    spider = DeruedasDiscoverySpider(marcas="audi")
+    items = [r for r in spider.parse(_results_response()) if isinstance(r, ListingSummaryItem)]
+
+    # el fixture real trae tarjetas sin km (las que Fase 0 vio como NewCondition)
+    sin_km = [c for c in iter_cards(html) if parse_km(prop(c, "mileageFromOdometer")) is None]
+    assert sin_km, "el fixture ya no tiene tarjetas sin km"
+    # y esas se conservan: no se pierde ningun usado por no tener el dato
+    assert len(items) == len(list(iter_cards(html)))
+
+
+def test_detail_drops_zero_km_units():
+    html = (FIXTURES / "deruedas_detail.html").read_text(encoding="utf-8")
+    spider = DeruedasDetailSpider(urls=DETAIL_URL)
+
+    assert len(list(spider.parse(_detail_response()))) == 1
+
+    as_zero = html.replace('content="KMT 109000"', 'content="KMT 0"')
+    assert as_zero != html, "no se pudo simular 0km en el fixture"
+    response = HtmlResponse(url=DETAIL_URL, body=as_zero.encode(), encoding="utf-8",
+                            request=Request(url=DETAIL_URL))
+    assert list(spider.parse(response)) == []

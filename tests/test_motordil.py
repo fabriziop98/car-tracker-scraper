@@ -138,7 +138,9 @@ def test_discovery_emits_one_item_per_listing_with_absolute_detail_urls():
     results = list(spider.parse(_results_response()))
 
     items = [r for r in results if isinstance(r, ListingSummaryItem)]
-    assert len(items) == 24
+    # 24 avisos en la pagina, 4 de ellos 0km (que se descartan, ver
+    # test_discovery_drops_zero_km_units) -> 20 items.
+    assert len(items) == 20
     assert all(item["url"].startswith("https://www.motordil.com/auto/") for item in items)
     assert all(item["source"] == "motordil" for item in items)
     assert all(item["is_ad"] is False for item in items)
@@ -250,4 +252,43 @@ def test_detail_yields_nothing_when_the_publication_object_is_missing():
         request=Request(url="https://www.motordil.com/auto/x"),
     )
 
+    assert list(spider.parse(response)) == []
+
+
+# --- filtro de 0km (wdxtkg39pw) ----------------------------------------------
+
+
+def test_discovery_drops_zero_km_units():
+    """Incidente real 2026-08-27: sin este filtro entraron 114 autos NUEVOS
+    (0 km, modelos 2024-2026, titulos "0KM SIN RODAR A PATENTAR") a una serie
+    de precios de USADOS, donde distorsionan cualquier cohorte que toquen. El
+    Discovery de ML ya descartaba 0km por texto; estas fuentes se sumaron sin
+    el equivalente."""
+    payload = extract_rsc_payload((FIXTURES / "motordil_results.html").read_text(encoding="utf-8"))
+    listings = list(iter_objects_with_key(payload, "listing"))
+    zero_km = [l for l in listings if l.get("odometer") == 0]
+
+    # El fixture real trae 4 de 24 en 0km (Tonale/Stelvio 2025-2026).
+    assert len(zero_km) == 4, "el fixture ya no ejercita el filtro de 0km"
+
+    spider = MotordilDiscoverySpider(marcas="alfa-romeo")
+    items = [r for r in spider.parse(_results_response()) if isinstance(r, ListingSummaryItem)]
+
+    assert len(items) == len(listings) - len(zero_km)
+    emitted = {i["source_listing_key"] for i in items}
+    assert not (emitted & {l["id"] for l in zero_km}), "se colo un 0km"
+
+
+def test_detail_drops_new_vehicles():
+    spider = MotordilDetailSpider(urls="https://www.motordil.com/auto/x")
+    html = (FIXTURES / "motordil_detail.html").read_text(encoding="utf-8")
+    # el fixture real es USED y si emite item
+    used = _response("motordil_detail.html", "https://www.motordil.com/auto/x")
+    assert len(list(spider.parse(used))) == 1
+
+    # el mismo aviso marcado NEW no debe emitir nada
+    as_new = html.replace('\\"vehicleStatus\\":\\"USED\\"', '\\"vehicleStatus\\":\\"NEW\\"')
+    assert as_new != html, "no se pudo simular vehicleStatus NEW en el fixture"
+    response = HtmlResponse(url="https://www.motordil.com/auto/x", body=as_new.encode(),
+                            encoding="utf-8", request=Request(url="https://www.motordil.com/auto/x"))
     assert list(spider.parse(response)) == []

@@ -68,6 +68,13 @@ class DeruedasDetailSpider(scrapy.Spider):
             self.logger.warning("Sin bloque schema.org/Vehicle en %s - aviso caido o cambio de formato", response.url)
             return
 
+        # 0km fuera, mismo criterio que en Discovery: por odometro explicito en
+        # 0, no por itemCondition (esta fuente lo marca NewCondition cuando
+        # falta el kilometraje - ver el hallazgo de Fase 0).
+        if parse_km(prop(vehicle, "mileageFromOdometer")) == 0:
+            self.logger.debug("0km, no es el segmento usado: %s", response.url)
+            return
+
         brand = (
             vehicle.css('[itemprop="brand"] [itemprop="name"]::attr(content)').get()
             or vehicle.css('[itemprop="brand"] [itemprop="name"]::text').get()

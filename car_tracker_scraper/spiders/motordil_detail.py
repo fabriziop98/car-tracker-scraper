@@ -63,6 +63,14 @@ class MotordilDetailSpider(scrapy.Spider):
             return
         pub = publications[0]
 
+        # 0km fuera, igual que en Discovery - aca con el campo autoritativo
+        # (`vehicleStatus`), que la grilla no expone. Doble filtro a proposito:
+        # el de Discovery evita gastar el fetch, este ataja lo que igual llego
+        # (ej. un aviso que cargo el odometro despues de publicarse).
+        if (pub.get("vehicleStatus") or "").upper() == "NEW":
+            self.logger.debug("0km, no es el segmento usado: %s", response.url)
+            return
+
         car = extract_json_ld(html, "Car") or {}
         offers = car.get("offers") or {}
 
