@@ -521,14 +521,17 @@ def test_every_registered_source_has_distinct_spiders_and_a_sane_batch_size():
     spiders = [s.discovery_spider for s in run_batch.SOURCES] + [s.detail_spider for s in run_batch.SOURCES]
     assert len(spiders) == len(set(spiders)), "dos fuentes comparten un spider"
 
-    # Las fuentes corren secuencialmente dentro del mismo tick de cron (15 min):
-    # si la suma de sus tiempos estimados se pasa, los ticks se solapan.
-    # Se pondera por seconds_per_request y no por batch_size a secas, porque una
-    # fuente con DOWNLOAD_DELAY propio (DeRuedas: 5s) cuesta varias veces mas
-    # por aviso que una que solo respeta el token bucket (1s).
+    # wdxtkg39qx: las fuentes corren en PARALELO, asi que la restriccion es el
+    # MAXIMO y no la suma - una fuente lenta ya no obliga a achicarle el batch
+    # a las demas. Se pondera por seconds_per_request y no por batch_size a
+    # secas, porque una fuente con DOWNLOAD_DELAY propio (DeRuedas: 5s) cuesta
+    # varias veces mas por aviso que una que solo respeta el token bucket (1s).
     tick_seconds = 15 * 60
-    total = sum(s.estimated_detail_seconds for s in run_batch.SOURCES)
-    assert total <= tick_seconds, f"el tick se pasa: {total}s > {tick_seconds}s"
+    for source in run_batch.SOURCES:
+        assert source.estimated_detail_seconds <= tick_seconds, (
+            f"{source.slug} sola no entra en el tick: "
+            f"{source.estimated_detail_seconds}s > {tick_seconds}s"
+        )
 
 
 def test_one_failing_source_does_not_stop_the_others(monkeypatch, tmp_path: Path):
@@ -548,5 +551,36 @@ def test_one_failing_source_does_not_stop_the_others(monkeypatch, tmp_path: Path
          patch("run_batch.redis.Redis.from_url", return_value=fakeredis.FakeRedis()):
         rc = run_batch.main()
 
-    assert ran == [s.slug for s in run_batch.SOURCES], "una fuente caida corto el resto del tick"
+    assert set(ran) == {s.slug for s in run_batch.SOURCES}, "una fuente caida corto el resto del tick"
     assert rc != 0, "una fuente caida tiene que reflejarse en el exit code"
+
+
+def test_sources_run_in_parallel_not_sequentially(monkeypatch, tmp_path: Path):
+    """wdxtkg39qx: prueba real del paralelismo, no una suposicion.
+
+    Se usa una Barrier del tamanio de SOURCES: solo se libera si TODAS las
+    fuentes estan corriendo a la vez. Si main() volviera a ser secuencial, la
+    primera se quedaria esperando a las otras dos para siempre y el test corta
+    por timeout en vez de pasar en silencio.
+
+    Correrlas en paralelo es seguro porque el token bucket y el circuit breaker
+    son por dominio: dos sitios distintos nunca comparten presupuesto.
+    """
+    import threading
+
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "output").mkdir()
+    barrier = threading.Barrier(len(run_batch.SOURCES), timeout=5)
+    llegaron = []
+
+    def _fake_run_source(now, redis_client, source):
+        llegaron.append(source.slug)
+        barrier.wait()  # BrokenBarrierError si alguna no llega -> el test falla
+        return 0
+
+    with patch("run_batch.run_source", side_effect=_fake_run_source), \
+         patch("run_batch.redis.Redis.from_url", return_value=fakeredis.FakeRedis()):
+        rc = run_batch.main()
+
+    assert rc == 0
+    assert set(llegaron) == {s.slug for s in run_batch.SOURCES}

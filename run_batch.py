@@ -43,10 +43,11 @@ Redis, su propia cadencia de Discovery y su propio tamanio de batch de Detail
 de tener mas de una es no depender de ninguna en particular (regla del doc:
 ninguna fuente por encima del 60% del dataset).
 
-Ojo con el tick: las fuentes corren SECUENCIALMENTE (subprocess.run bloquea),
-asi que la suma de los detail_batch_size de todas tiene que entrar en el tick
-de cron de 15 min al ritmo del token bucket (1 req/s, que es POR DOMINIO - por
-eso sumar fuentes suma throughput real en vez de repartirlo).
+wdxtkg39qx: las fuentes corren EN PARALELO (una por thread), no secuencial.
+El token bucket es POR DOMINIO, asi que dos sitios distintos nunca compiten
+entre si - correrlas en serie era una limitacion autoimpuesta sin beneficio.
+El presupuesto del tick pasa a ser el MAXIMO de las fuentes, no la suma, que
+es lo que permite sumar sitios lentos (Kavak pide Crawl-delay: 20).
 
 Tier unico por ahora (DETAIL_TIER_HOURS): la diferenciacion A/B/C por
 volumen real (seccion 3.4 del doc) queda para cuando haya datos reales de
@@ -79,6 +80,7 @@ import subprocess
 import sys
 import urllib.error
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -116,12 +118,11 @@ OUTPUT_DIR = Path("output")
 class SourceConfig:
     """Una fuente scrapeable (wdxtkg30xr).
 
-    El tamanio de batch de Detail es POR FUENTE, no una constante global, y esa
-    es la parte que importa: run_discovery/run_detail son sincronicos, asi que
-    las fuentes corren una despues de la otra dentro del mismo tick de cron. A
-    1 req/s (el token bucket, que es por dominio), 700 URLs son ~12 min; dos
-    fuentes con 700 cada una se pasarian del tick de 15 min. La suma de los
-    batches de todas las fuentes tiene que entrar en un tick.
+    El tamanio de batch de Detail es POR FUENTE, no una constante global.
+    Desde wdxtkg39qx las fuentes corren en PARALELO (ver main()), asi que lo
+    que tiene que entrar en el tick de cron es el tiempo estimado de CADA
+    fuente por separado, no la suma de todas - por eso agregar una fuente
+    lenta ya no obliga a achicarle el batch a las demas.
     """
 
     slug: str
@@ -324,16 +325,41 @@ def main() -> int:
     now = datetime.now(ART)
     redis_client = redis.Redis.from_url(REDIS_URL)
 
+    # wdxtkg39qx: las fuentes corren EN PARALELO, una por thread.
+    #
+    # Antes corrian secuencialmente y eso ponia un techo GLOBAL al tick: la
+    # suma de todos los batches tenia que entrar en los 15 min de cron (con 3
+    # fuentes ya iba 850s de 900s). Ese techo era una limitacion autoimpuesta
+    # SIN beneficio: el token bucket y el circuit breaker son POR DOMINIO (la
+    # clave sale de domain_of(url), ver antiblocking/token_bucket.py), asi que
+    # dos spiders de sitios distintos nunca compiten por el mismo presupuesto
+    # de requests. Correrlas en paralelo no nos hace ni un poco mas agresivos
+    # con ningun sitio - solo deja de desperdiciar tiempo de pared esperando a
+    # la fuente anterior.
+    #
+    # Con esto el presupuesto del tick pasa a ser el MAXIMO de las fuentes en
+    # vez de la suma, que es lo que hace viable sumar sitios lentos (Kavak pide
+    # Crawl-delay: 20, o sea 20s por request).
+    #
+    # Threads y no procesos: cada run_source es I/O bound (subprocess.run
+    # esperando al crawl, mas HTTP y Redis), asi que el GIL se libera. El
+    # cliente de redis-py es thread-safe (pool de conexiones) y cada fuente
+    # escribe en su propio keyspace y en sus propios archivos de output, asi
+    # que no comparten estado mutable.
     exit_code = 0
-    for source in SOURCES:
-        # Una fuente caida (sitio bloqueando, formato cambiado, spider roto) no
-        # puede impedir que las demas corran - el objetivo entero de tener mas
-        # de una fuente (wdxtkg30xr) es no depender de ninguna en particular.
-        try:
-            exit_code = run_source(now, redis_client, source) or exit_code
-        except Exception as exc:  # noqa: BLE001 - aislamiento deliberado por fuente
-            print(f"[run_batch] [{source.slug}] fallo inesperado, sigo con las demas fuentes: {exc!r}")
-            exit_code = exit_code or 1
+    with ThreadPoolExecutor(max_workers=len(SOURCES), thread_name_prefix="source") as pool:
+        futures = {pool.submit(run_source, now, redis_client, source): source for source in SOURCES}
+        for future in as_completed(futures):
+            source = futures[future]
+            # Una fuente caida (sitio bloqueando, formato cambiado, spider
+            # roto) no puede impedir que las demas corran - el objetivo entero
+            # de tener mas de una fuente (wdxtkg30xr) es no depender de
+            # ninguna en particular.
+            try:
+                exit_code = future.result() or exit_code
+            except Exception as exc:  # noqa: BLE001 - aislamiento deliberado por fuente
+                print(f"[run_batch] [{source.slug}] fallo inesperado, sigo con las demas fuentes: {exc!r}")
+                exit_code = exit_code or 1
     return exit_code
 
 
