@@ -148,7 +148,14 @@ SOURCES = (
         discovery_spider="mercadolibre_discovery",
         detail_spider="mercadolibre_detail",
         discovery_interval_hours=5,  # seccion 3.4 del doc: cada 4-6h
-        detail_batch_size=500,
+        # Subido de 500 a 1200 (wdxtkg39qx). Con las fuentes en paralelo el
+        # limite es esta fuente sola contra el tick, no la suma de todas.
+        detail_batch_size=1200,
+        # Medido, no estimado: en corridas reales ML hace 842 req en 494s y
+        # 301 en 130s, o sea 1.7-2.3 req/s. El 1.0 por defecto (el refill
+        # nominal del token bucket) subestimaba al doble. 0.5 deja margen
+        # sobre el mejor caso observado (0.43).
+        seconds_per_request=0.5,
     ),
     SourceConfig(
         slug="motordil",
