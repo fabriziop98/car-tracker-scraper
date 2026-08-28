@@ -148,14 +148,22 @@ SOURCES = (
         discovery_spider="mercadolibre_discovery",
         detail_spider="mercadolibre_detail",
         discovery_interval_hours=5,  # seccion 3.4 del doc: cada 4-6h
-        # Subido de 500 a 1200 (wdxtkg39qx). Con las fuentes en paralelo el
-        # limite es esta fuente sola contra el tick, no la suma de todas.
-        detail_batch_size=1200,
-        # Medido, no estimado: en corridas reales ML hace 842 req en 494s y
-        # 301 en 130s, o sea 1.7-2.3 req/s. El 1.0 por defecto (el refill
-        # nominal del token bucket) subestimaba al doble. 0.5 deja margen
-        # sobre el mejor caso observado (0.43).
-        seconds_per_request=0.5,
+        # 2026-08-28: revertido de 1200 a 400 tras abrir el circuit breaker de
+        # auto.mercadolibre.com.ar (31% de error: 632 respuestas 403 y 261 429).
+        # Subir el batch a 1200 Y soltarle 40.413 candidatos reseteados de golpe
+        # sostuvo una presion que ML corto.
+        #
+        # El 0.5 s/req que acompanaba a ese 1200 estaba MAL MEDIDO: se calculo
+        # como elapsed/request_count sobre corridas que ya incluian 403s, y un
+        # 403 vuelve instantaneo - o sea que inflaba el req/s aparente sin que
+        # el throughput util subiera. Se vuelve a 1.0, que es el refill nominal
+        # del token bucket.
+        #
+        # 400 < 500 (el valor previo) a proposito: hay backlog acumulado, asi
+        # que conviene entrar por debajo del ritmo que ya venia funcionando
+        # antes de volver a subir.
+        detail_batch_size=400,
+        seconds_per_request=1.0,
     ),
     SourceConfig(
         slug="motordil",
