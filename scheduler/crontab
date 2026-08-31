@@ -7,3 +7,8 @@ SHELL=/bin/bash
 PATH=/usr/local/bin:/usr/local/sbin:/usr/bin:/sbin:/bin
 
 */15 * * * * root cd /app && python run_batch.py >> /app/logs/batch.log 2>&1
+
+# Rotacion de batch.log (ver scheduler/logrotate.conf). Estado explicito bajo
+# /app/logs, que es el volumen montado: en /var/lib/logrotate se perderia en
+# cada recreacion del contenedor y logrotate creeria que nunca roto nada.
+15 3 * * * root /usr/sbin/logrotate /etc/logrotate.d/car-tracker-batch --state /app/logs/logrotate.state >> /app/logs/batch.log 2>&1

@@ -139,3 +139,27 @@ EXTENSIONS = {
 
 # Set settings whose default value is deprecated to a future-proof value
 FEED_EXPORT_ENCODING = "utf-8"
+
+# Scrapy corre el root logger en DEBUG (su default), y boto3/botocore heredan
+# ese nivel. Como LandingZoneMiddleware sube el HTML de CADA pagina scrapeada a
+# MinIO, botocore emitia ~20 lineas por request - firma AWS, StringToSign,
+# CanonicalRequest, headers completos de ida y vuelta, eventos de hooks. A ~250
+# MB/dia con 4 fuentes, batch.log llego a 4,86 GB (incidente 2026-08-31) y dejo
+# de ser leible justo cuando hacia falta para diagnosticar una caida de 20h: no
+# entraba en memoria y habia que rasparlo con `tail -c` de a cientos de MB.
+#
+# Se bajan SOLO estos loggers, no el LOG_LEVEL global: las lineas DEBUG propias
+# de Scrapy ("Crawled (200) <GET ...>") son las que sirven de verdad para
+# diagnosticar - con ellas se identificaron los 404 de Autocity (wdxtkg3auw).
+# Nada de lo que botocore dice en DEBUG se uso nunca; sus errores reales siguen
+# saliendo, porque son WARNING/ERROR.
+import logging  # noqa: E402  (al final del archivo a proposito, junto a lo que configura)
+
+for _noisy_logger in ("botocore", "boto3", "s3transfer", "urllib3", "pika"):
+    logging.getLogger(_noisy_logger).setLevel(logging.WARNING)
+
+# El volcado del item completo de scrapy.core.scraper (el 99% del log) NO se
+# puede apagar con setLevel: configure_logging() de Scrapy resetea los loggers
+# scrapy.* a NOTSET despues de que este archivo corre. Se apaga con un
+# LogFormatter, ver car_tracker_scraper/logformatter.py.
+LOG_FORMATTER = "car_tracker_scraper.logformatter.QuietItemLogFormatter"
