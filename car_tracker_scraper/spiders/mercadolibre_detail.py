@@ -23,6 +23,36 @@ class MercadolibreDetailSpider(BaseDetailSpider):
     name = "mercadolibre_detail"
     allowed_domains = ["auto.mercadolibre.com.ar"]
 
+    # wdxtkg3auw: el 302 tiene que llegar a nosotros en crudo en vez de que lo
+    # siga RedirectMiddleware, ver is_dead/redirect_to_follow.
+    handle_httpstatus_list = BaseDetailSpider.handle_httpstatus_list + [302]
+
+    # ML manda los avisos caidos a la busqueda de la marca/modelo en OTRO
+    # subdominio: auto.mercadolibre.com.ar -> autos.mercadolibre.com.ar (con
+    # una "s"), con el VIP original colgado en el fragmento #redirectedFromVip.
+    _SEARCH_HOST = "autos.mercadolibre.com.ar"
+
+    def is_dead(self, response):
+        if super().is_dead(response):
+            return True
+        if response.status != 302:
+            return False
+        location = self._location_of(response)
+        # Dos formas de reconocerlo, cualquiera alcanza: el salto al subdominio
+        # de busqueda, o la marca explicita que ML deja en el fragmento.
+        return (
+            self._host_of(location) == self._SEARCH_HOST
+            or "redirectedFromVip" in location
+        )
+
+    def redirect_to_follow(self, response):
+        """Un 302 que NO es baja es un cambio de URL canonica (ML reescribe el
+        slug del titulo) y hay que seguirlo: el aviso sigue vivo. Medido en la
+        corrida de las 20:15 del 31/8: 38 redirects, 37 bajas y 1 de estos."""
+        if response.status == 302:
+            return self._location_of(response) or None
+        return None
+
     def parse(self, response):
         html = response.text
         vehicle = extract_json_ld(html, "Vehicle") or {}

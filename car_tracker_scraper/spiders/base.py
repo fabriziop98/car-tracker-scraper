@@ -10,7 +10,11 @@ seria peor que la duplicacion que elimina. Cada proveedor sigue teniendo su
 """
 from __future__ import annotations
 
+from urllib.parse import urlparse
+
 import scrapy
+
+from car_tracker_scraper.items import DeadListingItem
 
 
 def landing_meta(response) -> dict:
@@ -42,6 +46,22 @@ class BaseDetailSpider(scrapy.Spider):
     # esperado, y rotar lo haria mas sospechoso, no menos.
     sticky_persona = True
 
+    # wdxtkg3auw: sin esto, HttpErrorMiddleware descarta los 404 antes de que
+    # llegue a parse() y el aviso caido desaparece sin dejar rastro. Autocity
+    # sirve 404 limpio para avisos vendidos (medido: 123 de 150 URLs pedidas en
+    # una corrida del 31/8). Las subclases que necesiten mas codigos amplian
+    # esta lista - ML agrega 302, ver mercadolibre_detail.
+    handle_httpstatus_list = [404, 410]
+
+    # Codigos que significan inequivocamente "este aviso ya no existe". 404/410
+    # aplican a cualquier proveedor; lo que cambia por sitio es lo de arriba.
+    DEAD_STATUSES = frozenset({404, 410})
+
+    @property
+    def source_slug(self) -> str:
+        """Misma convencion que usa LandingZoneMiddleware para el prefijo S3."""
+        return self.name.split("_")[0]
+
     def __init__(self, urls_file: str | None = None, urls: str | None = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._urls: list[str] = []
@@ -60,4 +80,58 @@ class BaseDetailSpider(scrapy.Spider):
         # (wdxtkg34th/wdxtkg35ba). Al estar en la base, un proveedor nuevo no
         # puede volver a caer en eso por copiar un ejemplo viejo.
         for url in self._urls:
-            yield scrapy.Request(url, callback=self.parse)
+            yield scrapy.Request(url, callback=self._parse_or_dead)
+
+    def _parse_or_dead(self, response):
+        """Filtra avisos caidos antes de delegar en el `parse()` del proveedor.
+
+        wdxtkg3auw: antes cada request iba derecho a `parse()`, y una URL que ya
+        no correspondia a un aviso vivo simplemente no producia item. Como
+        `run_batch.mark_detailed()` marca igual todo el batch, esos candidatos
+        se re-pedian cada DETAIL_TIER_HOURS para siempre sin poder rendir nada.
+        """
+        if self.is_dead(response):
+            yield DeadListingItem(
+                source=self.source_slug, url=response.url, item_type="dead_listing"
+            )
+            return
+
+        follow_to = self.redirect_to_follow(response)
+        if follow_to is not None:
+            yield response.follow(follow_to, callback=self._parse_or_dead)
+            return
+
+        produced = 0
+        for item in self.parse(response):
+            produced += 1
+            yield item
+
+        if produced == 0:
+            # Ni item ni señal de muerto reconocida. Antes esto era una perdida
+            # 100% silenciosa; ahora deja rastro para poder sumar la señal que
+            # falte, en vez de descubrirla auditando Postgres meses despues.
+            self.logger.warning(
+                "wdxtkg3auw: %s (status=%s) no produjo item ni coincidio con una "
+                "señal de baja conocida - revisar si este proveedor usa otra",
+                response.url,
+                response.status,
+            )
+
+    def is_dead(self, response) -> bool:
+        """Señal generica de aviso caido. Las subclases la amplian, no la pisan
+        (llamar a `super().is_dead(response)` primero)."""
+        return response.status in self.DEAD_STATUSES
+
+    def redirect_to_follow(self, response) -> str | None:
+        """URL a seguir a mano cuando el proveedor necesita ver el redirect en
+        crudo para distinguir baja de simple cambio de URL canonica. `None` =
+        no aplica (el comportamiento normal de RedirectMiddleware alcanza)."""
+        return None
+
+    @staticmethod
+    def _location_of(response) -> str:
+        return response.headers.get("Location", b"").decode("latin-1")
+
+    @staticmethod
+    def _host_of(url: str) -> str:
+        return urlparse(url).netloc.lower()
