@@ -664,3 +664,85 @@ def test_sources_run_in_parallel_not_sequentially(monkeypatch, tmp_path: Path):
 
     assert rc == 0
     assert set(llegaron) == {s.slug for s in run_batch.SOURCES}
+
+
+# ---------------------------------------------------------------------------
+# Lock por fuente (2026-08-31): una sola corrida por fuente a la vez.
+# ---------------------------------------------------------------------------
+
+
+def test_una_segunda_corrida_de_la_misma_fuente_saltea_el_tick():
+    """El bug medido: Discovery de DeRuedas tarda ~34 min contra un tick de
+    cron de 15 min, y `mark_discovery_ran_for` recien corre DESPUES del
+    subprocess - asi que los ticks siguientes veian el timestamp viejo y
+    lanzaban su propia Discovery encima. Con 3 spiders concurrentes a
+    DOWNLOAD_DELAY=5 el sitio recibia un request cada ~1,7s en vez de cada 5s,
+    rompiendo el Crawl-delay que respetamos a proposito."""
+    from datetime import datetime
+
+    redis_client = fakeredis.FakeRedis()
+    source = run_batch.SOURCES[0]
+    corridas = []
+
+    with patch("run_batch._run_source_locked", side_effect=lambda *a: corridas.append(1) or 0):
+        # la primera toma el lock y corre
+        assert run_batch.run_source(datetime.now(), redis_client, source) == 0
+        assert len(corridas) == 1
+
+        # simulo una corrida EN CURSO: el lock esta tomado
+        assert run_batch._acquire_source_lock(redis_client, source)
+        assert run_batch.run_source(datetime.now(), redis_client, source) == 0
+        assert len(corridas) == 1, "la segunda corrida no debio ejecutarse"
+
+
+def test_el_lock_se_libera_aunque_la_corrida_falle():
+    """Si una excepcion dejara el lock tomado, la fuente quedaria muerta hasta
+    que expire el TTL (1h) - peor que el problema que resuelve."""
+    from datetime import datetime
+
+    redis_client = fakeredis.FakeRedis()
+    source = run_batch.SOURCES[0]
+
+    with patch("run_batch._run_source_locked", side_effect=RuntimeError("spider roto")):
+        with pytest.raises(RuntimeError):
+            run_batch.run_source(datetime.now(), redis_client, source)
+
+    assert run_batch._acquire_source_lock(redis_client, source), "el lock quedo huerfano"
+
+
+def test_el_lock_es_por_fuente_no_global():
+    """Que DeRuedas este ocupada no puede frenar a ML: corren contra dominios
+    distintos, con presupuestos de request independientes."""
+    redis_client = fakeredis.FakeRedis()
+    una, otra = run_batch.SOURCES[0], run_batch.SOURCES[1]
+
+    assert run_batch._acquire_source_lock(redis_client, una)
+    assert run_batch._acquire_source_lock(redis_client, otra), "el lock de una fuente bloqueo a otra"
+
+
+def test_el_lock_expira_solo_para_no_dejar_una_fuente_colgada():
+    """Ante una muerte dura (contenedor recreado) el `finally` no corre; el TTL
+    es la unica red."""
+    redis_client = fakeredis.FakeRedis()
+    source = run_batch.SOURCES[0]
+    run_batch._acquire_source_lock(redis_client, source)
+
+    ttl = redis_client.ttl(f"scheduling:run_lock:{source.slug}")
+    assert 0 < ttl <= run_batch.SOURCE_LOCK_TTL_SECONDS
+    # tiene que superar la corrida mas larga medida (Discovery de DeRuedas, 34 min)
+    assert run_batch.SOURCE_LOCK_TTL_SECONDS > 34 * 60
+
+
+def test_deruedas_entra_en_el_tick_con_su_crawl_delay():
+    """El batch se dimensiona contra el tick de 15 min a 5s por request, no
+    contra lo que sobra despues de las otras fuentes (corren en paralelo)."""
+    deruedas = next(s for s in run_batch.SOURCES if s.slug == "deruedas")
+    segundos = deruedas.detail_batch_size * deruedas.seconds_per_request
+
+    assert segundos <= 900, "un batch mas largo que el tick se apoya solo en el lock"
+    assert segundos <= 700, "dejar margen para reintentos y arranque del spider"
+
+    # y tiene que poder recorrer su pool dentro del tier de re-Detail
+    por_dia = deruedas.detail_batch_size * (24 * 60 / 15)
+    assert por_dia / 8780 >= 1 / (run_batch.DETAIL_TIER_HOURS / 24), \
+        "no alcanza a recorrer el pool conocido dentro de DETAIL_TIER_HOURS"

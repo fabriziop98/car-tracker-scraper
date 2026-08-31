@@ -43,6 +43,37 @@ class DeruedasDetailSpider(BaseDetailSpider):
         "DOWNLOAD_DELAY": 5,
     }
 
+    # wdxtkg3auw: el 302 tiene que llegar en crudo, no seguirlo el middleware.
+    handle_httpstatus_list = BaseDetailSpider.handle_httpstatus_list + [302]
+
+    def is_dead(self, response):
+        """DeRuedas manda los avisos caidos a la HOME del sitio con un 302
+        (no 404 como Autocity, ni al buscador de la marca como ML - cada sitio
+        lo hace distinto, por eso ninguna señal se asume).
+
+        Identificado el 2026-08-31 con el warning que introdujo wdxtkg3auw
+        justamente para esto: en el batch de las 18:45 aparecio
+        `https://www.deruedas.com.ar/ (status=200) no produjo item`, o sea
+        RedirectMiddleware siguiendo el 302 hasta la portada, que obviamente no
+        parsea como ficha.
+
+        Se exige que el destino sea la RAIZ, no cualquier redirect del mismo
+        host: un 302 a otra ficha seria un cambio de URL canonica con el aviso
+        vivo, y marcarlo muerto tiraria un candidato bueno."""
+        if super().is_dead(response):
+            return True
+        if response.status != 302:
+            return False
+        location = self._location_of(response)
+        if not location:
+            return False
+        from urllib.parse import urlparse
+
+        destino = urlparse(location)
+        return destino.path in ("", "/") and (
+            destino.netloc == "" or destino.netloc.lower() in self.allowed_domains
+        )
+
     def parse(self, response):
         html = response.text
         vehicle = detail_vehicle(html)

@@ -10,6 +10,12 @@ en produccion:
                  (37 de 400 en la corrida del 31/8 20:15)
   - ML        -> ademas, 302 dentro del MISMO host = cambio de slug canonico,
                  el aviso sigue vivo y hay que seguirlo (1 de esos 38)
+  - DeRuedas  -> 302 a la HOME del sitio (batch del 31/8 18:45)
+
+Motordil todavia no tiene señal propia observada: sus corridas dan 27/27 sin
+perdidas. Hereda el 404 de la base, y si usa otra cosa el warning de
+BaseDetailSpider la va a delatar con URL y status - que es exactamente como se
+encontro la de DeRuedas, en vez de asumirla.
 """
 from scrapy.http import HtmlResponse, Request, Response
 
@@ -130,3 +136,41 @@ def test_source_slug_sale_del_nombre_del_spider():
     }
     for spider in _all_spiders():
         assert spider.source_slug == esperado[spider.name]
+
+
+# --- DeRuedas: 302 a la home ------------------------------------------------
+# Identificada el 2026-08-31 gracias al warning de este mismo ticket, no
+# asumida: en el batch de las 18:45 el log mostro
+# "https://www.deruedas.com.ar/ (status=200) no produjo item".
+
+DR_FICHA = "https://www.deruedas.com.ar/vendo/Toyota/Hilux-SW4/Usado/Mendoza?cod=781094"
+
+
+def test_deruedas_302_a_la_home_es_baja():
+    spider = DeruedasDetailSpider(urls=DR_FICHA)
+    response = _redirect(DR_FICHA, "https://www.deruedas.com.ar/")
+
+    assert spider.is_dead(response)
+    items = list(spider._parse_or_dead(response))
+    assert len(items) == 1 and isinstance(items[0], DeadListingItem)
+    assert items[0]["source"] == "deruedas"
+
+
+def test_deruedas_302_relativo_a_la_raiz_tambien_es_baja():
+    spider = DeruedasDetailSpider(urls=DR_FICHA)
+    assert spider.is_dead(_redirect(DR_FICHA, "/"))
+
+
+def test_deruedas_302_a_OTRA_ficha_NO_es_baja():
+    """Cambio de URL canonica con el aviso vivo. Marcarlo muerto tiraria un
+    candidato bueno - el mismo riesgo que ya cubre el caso de ML."""
+    spider = DeruedasDetailSpider(urls=DR_FICHA)
+    otra = "https://www.deruedas.com.ar/vendo/Toyota/Hilux-SW4/Usado/Mendoza?cod=999999"
+    response = _redirect(DR_FICHA, otra)
+
+    assert not spider.is_dead(response)
+
+
+def test_deruedas_302_a_otro_dominio_NO_se_asume_baja():
+    spider = DeruedasDetailSpider(urls=DR_FICHA)
+    assert not spider.is_dead(_redirect(DR_FICHA, "https://example.com/"))

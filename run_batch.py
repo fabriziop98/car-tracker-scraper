@@ -181,13 +181,23 @@ SOURCES = (
         discovery_spider="deruedas_discovery",
         detail_spider="deruedas_detail",
         discovery_interval_hours=5,
-        # El mas chico de los tres a proposito: los spiders de DeRuedas suman
-        # DOWNLOAD_DELAY=5 propio para respetar el Crawl-delay que pide su
-        # robots.txt, asi que cada request cuesta ~5s en vez de ~1s. Con 40
-        # avisos son ~150s: deja ~100s de margen sobre el tick de 15 min una vez
-        # descontados ML (500s) y Motordil (200s). El margen es a proposito - el
-        # calculo asume paceo perfecto y sin reintentos.
-        detail_batch_size=30,
+        # DeRuedas suma DOWNLOAD_DELAY=5 propio para respetar el Crawl-delay
+        # que pide su robots.txt, asi que cada request cuesta ~5s en vez de ~1s.
+        #
+        # 2026-08-31: subido de 30 a 120. El 30 salia de restarle al tick de 15
+        # min lo que tardaban ML (500s) y Motordil (200s) - una cuenta que dejo
+        # de valer cuando wdxtkg39qx paso las fuentes a correr EN PARALELO. El
+        # presupuesto del tick es por fuente, no compartido: DeRuedas dispone de
+        # los 900s enteros y estaba usando 150s.
+        #
+        # Con 30 el ciclo completo daba 3,0 dias contra un DETAIL_TIER_HOURS de
+        # 72h: exactamente al 100% de capacidad, sin margen para candidatos
+        # nuevos. Por eso convertia 29% (2.567 listings de 8.780 candidatos)
+        # mientras ML convertia 89,6%, con 1.280 candidatos nunca detallados.
+        # Con 120 son ~600s por tick (300s de margen) y el ciclo baja a ~0,8
+        # dias. Que una corrida se pase del tick ya no es peligroso: el lock de
+        # run_source hace que el tick siguiente saltee en vez de solaparse.
+        detail_batch_size=120,
         seconds_per_request=5.0,
     ),
     SourceConfig(
@@ -353,8 +363,62 @@ def run_detail(now: datetime, tracker: DiscoveryCandidateTracker, source: Source
     return result.returncode
 
 
+# TTL del lock de fuente. Solo actua como red ante una muerte dura del proceso
+# (SIGKILL, contenedor recreado) - el camino normal es el release del `finally`.
+# 1h supera con holgura la corrida mas larga medida (Discovery de DeRuedas, 34
+# min) y acota a 1h cuanto puede quedar una fuente parada por un lock huerfano.
+SOURCE_LOCK_TTL_SECONDS = 3600
+
+
+def _acquire_source_lock(redis_client, source: SourceConfig) -> bool:
+    return bool(
+        redis_client.set(
+            f"scheduling:run_lock:{source.slug}",
+            f"{os.getpid()}@{datetime.now(ART).isoformat()}",
+            nx=True,
+            ex=SOURCE_LOCK_TTL_SECONDS,
+        )
+    )
+
+
+def _release_source_lock(redis_client, source: SourceConfig) -> None:
+    redis_client.delete(f"scheduling:run_lock:{source.slug}")
+
+
 def run_source(now: datetime, redis_client, source: SourceConfig) -> int:
-    """Un tick completo (Discovery si vencio + Detail) para UNA fuente."""
+    """Un tick completo (Discovery si vencio + Detail) para UNA fuente.
+
+    Una sola corrida por fuente a la vez (lock en Redis). Sin esto, una corrida
+    mas larga que el tick de cron (15 min) se solapaba con la siguiente: cron
+    dispara igual, y `mark_discovery_ran_for` recien se llama DESPUES de que el
+    subprocess termina, asi que el tick siguiente ve el timestamp viejo y lanza
+    su propia Discovery encima.
+
+    Medido el 2026-08-31: Discovery de DeRuedas tarda ~34 min (8.029 items a
+    DOWNLOAD_DELAY=5) y aparecia 3 veces seguidas en ticks consecutivos
+    (10:00, 10:15, 10:30, las tres completas). Con 3 spiders concurrentes a 5s
+    cada uno, el sitio recibia un request cada ~1,7s en vez de cada 5s - o sea
+    que el Crawl-delay que respetamos a proposito no se estaba respetando. El
+    DOWNLOAD_DELAY de Scrapy es POR PROCESO y el token bucket de Redis, que si
+    es global, esta en 1 req/s: mucho mas laxo que los 0,2 req/s de esta
+    fuente, asi que tampoco lo atrapaba.
+
+    El lock es por fuente y no global: que DeRuedas este ocupada no tiene por
+    que frenar a las demas, que corren contra otros dominios con su propio
+    presupuesto (ver el comentario del ThreadPoolExecutor en main()).
+    """
+    if not _acquire_source_lock(redis_client, source):
+        print(f"[run_batch] [{source.slug}] ya hay una corrida en curso para esta fuente - "
+              "salteo el tick (no solapar protege el Crawl-delay del sitio).")
+        return 0
+
+    try:
+        return _run_source_locked(now, redis_client, source)
+    finally:
+        _release_source_lock(redis_client, source)
+
+
+def _run_source_locked(now: datetime, redis_client, source: SourceConfig) -> int:
     tracker = DiscoveryCandidateTracker.for_source(redis_client, source.slug)
 
     exit_code = 0
