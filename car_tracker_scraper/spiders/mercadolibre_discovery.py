@@ -54,6 +54,7 @@ import scrapy
 from car_tracker_scraper.extraction.common import compact
 from car_tracker_scraper.extraction.mercadolibre import (
     extract_nordic_ctx,
+    iter_model_facet,
     iter_polycards,
     polycard_components,
 )
@@ -137,10 +138,24 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
     name = "mercadolibre_discovery"
     allowed_domains = ["autos.mercadolibre.com.ar"]
 
-    def __init__(self, marcas: str = "fiat", max_pages: str = "30", *args, **kwargs):
+    def __init__(
+        self,
+        marcas: str = "fiat",
+        max_pages: str = "30",
+        modelo_min_volumen: str = "150",
+        max_modelos_por_marca: str = "15",
+        *args,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
         self.marcas = [m.strip() for m in marcas.split(",") if m.strip()]
         self.max_pages = int(max_pages)
+        # wdxtkg39v1: por debajo de este volumen no vale gastar requests - la
+        # consulta por marca ya trae esos avisos dentro de su cupo. 0 desactiva
+        # el corte por modelo por completo (util para comparar contra la linea
+        # base sin tocar codigo).
+        self.modelo_min_volumen = int(modelo_min_volumen)
+        self.max_modelos_por_marca = int(max_modelos_por_marca)
 
     async def start(self):
         # start_requests() esta deprecado desde Scrapy 2.13 en favor de este
@@ -163,7 +178,67 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
         # regla.
         for marca in self.marcas:
             url = f"https://autos.mercadolibre.com.ar/{marca}"
-            yield scrapy.Request(url, callback=self.parse, meta={"marca": marca, "page_count": 1})
+            yield scrapy.Request(
+                url,
+                callback=self.parse,
+                meta={"marca": marca, "page_count": 1, "es_pagina_de_marca": True},
+            )
+
+    def _abanico_por_modelo(self, marca: str, search: dict):
+        """wdxtkg39v1: ademas de la consulta por marca, una consulta por cada
+        modelo con volumen propio.
+
+        ML corta la paginacion en el offset ~2.000 por consulta y lo publica en
+        `search.pagination.results_limit`. Medido el 2026-09-01: Toyota tiene
+        6.746 avisos reales (facet BRAND) y por `/toyota` solo se alcanzan
+        2.000 - el 30%. Partiendo en consultas mas chicas cada una recupera su
+        propio cupo; se confirmo que el cupo es POR CONSULTA corriendo dos
+        modelos seguidos y llegando ambos al offset 1969.
+
+        Se consulta `/{slug}` como TERMINO de busqueda, no como filtro: la url
+        que publica el facet (`/{modelo}/{marca}_NoIndex_True`) no aplica nada
+        si se la pide sin su fragmento `#applied_...`, que es client-side. ML
+        toma el ultimo segmento del path como texto de busqueda.
+
+        **La marca que viaja en meta es la de la PAGINA DE MARCA, no el termino.**
+        Es deliberado y es el punto delicado: `_resolve_marca` valida el titulo
+        contra `self.marcas`, que tiene que seguir siendo la lista de marcas
+        reales. Si se le pasaran nombres de modelo, ninguna resolucion
+        matchearia y los items quedarian etiquetados con el modelo como si
+        fuera marca - invisibles para `due_for_detail`, que filtra por marca
+        curada. Es la misma falla silenciosa del incidente de la marca 'salto'.
+
+        La busqueda por texto trae de mas: `/etios` devuelve un Fiat 600 y
+        `/hiace` un Citroen Jumpy entre los primeros resultados. No es un
+        problema - son avisos reales, y `_resolve_marca` los reetiqueta con su
+        marca verdadera a partir del titulo.
+        """
+        modelos = [
+            m for m in iter_model_facet(search)
+            if m["count"] >= self.modelo_min_volumen and m["slug"] != marca
+        ]
+        modelos.sort(key=lambda m: m["count"], reverse=True)
+        modelos = modelos[: self.max_modelos_por_marca]
+
+        if not modelos:
+            return
+        self.logger.info(
+            "wdxtkg39v1 [%s]: %d modelos con volumen propio (>=%d): %s",
+            marca,
+            len(modelos),
+            self.modelo_min_volumen,
+            ", ".join(f"{m['slug']}({m['count']})" for m in modelos),
+        )
+        for modelo in modelos:
+            yield scrapy.Request(
+                f"https://autos.mercadolibre.com.ar/{modelo['slug']}",
+                callback=self.parse,
+                meta={
+                    "marca": marca,  # la marca real, NO el termino - ver docstring
+                    "page_count": 1,
+                    "termino_modelo": modelo["slug"],
+                },
+            )
 
     def parse(self, response):
         marca = response.meta["marca"]
@@ -171,6 +246,9 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
 
         ctx = extract_nordic_ctx(response.text)
         search = ctx["appProps"]["sharedState"]["search"]
+
+        if response.meta.get("es_pagina_de_marca") and self.modelo_min_volumen > 0:
+            yield from self._abanico_por_modelo(marca, search)
 
         for polycard in iter_polycards(search.get("results", [])):
             metadata = polycard.get("metadata", {})
@@ -250,5 +328,14 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
             yield response.follow(
                 next_url,
                 callback=self.parse,
-                meta={"marca": marca, "page_count": page_count + 1},
+                # es_pagina_de_marca NO se propaga a proposito: el abanico por
+                # modelo (wdxtkg39v1) tiene que dispararse una sola vez por
+                # marca, en su primera pagina, y no en cada pagina siguiente.
+                # termino_modelo si viaja, solo para poder leer en el log de que
+                # consulta salio cada pagina.
+                meta={
+                    "marca": marca,
+                    "page_count": page_count + 1,
+                    "termino_modelo": response.meta.get("termino_modelo"),
+                },
             )

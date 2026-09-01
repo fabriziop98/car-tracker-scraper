@@ -8,6 +8,7 @@ se confirmo esto con datos reales.
 from __future__ import annotations
 
 import re
+from urllib.parse import urlparse
 from typing import Any, Iterator
 
 # wdxtkg30xr: el scanner de llaves balanceadas y el lector de JSON-LD se
@@ -53,3 +54,59 @@ def iter_polycards(results: list[dict]) -> Iterator[dict]:
 def polycard_components(polycard: dict) -> dict[str, Any]:
     """Convierte la lista components[] de un polycard en un dict indexado por tipo."""
     return {c["type"]: c.get(c["type"]) for c in polycard.get("components", [])}
+
+
+def iter_model_facet(search: dict) -> Iterator[dict[str, Any]]:
+    """Modelos que ML ofrece como filtro en una pagina de listado, con su slug
+    canonico y el conteo real de avisos (wdxtkg39v1).
+
+    Es la fuente de la lista de modelos a scrapear: sale del propio sitio, con
+    los slugs que ML usa y conteos que se actualizan solos cuando aparece un
+    modelo nuevo - a diferencia de derivarla de nuestro catalogo curado, cuyos
+    slugs no tienen por que coincidir con los de ML y que quedaria viejo sin
+    que nadie se entere.
+
+    Dos detalles medidos contra el sitio real (2026-09-01), no asumidos:
+
+    * El facet aparece DOS veces en la respuesta. El de
+      `melidata_track.event_data.displayed_filters` es el payload de analitica y
+      trae los values como strings pelados (ids), sin url ni conteo: inservible.
+      El util esta en `sidebar.components[].filters[]`. Por eso se busca por
+      `id == "MODEL"` con values de dicts, en vez de por una ruta fija.
+    * El slug se toma del PRIMER segmento de la url del facet
+      (`/{modelo}/{marca}_NoIndex_True`), que es el slug canonico de ML, en vez
+      de slugificar `name` nosotros - "Hilux Pick-Up" -> "hilux-pick-up" y
+      "C-HR" -> "c-hr" son justo los casos donde una slugificacion propia se
+      equivoca.
+
+    Ojo con lo que ML hace con esa url: pedida sin el fragmento `#applied_...`
+    NO aplica el filtro (devuelve la marca sin filtrar). El slug sirve como
+    TERMINO de busqueda (`/{slug}`), no como filtro estructurado.
+    """
+    for nodo in _iter_filtros(search, "MODEL"):
+        for valor in nodo.get("values") or []:
+            if not isinstance(valor, dict):
+                continue  # el facet de melidata: ids pelados, sin url ni conteo
+            url = str(valor.get("url") or "").split("#")[0]
+            slug = urlparse(url).path.strip("/").split("/")[0] if url else ""
+            if not slug:
+                continue
+            digitos = "".join(c for c in str(valor.get("results") or "") if c.isdigit())
+            yield {
+                "name": valor.get("name"),
+                "slug": slug,
+                "count": int(digitos) if digitos else 0,
+            }
+
+
+def _iter_filtros(nodo: Any, filtro_id: str, prof: int = 0) -> Iterator[dict]:
+    if prof > 6:
+        return
+    if isinstance(nodo, dict):
+        if nodo.get("id") == filtro_id and isinstance(nodo.get("values"), list):
+            yield nodo
+        for v in nodo.values():
+            yield from _iter_filtros(v, filtro_id, prof + 1)
+    elif isinstance(nodo, list):
+        for v in nodo:
+            yield from _iter_filtros(v, filtro_id, prof + 1)

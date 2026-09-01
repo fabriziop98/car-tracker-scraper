@@ -81,7 +81,7 @@ import sys
 import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -137,6 +137,13 @@ class SourceConfig:
     # delay 5 tarda 5x lo que sugiere su batch_size.
     seconds_per_request: float = 1.0
 
+    # Argumentos extra para el spider de Discovery de ESTA fuente (`-a k=v`).
+    # Existen porque el corte por modelo de wdxtkg39v1 es especifico de ML y su
+    # calibracion es una decision de ritmo, no un default del spider: conviene
+    # que viva junto al resto del tuning por fuente (detail_batch_size,
+    # seconds_per_request) y no escondido en la firma del spider.
+    discovery_args: dict = field(default_factory=dict)
+
     @property
     def estimated_detail_seconds(self) -> float:
         return self.detail_batch_size * self.seconds_per_request
@@ -164,6 +171,25 @@ SOURCES = (
         # antes de volver a subir.
         detail_batch_size=400,
         seconds_per_request=1.0,
+        # wdxtkg39v1 - despliegue conservador, a subir con dato real medido.
+        #
+        # ML corta la paginacion en ~2.000 por consulta (lo publica en
+        # search.pagination.results_limit) y su facet BRAND dice que Toyota
+        # tiene 6.746 avisos: por `/toyota` alcanzamos el 30%. Consultar tambien
+        # por modelo rompe ese techo porque el cupo es POR CONSULTA (verificado
+        # 2026-09-01 contra el sitio real).
+        #
+        # Los valores por defecto del spider son 150/15, que estimados dan
+        # ~1.500-2.000 requests extra por corrida sobre los ~840 actuales. Se
+        # arranca en 400/5 -bastante mas arriba y mas angosto- porque el
+        # circuit breaker de auto.mercadolibre.com.ar ya se abrio una vez
+        # (2026-08-28, 31% de error) al subir el ritmo de golpe. Primero medir
+        # cuantos candidatos nuevos aparecen y como responde ML; recien despues
+        # aflojar hacia 150/15.
+        #
+        # modelo_min_volumen=0 desactiva el corte por completo, para una corrida
+        # de control contra la linea base sin tocar codigo.
+        discovery_args={"modelo_min_volumen": 400, "max_modelos_por_marca": 5},
     ),
     SourceConfig(
         slug="motordil",
@@ -268,6 +294,7 @@ def run_discovery(now: datetime, tracker: DiscoveryCandidateTracker, source: Sou
         sys.executable, "-m", "scrapy", "crawl", source.discovery_spider,
         "-a", f"marcas={','.join(marcas)}",
         "-a", f"max_pages={DISCOVERY_MAX_PAGES}",
+        *[arg for k, v in source.discovery_args.items() for arg in ("-a", f"{k}={v}")],
         "-O", str(output_path),
     ])
     if result.returncode != 0:

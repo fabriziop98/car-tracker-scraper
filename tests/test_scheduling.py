@@ -746,3 +746,50 @@ def test_deruedas_entra_en_el_tick_con_su_crawl_delay():
     por_dia = deruedas.detail_batch_size * (24 * 60 / 15)
     assert por_dia / 8780 >= 1 / (run_batch.DETAIL_TIER_HOURS / 24), \
         "no alcanza a recorrer el pool conocido dentro de DETAIL_TIER_HOURS"
+
+
+# ---------------------------------------------------------------------------
+# wdxtkg39v1: el tuning del corte por modelo vive en SourceConfig y tiene que
+# llegar de verdad al comando de scrapy.
+# ---------------------------------------------------------------------------
+
+
+@patch("run_batch.fetch_discovered_marcas", return_value=["toyota"])
+@patch("run_batch.subprocess.run")
+def test_discovery_args_llegan_al_comando_de_scrapy(mock_run, _marcas, tmp_path: Path, monkeypatch):
+    from datetime import datetime
+
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "output").mkdir()
+    mock_run.return_value = MagicMock(returncode=0)
+    ml = next(s for s in run_batch.SOURCES if s.slug == "mercadolibre")
+    tracker = DiscoveryCandidateTracker(fakeredis.FakeRedis())
+
+    # subprocess.run esta mockeado, asi que el .jsonl que el spider habria
+    # escrito hay que dejarlo a mano: _record_discovered lo lee despues.
+    ahora = datetime(2026, 9, 1, 3, 0, tzinfo=run_batch.ART)
+    (tmp_path / "output" / f"discovery_mercadolibre_{ahora.strftime('%Y%m%dT%H%M%S')}.jsonl").write_text("")
+
+    run_batch.run_discovery(ahora, tracker, ml)
+
+    cmd = mock_run.call_args[0][0]
+    for clave, valor in ml.discovery_args.items():
+        assert f"{clave}={valor}" in cmd, f"{clave} no llego al spider: {cmd}"
+
+
+def test_el_corte_por_modelo_de_ML_arranca_conservador():
+    """Se despliega en 400/5 y no en los defaults del spider (150/15) porque el
+    circuit breaker de ML ya se abrio una vez al subir el ritmo de golpe
+    (2026-08-28, 31% de error). Este test es un recordatorio explicito: subirlo
+    es una decision con dato medido, no un cambio de rutina."""
+    ml = next(s for s in run_batch.SOURCES if s.slug == "mercadolibre")
+    assert ml.discovery_args["modelo_min_volumen"] >= 400
+    assert ml.discovery_args["max_modelos_por_marca"] <= 5
+
+
+def test_las_otras_fuentes_no_heredan_el_corte_por_modelo():
+    """Es especifico de ML: es la unica fuente con un techo de paginacion
+    medido. Motordil y DeRuedas se drenan enteras con la consulta normal."""
+    for source in run_batch.SOURCES:
+        if source.slug != "mercadolibre":
+            assert source.discovery_args == {}, source.slug
