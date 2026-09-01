@@ -793,3 +793,30 @@ def test_las_otras_fuentes_no_heredan_el_corte_por_modelo():
     for source in run_batch.SOURCES:
         if source.slug != "mercadolibre":
             assert source.discovery_args == {}, source.slug
+
+
+def test_release_stale_source_locks_limpia_todos_los_locks(monkeypatch):
+    """El release normal es el finally de run_source, que NO corre ante un kill
+    duro - y recrear el contenedor en cada rebuild es exactamente eso. Sin esto
+    el TTL de 1h deja la fuente parada hasta una hora: paso el 2026-09-01, un
+    rebuild a las 10:37 mato una corrida de las 10:30 y el Discovery de ML del
+    tick de las 11:15 se salteo solo."""
+    fake = fakeredis.FakeRedis()
+    monkeypatch.setattr(run_batch.redis.Redis, "from_url", staticmethod(lambda *a, **k: fake))
+    for source in run_batch.SOURCES:
+        run_batch._acquire_source_lock(fake, source)
+    assert fake.keys("scheduling:run_lock:*")
+
+    liberados = run_batch.release_stale_source_locks()
+
+    assert len(liberados) == len(run_batch.SOURCES)
+    assert fake.keys("scheduling:run_lock:*") == []
+    # y despues de limpiarlos, cada fuente puede volver a tomar el suyo
+    for source in run_batch.SOURCES:
+        assert run_batch._acquire_source_lock(fake, source)
+
+
+def test_release_stale_source_locks_sin_locks_no_falla(monkeypatch):
+    fake = fakeredis.FakeRedis()
+    monkeypatch.setattr(run_batch.redis.Redis, "from_url", staticmethod(lambda *a, **k: fake))
+    assert run_batch.release_stale_source_locks() == []

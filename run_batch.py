@@ -412,6 +412,29 @@ def _release_source_lock(redis_client, source: SourceConfig) -> None:
     redis_client.delete(f"scheduling:run_lock:{source.slug}")
 
 
+def release_stale_source_locks() -> list[str]:
+    """Libera TODOS los locks de fuente. La llama el entrypoint del contenedor.
+
+    Por que hace falta: el release normal es el `finally` de run_source, que no
+    corre ante una muerte dura del proceso - y recrear el contenedor (cosa que
+    pasa en cada rebuild) es exactamente eso. El TTL de 1h es la red, pero deja
+    la fuente parada hasta una hora, en silencio salvo por una linea de log.
+
+    Paso de verdad el 2026-09-01: un rebuild a las 10:37 mato una corrida
+    arrancada a las 10:30, y el Discovery de ML del tick de las 11:15 se salteo
+    solo ("ya hay una corrida en curso") sin que hubiera ninguna.
+
+    Es seguro hacerlo al arrancar: si este contenedor recien arranca, ninguna
+    corrida suya puede estar en vuelo. El compose levanta un unico scheduler,
+    asi que no hay otro proceso legitimo cuyo lock se pueda estar pisando.
+    """
+    redis_client = redis.Redis.from_url(REDIS_URL)
+    claves = [k.decode() if isinstance(k, bytes) else k for k in redis_client.keys("scheduling:run_lock:*")]
+    if claves:
+        redis_client.delete(*claves)
+    return claves
+
+
 def run_source(now: datetime, redis_client, source: SourceConfig) -> int:
     """Un tick completo (Discovery si vencio + Detail) para UNA fuente.
 
