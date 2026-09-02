@@ -88,6 +88,29 @@ The scraper runs as short-lived batch jobs (spiders triggered by Discovery/Detai
 - `AntiBlockingMiddleware` (350) must stay higher-priority than `LandingZoneMiddleware` (300) — reversing them would let the landing zone capture an intermediate error response instead of the final retried one.
 - **`settings.py` must read env-configurable values via `os.environ.get(name, default)`, never hardcode the localhost default as a bare literal.** `ANTIBLOCK_REDIS_URL` and `LANDING_S3_ENDPOINT_URL` were both hardcoded to their `localhost` fallback (with a comment claiming "configurable by env var" that the code didn't actually implement) — real incident, 2026-08-19: every Discovery/Detail request inside the `scheduler` container failed with `redis.exceptions.ConnectionError` (the anti-blocking circuit breaker check couldn't reach Redis) for a full overnight window, 100% failure rate, silently. `docker-compose.yml` had the right env vars set the whole time; the Python code just never read them. Any new Scrapy setting backed by an env var needs the same `os.environ.get(...)` pattern already used elsewhere in this file — grep `settings.py` for `os.environ` before adding a new one to copy the pattern, don't hand-copy an existing hardcoded line.
 
+## Medir antes de concluir: el script de análisis es el sospechoso número uno
+
+Mucho de lo que se decide acá sale de medir contra el sitio o contra la base
+(rendimiento de Discovery, techo de paginación, cobertura por marca), y esas
+mediciones vienen de scripts escritos en el momento. Han estado mal varias
+veces, y siempre el bug fue del script, no del dato — dos ejemplos reales de la
+misma sesión: se afirmó que MercadoLibre no publica un total de resultados
+(sí lo publica, en `search.pagination.results_limit`) y que Corolla e Hilux
+iban a necesitar cortarse por año para superar el tope (no lo necesitaban).
+Las dos salieron de leer `/toyota/corolla` como un filtro marca+modelo cuando
+en realidad es una búsqueda de texto por "corolla".
+
+- **Cruzar el total contra un conteo independiente.** Un parser que devuelve 0
+  se lee idéntico a "no hay nada". Es el modo de falla más caro porque no
+  parece un error.
+- **Imprimir ejemplos concretos, no solo agregados.** Un promedio no se puede
+  auditar; tres URLs con su respuesta sí.
+- **Antes de concluir sobre el comportamiento del sitio, confirmarlo con dos
+  consultas que deberían diferir.** Si `/toyota/corolla` y `/toyota/hilux`
+  devuelven el mismo `results_limit`, el path no está filtrando lo que se cree.
+- El `CLAUDE.md` de `car-tracker` tiene la versión larga de esto, con los tres
+  casos del 2026-09-02 que costaron un ticket con la premisa invertida.
+
 ## ClickUp (project tracking / documentation)
 
 All roadmap work is tracked in ClickUp, not in this repo's issues. Workspace id `90132882707`, project "Car tracker" id `1000480000001469`, list **"Roadmap Técnico"** (all actionable Fase 0/1/2 tasks) id `1000480000002324`.
