@@ -36,6 +36,8 @@ from car_tracker_scraper.spiders.autocity_discovery import AutocityDiscoverySpid
 from car_tracker_scraper.spiders.deruedas_discovery import DeruedasDiscoverySpider
 from car_tracker_scraper.spiders.mercadolibre_discovery import MercadolibreDiscoverySpider
 from car_tracker_scraper.spiders.motordil_discovery import MotordilDiscoverySpider
+from car_tracker_scraper.extraction.v6 import PUBLISHED_CARS_URL
+from car_tracker_scraper.spiders.v6_discovery import V6DiscoverySpider
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -122,11 +124,29 @@ def _autocity_case():
     )
 
 
+def _v6_case():
+    """Unico Discovery que no pagina NI filtra por marca en el request: un
+    solo GET trae el catalogo entero (ver extraction/v6.py), asi que las
+    'marcas pedidas' no son un filtro real - se pasan solo para validar que
+    la normalizacion a slug curado siga funcionando."""
+    return (
+        V6DiscoverySpider(marcas="toyota,audi,peugeot"),
+        TextResponse(
+            url=PUBLISHED_CARS_URL,
+            body=(FIXTURES / "v6_published_cars_sample.json").read_bytes(),
+            encoding="utf-8",
+            request=Request(url=PUBLISHED_CARS_URL),
+        ),
+        None,  # no filtra por marcas: el catalogo entero llega en un unico GET
+    )
+
+
 PROVIDER_CASES = {
     "mercadolibre": _mercadolibre_case,
     "autocity": _autocity_case,
     "motordil": _motordil_case,
     "deruedas": _deruedas_case,
+    "v6": _v6_case,
 }
 
 

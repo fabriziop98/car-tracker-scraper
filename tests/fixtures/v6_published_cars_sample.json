@@ -1,0 +1,494 @@
+[
+  {
+    "uid": "a6LTIVsfBb",
+    "brand": "Toyota",
+    "model": "Hiace",
+    "version": "Wagon 2.8 TDI AT 10A",
+    "city": "Castelar",
+    "province": "Buenos Aires",
+    "domain": "",
+    "specs": {
+      "carrocería": {
+        "cantidad_puertas": "5",
+        "largo_mm": "5265",
+        "plazas": "10",
+        "tipo_carroceria": "Van",
+        "peso_kg": "2150"
+      },
+      "mecánica": {
+        "caja_tipo": "AT",
+        "cilindros": "4",
+        "cilindrada": "2755",
+        "combustible": "Diésel",
+        "es_hibrido": false,
+        "potencia_hp": "177",
+        "torque_nm": "450",
+        "traccion": "Trasera (RWD)",
+        "relacion_peso_potencia": 12.15
+      },
+      "seguridad": {
+        "airbags_total": "3",
+        "control_estabilidad_esp": "Sí"
+      },
+      "confort": {}
+    },
+    "specs_code": "23438734",
+    "agencyUrl": "/agencia/Car-Cash-Argentina",
+    "agencyDescription": "Somos Car Cash Argentina, concesionario de autos multimarca, con más de 10 años en el mercado.\nNuestra máxima prioridad es brindarle al cliente la mejor experiencia a la hora de comprar un auto usado, generando transparencia y seriedad durante todo su proceso de compra o venta.",
+    "record": "",
+    "first_owner": false,
+    "cover250": {
+      "rotation": 0,
+      "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2Fg7KTkMfzjOc4mZDI7F7v%2FFILEminimizer1_250_1786545923304.webp?alt=media&token=bc65ba52-4a56-4adc-8d1d-704a4373f2c8"
+    },
+    "cover750": {
+      "rotation": 0,
+      "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2Fg7KTkMfzjOc4mZDI7F7v%2FFILEminimizer1_750_1786545923304.webp?alt=media&token=e9b9cb15-d9c2-44fa-b0db-1a1a6effbf07"
+    },
+    "kilometers": "0",
+    "year": "2025",
+    "fromAgency": true,
+    "exterior250": [
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2Fg7KTkMfzjOc4mZDI7F7v%2FFILEminimizer3_250_1786545967207.webp?alt=media&token=1be7ab56-b638-415f-a54b-ab126f22fc74",
+        "rotation": 0
+      },
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2Fg7KTkMfzjOc4mZDI7F7v%2FFILEminimizer81_250_1786545968645.webp?alt=media&token=615e0093-fcb3-4a66-bf76-229059b61bf3",
+        "rotation": 0
+      }
+    ],
+    "exterior750": [
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2Fg7KTkMfzjOc4mZDI7F7v%2FFILEminimizer3_750_1786545967207.webp?alt=media&token=6b763cb9-3079-4b97-b60c-b26a5184bbe4",
+        "rotation": 0
+      },
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2Fg7KTkMfzjOc4mZDI7F7v%2FFILEminimizer81_750_1786545968645.webp?alt=media&token=edcc3855-c3fa-43c6-8289-92e3ff86a673",
+        "rotation": 0
+      }
+    ],
+    "interior250": [
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2Fg7KTkMfzjOc4mZDI7F7v%2FFILEminimizer82_250_1786545996498.webp?alt=media&token=014fb440-7b17-4503-95dd-539104f6364c",
+        "rotation": 0
+      },
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2Fg7KTkMfzjOc4mZDI7F7v%2FFILEminimizer83_250_1786545997970.webp?alt=media&token=9dca22ed-200f-47b0-b24c-9cad0ac51939",
+        "rotation": 0
+      }
+    ],
+    "interior750": [
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2Fg7KTkMfzjOc4mZDI7F7v%2FFILEminimizer82_750_1786545996498.webp?alt=media&token=da66aa69-0270-4344-b886-40a885dabc43",
+        "rotation": 0
+      },
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2Fg7KTkMfzjOc4mZDI7F7v%2FFILEminimizer83_750_1786545997970.webp?alt=media&token=1931dba3-4a54-4ac5-aeee-901a14191f6f",
+        "rotation": 0
+      }
+    ],
+    "others250": [],
+    "others750": [],
+    "visitsTotal": 15,
+    "price": "73500",
+    "publishedAt": 1786546048520,
+    "created": "2026-08-12T14:44:07.726Z",
+    "turbo": false,
+    "financiamiento": true,
+    "anticipo": null,
+    "boost": false,
+    "boostDate": null,
+    "score": 55
+  },
+  {
+    "uid": "FBEo5y5iZe",
+    "brand": "Audi",
+    "model": "A3",
+    "version": "2.0 TFSI Sportback S-tronic 5P",
+    "city": "Liniers, CABA",
+    "province": "Ciudad Autónoma de Buenos Aires",
+    "domain": "xxxxxx",
+    "specs": {
+      "carrocería": {
+        "cantidad_puertas": "5",
+        "largo_mm": "4313",
+        "plazas": "5",
+        "tipo_carroceria": "Hatchback",
+        "peso_kg": "1290"
+      },
+      "mecánica": {
+        "caja_tipo": "AT",
+        "cilindros": "4",
+        "cilindrada": "1984",
+        "consumo_mixto_l_100km": "6.7",
+        "combustible": "Nafta",
+        "es_hibrido": false,
+        "potencia_hp": "190",
+        "torque_nm": "320",
+        "traccion": "Delantera",
+        "relacion_peso_potencia": "6.8"
+      },
+      "seguridad": {
+        "airbags_total": "6",
+        "control_estabilidad_esp": "Sí",
+        "asistente_frenado_emergencia": "Sí"
+      },
+      "confort": {
+        "tapizados": "Cuero"
+      }
+    },
+    "specs_code": "26506329",
+    "record": "",
+    "first_owner": false,
+    "cover250": {
+      "rotation": 0,
+      "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FaXZSYYQ1IPq7lfblA34V%2F317490_250_1787667289717.webp?alt=media&token=e9f26436-d0ee-4f66-a152-9d7f4aef5299"
+    },
+    "cover750": {
+      "rotation": 0,
+      "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FaXZSYYQ1IPq7lfblA34V%2F317490_750_1787667289717.webp?alt=media&token=2cfe6019-f73a-41e9-ba63-2b2902aa3e75"
+    },
+    "kilometers": "163000",
+    "year": "2007",
+    "exterior250": [
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FaXZSYYQ1IPq7lfblA34V%2F317491_250_1787667339276.webp?alt=media&token=c50137e5-1ba3-4f63-8e45-6f576c4af282",
+        "rotation": 0
+      },
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FaXZSYYQ1IPq7lfblA34V%2F317492_250_1787667344300.webp?alt=media&token=6dfe32ef-6239-441d-a170-f70c5e0b6943",
+        "rotation": 0
+      }
+    ],
+    "exterior750": [
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FaXZSYYQ1IPq7lfblA34V%2F317491_750_1787667339276.webp?alt=media&token=fc4e60e4-7cd3-4d2f-bbe4-e0ae244e85c2",
+        "rotation": 0
+      },
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FaXZSYYQ1IPq7lfblA34V%2F317492_750_1787667344300.webp?alt=media&token=0e67ebef-353e-4a75-9895-853be223bfbb",
+        "rotation": 0
+      }
+    ],
+    "interior250": [
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FaXZSYYQ1IPq7lfblA34V%2F317502_250_1787667381772.webp?alt=media&token=51932161-875d-40d3-8c50-20fdd2ba9725",
+        "rotation": 0
+      },
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FaXZSYYQ1IPq7lfblA34V%2F317503_250_1787667386459.webp?alt=media&token=dd9722f3-7e53-4b7f-8884-065f1aca9781",
+        "rotation": 0
+      }
+    ],
+    "interior750": [
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FaXZSYYQ1IPq7lfblA34V%2F317502_750_1787667381772.webp?alt=media&token=ba32daca-7962-476d-99b3-c35cfca5a216",
+        "rotation": 0
+      },
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FaXZSYYQ1IPq7lfblA34V%2F317503_750_1787667386459.webp?alt=media&token=6168a152-93aa-4a96-bc99-749f02835418",
+        "rotation": 0
+      }
+    ],
+    "others250": [
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FaXZSYYQ1IPq7lfblA34V%2F317512_250_1787667423096.webp?alt=media&token=cd59e722-66e5-4978-b087-29c7272a4754",
+        "rotation": 0
+      },
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FaXZSYYQ1IPq7lfblA34V%2F317513_250_1787667426226.webp?alt=media&token=e69d9038-a621-4c01-905e-e478e3aaa41b",
+        "rotation": 0
+      }
+    ],
+    "others750": [
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FaXZSYYQ1IPq7lfblA34V%2F317512_750_1787667423096.webp?alt=media&token=352f5270-0660-46cd-9f19-0e6115eaa4a5",
+        "rotation": 0
+      },
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FaXZSYYQ1IPq7lfblA34V%2F317513_750_1787667426226.webp?alt=media&token=c883fbc3-dc38-4517-9bba-9f7eef978bcd",
+        "rotation": 0
+      }
+    ],
+    "visitsTotal": 200,
+    "price": "13000",
+    "publishedAt": 1787667964016,
+    "created": "2026-08-25T14:17:11.317Z",
+    "turbo": true,
+    "financiamiento": false,
+    "anticipo": null,
+    "boost": false,
+    "boostDate": null,
+    "score": 77.1
+  },
+  {
+    "uid": "4eXEkE9eUP",
+    "brand": "Toyota",
+    "model": "Corolla Cross",
+    "version": "HEV XEI 1.8 eCVT 5P",
+    "city": "Colegiales",
+    "province": "Ciudad Autónoma de Buenos Aires",
+    "domain": "xxxxxxx",
+    "specs": {
+      "carrocería": {
+        "cantidad_puertas": "5",
+        "largo_mm": "4460",
+        "plazas": "5",
+        "tipo_carroceria": "SUV",
+        "peso_kg": "1430"
+      },
+      "mecánica": {
+        "caja_tipo": "AT",
+        "cilindros": "4",
+        "cilindrada": "1798",
+        "combustible": "Híbrido",
+        "es_hibrido": true,
+        "potencia_hp": "122",
+        "torque_nm": "142",
+        "traccion": "Delantera (FWD)",
+        "relacion_peso_potencia": 11.72
+      },
+      "seguridad": {
+        "airbags_total": "7",
+        "control_estabilidad_esp": "Sí (VSC + TRC)"
+      },
+      "confort": {
+        "tapizados": "Cuero y tela"
+      }
+    },
+    "specs_code": "42921884",
+    "record": "",
+    "first_owner": true,
+    "cover250": {
+      "rotation": 0,
+      "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FOhdLSjyOTUdR1ylFKbAw%2F20260809134801_250_1786391355710.webp?alt=media&token=9b7738cd-bd0b-4f38-b58f-f8abc26676d3"
+    },
+    "cover750": {
+      "rotation": 0,
+      "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FOhdLSjyOTUdR1ylFKbAw%2F20260809134801_750_1786391355710.webp?alt=media&token=990b237b-884e-4cd0-bc46-a9f0d5dc37d7"
+    },
+    "kilometers": "87200",
+    "year": "2023",
+    "priceHistory": [
+      {
+        "price": 39000000,
+        "date": 1787424660984,
+        "currency": "ARS"
+      },
+      {
+        "price": 40500000,
+        "date": 1786738193888,
+        "currency": "ARS"
+      }
+    ],
+    "exterior250": [
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FOhdLSjyOTUdR1ylFKbAw%2F20260809134845_250_1786391386410.webp?alt=media&token=b140ec9f-196e-49e4-bc7c-8ea6e7f7ca17",
+        "rotation": 0
+      },
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FOhdLSjyOTUdR1ylFKbAw%2F20260809134910_250_1786391388953.webp?alt=media&token=044a43e4-a354-4762-b953-ba6b0355570b",
+        "rotation": 0
+      }
+    ],
+    "exterior750": [
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FOhdLSjyOTUdR1ylFKbAw%2F20260809134845_750_1786391386410.webp?alt=media&token=971a24d2-2662-426c-befa-b2fbfe5de3cc",
+        "rotation": 0
+      },
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FOhdLSjyOTUdR1ylFKbAw%2F20260809134910_750_1786391388953.webp?alt=media&token=1408244f-144e-4557-b75e-435a8ee11ec6",
+        "rotation": 0
+      }
+    ],
+    "interior250": [
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FOhdLSjyOTUdR1ylFKbAw%2F20260809134551_250_1786391455906.webp?alt=media&token=6ad0cdfc-61d1-474a-aee5-25ffade1b31c",
+        "rotation": 0
+      },
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FOhdLSjyOTUdR1ylFKbAw%2F20260809133501_250_1786391458149.webp?alt=media&token=7a94a74c-3766-4bbd-aeeb-fb48b15b4ac1",
+        "rotation": 0
+      }
+    ],
+    "interior750": [
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FOhdLSjyOTUdR1ylFKbAw%2F20260809134551_750_1786391455906.webp?alt=media&token=9808f1fc-bef0-4541-8d2c-1403bd138d67",
+        "rotation": 0
+      },
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FOhdLSjyOTUdR1ylFKbAw%2F20260809133501_750_1786391458149.webp?alt=media&token=50e853f7-34b6-4313-8320-0c9b29bd8b1e",
+        "rotation": 0
+      }
+    ],
+    "others250": [
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FOhdLSjyOTUdR1ylFKbAw%2F20260809133622_250_1786391586176.webp?alt=media&token=01fed78d-f104-40d6-8704-531b09a9086a",
+        "rotation": 0
+      },
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FOhdLSjyOTUdR1ylFKbAw%2F20260809133612_250_1786391589290.webp?alt=media&token=3208f0c7-1b4e-430e-8e27-004de7df4079",
+        "rotation": 0
+      }
+    ],
+    "others750": [
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FOhdLSjyOTUdR1ylFKbAw%2F20260809133622_750_1786391586176.webp?alt=media&token=279c182c-a088-4518-a79b-8a90d48148b1",
+        "rotation": 0
+      },
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FOhdLSjyOTUdR1ylFKbAw%2F20260809133612_750_1786391589290.webp?alt=media&token=9a587ba0-dcf9-4458-b8ec-0686ce7a4789",
+        "rotation": 0
+      }
+    ],
+    "visitsTotal": 43,
+    "price": "38000000",
+    "publishedAt": "2026-08-10T19:53:37.419Z",
+    "created": "2026-08-10T19:53:37.419Z",
+    "turbo": true,
+    "financiamiento": false,
+    "anticipo": null,
+    "boost": false,
+    "boostDate": null,
+    "score": 65.3
+  },
+  {
+    "uid": "llsL6hZgfu",
+    "brand": "Peugeot",
+    "model": "208",
+    "version": "GT 1.6 THP MT 5P",
+    "city": "Rosario",
+    "province": "Santa Fe",
+    "domain": "xxxxxxx",
+    "specs": {
+      "carrocería": {
+        "cantidad_puertas": "",
+        "largo_mm": "3975",
+        "plazas": "",
+        "tipo_carroceria": "hatchback",
+        "peso_kg": ""
+      },
+      "mecánica": {
+        "caja_tipo": "MT",
+        "cilindros": "4",
+        "cilindrada": "1.6",
+        "consumo_mixto_l_100km": "7.8",
+        "combustible": "nafta",
+        "es_hibrido": false,
+        "potencia_hp": "165",
+        "torque_nm": "240",
+        "traccion": "Delantera",
+        "relacion_peso_potencia": ""
+      },
+      "seguridad": {
+        "airbags_total": "6",
+        "control_estabilidad_esp": "Sí",
+        "asistente_frenado_emergencia": "Sí"
+      },
+      "confort": {
+        "tapizados": "Tela y cuero"
+      }
+    },
+    "specs_code": "70704027",
+    "record": "",
+    "first_owner": false,
+    "cover250": {
+      "rotation": 0,
+      "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FLgwuMgHukNXhIHHWuLvw%2FIMG6115_250_1785519715709.webp?alt=media&token=f219f807-f14b-42ef-9f6c-24706df717eb"
+    },
+    "cover750": {
+      "rotation": 0,
+      "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FLgwuMgHukNXhIHHWuLvw%2FIMG6115_750_1785519715709.webp?alt=media&token=24c404a2-85ca-4520-8270-93a70922f4a0"
+    },
+    "kilometers": "63000",
+    "year": "2020",
+    "priceHistory": [
+      {
+        "price": 15000,
+        "date": 1788258346982,
+        "currency": "USD"
+      },
+      {
+        "price": 15500,
+        "date": 1787067709462,
+        "currency": "USD"
+      },
+      {
+        "price": 16000,
+        "date": 1785520077825,
+        "currency": "USD"
+      }
+    ],
+    "exterior250": [
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FLgwuMgHukNXhIHHWuLvw%2FIMG6118_250_1785519725371.webp?alt=media&token=b51a30d0-4f3e-41f7-bdf4-530105e6267f",
+        "rotation": 0
+      },
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FLgwuMgHukNXhIHHWuLvw%2FIMG6113_250_1785519755735.webp?alt=media&token=27e5fb21-883b-48c1-89b3-a15f1d3fe23d",
+        "rotation": 0
+      }
+    ],
+    "exterior750": [
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FLgwuMgHukNXhIHHWuLvw%2FIMG6118_750_1785519725371.webp?alt=media&token=c8d52c53-49ea-4aad-9e86-2bc548144880",
+        "rotation": 0
+      },
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FLgwuMgHukNXhIHHWuLvw%2FIMG6113_750_1785519755735.webp?alt=media&token=a248cfc0-6c64-4e79-986a-6c33e85e8332",
+        "rotation": 0
+      }
+    ],
+    "interior250": [
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FLgwuMgHukNXhIHHWuLvw%2FIMG6131_250_1785519775702.webp?alt=media&token=6e8451ce-00f6-491a-ba44-d7bd1746b7d7",
+        "rotation": 0
+      },
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FLgwuMgHukNXhIHHWuLvw%2FIMG6132_250_1785519781459.webp?alt=media&token=e7fb579d-9a1b-4f89-9337-342c694a70f3",
+        "rotation": 0
+      }
+    ],
+    "interior750": [
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FLgwuMgHukNXhIHHWuLvw%2FIMG6131_750_1785519775702.webp?alt=media&token=03fcbd46-8147-43ac-95b2-7776cd1e1533",
+        "rotation": 0
+      },
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FLgwuMgHukNXhIHHWuLvw%2FIMG6132_750_1785519781459.webp?alt=media&token=44c38809-f8fa-4dc5-815e-470483f5bec9",
+        "rotation": 0
+      }
+    ],
+    "others250": [
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FLgwuMgHukNXhIHHWuLvw%2FIMG6130_250_1785519808923.webp?alt=media&token=45c04047-73bb-4831-b80f-1771191b69f2",
+        "rotation": 0
+      },
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FLgwuMgHukNXhIHHWuLvw%2FIMG6129_250_1785519798799.webp?alt=media&token=0b112459-1ec5-4955-8d2e-712fc6d476d6",
+        "rotation": 0
+      }
+    ],
+    "others750": [
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FLgwuMgHukNXhIHHWuLvw%2FIMG6130_750_1785519808923.webp?alt=media&token=7479b1ee-b110-4365-8ff8-a1d68a06f208",
+        "rotation": 0
+      },
+      {
+        "url": "https://firebasestorage.googleapis.com/v0/b/autoprecios-f936b.appspot.com/o/cars%2FLgwuMgHukNXhIHHWuLvw%2FIMG6129_750_1785519798799.webp?alt=media&token=031e55ad-c525-4baa-8bb9-c0080cf5177e",
+        "rotation": 0
+      }
+    ],
+    "visitsTotal": 77,
+    "price": "14500",
+    "publishedAt": "2026-07-31T17:44:21.501Z",
+    "created": "2026-07-31T17:44:21.501Z",
+    "turbo": true,
+    "financiamiento": false,
+    "anticipo": null,
+    "boost": false,
+    "boostDate": null,
+    "score": 70.4
+  }
+]

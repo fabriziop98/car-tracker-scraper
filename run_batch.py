@@ -236,6 +236,27 @@ SOURCES = (
         # (re-Detail cada DETAIL_TIER_HOURS=72h) alcanza con ~4 por hora.
         detail_batch_size=150,
     ),
+    SourceConfig(
+        slug="v6",
+        discovery_spider="v6_discovery",
+        detail_spider="v6_detail",
+        discovery_interval_hours=5,
+        # wdxtkg39qx: a diferencia de las otras cuatro fuentes, Discovery Y
+        # Detail son un UNICO GET a un JSON que trae el catalogo entero (209
+        # avisos activos al momento de reverse-engineerear el sitio,
+        # 2026-09-02) - no hay costo por item ni por pagina, asi que
+        # detail_batch_size no limita requests reales, solo cuantos
+        # candidatos vencidos del tracker se le piden a esta corrida (ver
+        # extraction/v6.py). 250 > 209 para drenar el catalogo entero en un
+        # solo tick en vez de partirlo en varios sin necesidad.
+        detail_batch_size=250,
+        # El modelo batch_size*seconds_per_request asume un request POR
+        # ITEM, que no aplica aca (siempre es 1 request total). Se pone bajo
+        # a proposito para que estimated_detail_seconds refleje el costo real
+        # (un GET a un servicio Render que puede tardar unos segundos en
+        # arrancar en frio) en vez de exagerarlo 250x.
+        seconds_per_request=0.1,
+    ),
 )
 
 
