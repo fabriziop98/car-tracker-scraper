@@ -58,6 +58,13 @@ class ListingDetailItem(scrapy.Item):
     price_currency = scrapy.Field()
     price_valid_until = scrapy.Field()
     breadcrumb_raw = scrapy.Field()  # ej. "Autos y Camionetas > Fiat > Palio" - semilla de catalogo
+    main_image_url = scrapy.Field()  # JSON-LD Vehicle.image (= og:image, confirmado igual en fixture real)
+
+    # wdxtkg348c: calculado por ImagePhashPipeline a partir de main_image_url,
+    # no viene de la fuente. hash perceptual de 64 bits (imagehash.phash,
+    # hex de 16 caracteres) - null si la fuente no trajo imagen o la descarga
+    # fallo (avisos incompletos no bloquean el resto del pipeline).
+    main_image_phash = scrapy.Field()
 
     # De __NORDIC_RENDERING_CTX__ / initialState.components
     subtitle_raw = scrapy.Field()  # ej. "2014 | 110.000 km - Publicado hace 1 ano"

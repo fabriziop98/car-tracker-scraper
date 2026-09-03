@@ -46,6 +46,11 @@ def test_parse_real_detail_fixture():
     assert isinstance(item["highlighted_specs_raw"], list)
     assert len(item["highlighted_specs_raw"]) > 0
 
+    # wdxtkg348c: JSON-LD Vehicle.image, confirmado idéntico a <meta og:image>
+    # en este mismo fixture real - CDN distinto (http2.mlstatic.com) del host
+    # de la ficha (auto.mercadolibre.com.ar).
+    assert item["main_image_url"] == "https://http2.mlstatic.com/D_NQ_NP_649567-MLA88498230903_072025-O.webp"
+
 
 @pytest.mark.skipif(not FIXTURE_PARTICULAR.exists(), reason="fixture real no disponible en este checkout")
 def test_parse_real_detail_fixture_particular_seller():

@@ -21,7 +21,14 @@ from car_tracker_scraper.items import DeadListingItem, ListingDetailItem
 
 class MercadolibreDetailSpider(BaseDetailSpider):
     name = "mercadolibre_detail"
-    allowed_domains = ["auto.mercadolibre.com.ar"]
+    # wdxtkg348c: mlstatic.com (matchea todos los subdominios, OffsiteMiddleware
+    # hace sufijo) es el CDN de imagenes de ML - un host DISTINTO del sitio
+    # principal. Confirmado en vivo (2026-09-03): sin este dominio,
+    # OffsiteMiddleware filtraba en silencio el Request que arma
+    # ImagePhashPipeline.get_media_requests contra http2.mlstatic.com, y cada
+    # foto principal fallaba con FileException (main_image_phash quedaba
+    # siempre null pese a que main_image_url si se extraia bien).
+    allowed_domains = ["auto.mercadolibre.com.ar", "mlstatic.com"]
 
     # wdxtkg3auw: el 302 tiene que llegar a nosotros en crudo en vez de que lo
     # siga RedirectMiddleware, ver is_dead/redirect_to_follow.
@@ -149,6 +156,7 @@ class MercadolibreDetailSpider(BaseDetailSpider):
             price_currency=offers.get("priceCurrency"),
             price_valid_until=offers.get("priceValidUntil"),
             breadcrumb_raw=_breadcrumb_text(extract_json_ld(html, "BreadcrumbList")),
+            main_image_url=vehicle.get("image"),
             subtitle_raw=(components.get("header") or {}).get("subtitle"),
             location_raw=location_text,
             highlighted_specs_raw=(components.get("highlighted_specs_attrs") or {}).get("components"),

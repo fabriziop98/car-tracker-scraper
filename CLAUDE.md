@@ -79,6 +79,10 @@ The scraper runs as short-lived batch jobs (spiders triggered by Discovery/Detai
 
 `queue_publish/pipeline.py` + `publisher.py` is the only channel this repo uses to hand data to the Java side (`ITEM_PIPELINES`, priority 400, runs last). The queue/DLQ/retry topology itself is owned and declared by the Java repo (`car-tracker`'s `messaging/ListingsQueueConfig`) — this repo just publishes into it.
 
+### Main-photo perceptual hash (wdxtkg348c)
+
+`image_phash/pipeline.py` (`ITEM_PIPELINES`, priority 300, runs **before** the queue-publish pipeline) subclasses Scrapy's own `ImagesPipeline` rather than downloading with `requests` — its media requests go through the normal downloader stack, so `AntiBlockingMiddleware`'s per-domain token bucket/circuit breaker apply automatically to the image CDN too (`domain_of()` is generic, not hardcoded to the 5 known site domains). Computes `main_image_phash` (64-bit `imagehash.phash`, 16 hex chars) from `main_image_url`, which each spider has to populate itself (source-specific — currently only `mercadolibre_detail.py` does, from the same `Vehicle.image` JSON-LD field it already parses for other fields). **The image CDN is a different host than the site itself** — `mercadolibre_detail.py`'s `allowed_domains` needed `mlstatic.com` added explicitly, confirmed live 2026-09-03: without it, `OffsiteMiddleware` silently drops the image request (`FileException`, no phash, no error pointing at the real cause) even though `main_image_url` extracts fine. Check this first if a new source's phash always comes back null despite a populated `main_image_url`. No image bytes are persisted anywhere beyond `IMAGES_STORE` (an ephemeral local dir, not the S3/MinIO landing zone) — only the hash string survives past `item_completed`.
+
 ## Testing conventions
 
 - `tests/test_scheduling.py`, `tests/test_antiblocking.py` use **fakeredis**, not a real Redis, plus mocked `subprocess.run` — no real crawls or Redis connections triggered by the suite.

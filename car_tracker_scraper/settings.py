@@ -70,8 +70,20 @@ LANDING_S3_BUCKET = "car-tracker-raw"
 # reintentos) la posee y declara el lado Java. Config real por variable de
 # entorno - ver .env.example.
 ITEM_PIPELINES = {
+    # wdxtkg348c: tiene que correr ANTES que RabbitMQPublishPipeline (numero
+    # mas bajo = mas temprano) para que main_image_phash ya este seteado
+    # cuando el mensaje se arma - ItemAdapter(item).asdict() en el publish
+    # pipeline no sabe esperar a un campo que todavia no existe.
+    "car_tracker_scraper.image_phash.pipeline.ImagePhashPipeline": 300,
     "car_tracker_scraper.queue_publish.pipeline.RabbitMQPublishPipeline": 400,
 }
+
+# wdxtkg348c: directorio local efimero para ImagePhashPipeline - se lee una
+# sola vez para calcular el hash perceptual y despues no se vuelve a tocar.
+# No es landing zone (no se sube a MinIO/S3, a diferencia del HTML/JSON via
+# LandingZoneMiddleware) - si mas adelante hace falta reprocesar fotos
+# historicas, eso es alcance nuevo, no lo que pide este ticket.
+IMAGES_STORE = os.environ.get("IMAGE_PHASH_STORE", "/tmp/car-tracker-image-phash")
 
 DOWNLOADER_MIDDLEWARES = {
     "car_tracker_scraper.antiblocking.middleware.AntiBlockingMiddleware": 350,
