@@ -131,3 +131,7 @@ Key docs (ClickUp Docs, use `clickup_get_document_pages`/`clickup_list_document_
 - **"Guía de testing — Car Tracker"** — id `2ky5d98k-1659`, the canonical "how do I test this" runbook.
 
 Tasks that landed in this repo specifically: `wdxtkg30nk` (anti-blocking layer), `wdxtkg30nm` (landing zone), `wdxtkg30nj` (Discovery + Detail spiders, MercadoLibre), `wdxtkg35ba` (scheduler/`run_batch.py`), `wdxtkg34th` (per-source Pushgateway metrics), `wdxtkg35bb` (brand auto-discovery — the Discovery-broad/Detail-curated split described above), `wdxtkg39pw` (DeRuedas, third source), `wdxtkg30xr` (multi-source scheduler: parallel per-source execution + Motordil/Autocity), `wdxtkg39qx` (V6 Marketplace + Autocity sources — Kavak split out separately as `wdxtkg3hc5`, not done yet). Autocosmos (`wdxtkg3hc4`) is in progress as of 2026-09-02 — code for it exists locally but is uncommitted. Fetch by id (`clickup_get_task`) for current status/description rather than trusting this file to stay in sync — it won't.
+
+Al hablar con Fabrizio de una tarea (chat, comentarios de ClickUp, resúmenes),
+referite a ella por nombre + fase, nunca por el id crudo a secas — ver la
+regla completa en el `CLAUDE.md` de `car-tracker`.
