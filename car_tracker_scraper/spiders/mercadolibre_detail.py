@@ -142,6 +142,17 @@ class MercadolibreDetailSpider(BaseDetailSpider):
 
         financing = components.get("initial_payment_amount") or {}
 
+        breadcrumb_raw = _breadcrumb_text(extract_json_ld(html, "BreadcrumbList"))
+        if not _is_car_category(breadcrumb_raw):
+            # wdxtkg3hjq: motos reales (BMW/Honda, etc.) coladas via la busqueda
+            # de texto libre de mercadolibre_discovery._abanico_por_modelo, que
+            # no filtra por categoria - ver _is_car_category.
+            self.logger.info(
+                "wdxtkg3hjq: %s descartado por categoria no-auto (breadcrumb=%r)",
+                response.url, breadcrumb_raw,
+            )
+            return
+
         yield ListingDetailItem(
             source="mercadolibre",
             source_listing_key=vehicle.get("sku"),
@@ -155,7 +166,7 @@ class MercadolibreDetailSpider(BaseDetailSpider):
             price_amount=offers.get("price"),
             price_currency=offers.get("priceCurrency"),
             price_valid_until=offers.get("priceValidUntil"),
-            breadcrumb_raw=_breadcrumb_text(extract_json_ld(html, "BreadcrumbList")),
+            breadcrumb_raw=breadcrumb_raw,
             main_image_url=vehicle.get("image"),
             subtitle_raw=(components.get("header") or {}).get("subtitle"),
             location_raw=location_text,
@@ -178,3 +189,29 @@ def _breadcrumb_text(breadcrumb: dict | None) -> str | None:
     names = [el.get("name") or (el.get("item") or {}).get("name") for el in items]
     names = [n for n in names if n]
     return " > ".join(names) if names else None
+
+
+def _is_car_category(breadcrumb_raw: str | None) -> bool:
+    """wdxtkg3hjq: encontrado por catalog-normalization (2026-09-02) - motos
+    reales (BMW F 800 GS, Honda CBR 1000RR) coladas en pending_review de
+    normalization_alias, publicadas desde `mercadolibre_discovery` como si
+    fueran autos.
+
+    Causa raiz: `autos.mercadolibre.com.ar` no es un dominio auto-only, es el
+    subdominio del vertical combinado "motors" (autos+motos+otros) - el
+    breadcrumb real de un auto real es "Autos, Motos y Otros > Autos y
+    Camionetas > {marca} > {modelo}" (confirmado en produccion 2026-09-03
+    contra un Volkswagen Suran real), y el segundo segmento es lo unico que
+    distingue la categoria real dentro de ese vertical. La busqueda de texto
+    libre de `_abanico_por_modelo` (wdxtkg39v1) no filtra por categoria, asi
+    que un slug de modelo ambiguo puede devolver una moto entre los
+    resultados.
+
+    Sin breadcrumb (pagina rara, parseo parcial) se deja pasar: un falso
+    negativo ocasional (una moto que se cuela) pesa menos que arriesgar
+    descartar un auto real por un campo ausente.
+    """
+    if not breadcrumb_raw:
+        return True
+    segments = [s.strip() for s in breadcrumb_raw.split(">")]
+    return len(segments) < 2 or segments[1].casefold() == "autos y camionetas"

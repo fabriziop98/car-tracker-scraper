@@ -7,7 +7,10 @@ import pytest
 from scrapy.http import HtmlResponse, Request
 
 from car_tracker_scraper.items import DeadListingItem
-from car_tracker_scraper.spiders.mercadolibre_detail import MercadolibreDetailSpider
+from car_tracker_scraper.spiders.mercadolibre_detail import (
+    MercadolibreDetailSpider,
+    _is_car_category,
+)
 
 FIXTURE = Path(__file__).parent / "fixtures" / "ml_detail_sample.html"
 FIXTURE_PARTICULAR = Path(__file__).parent / "fixtures" / "ml_detail_sample2.html"
@@ -96,3 +99,26 @@ def test_parse_real_dead_listing_fixture_yields_a_dead_signal_not_a_listing():
     assert items[0]["source"] == "mercadolibre"
     assert items[0]["url"] == url
     assert items[0]["item_type"] == "dead_listing"
+
+
+def test_is_car_category_accepts_a_real_car_breadcrumb():
+    # Texto real, capturado en produccion 2026-09-03 (Volkswagen Suran).
+    assert _is_car_category("Autos, Motos y Otros > Autos y Camionetas > Volkswagen > Suran")
+
+
+def test_is_car_category_rejects_a_real_motorcycle_breadcrumb():
+    # wdxtkg3hjq: forma real del vertical combinado para una moto - el
+    # segundo segmento es "Motos", no "Autos y Camionetas".
+    assert not _is_car_category("Autos, Motos y Otros > Motos > Honda > CBR 1000RR")
+    assert not _is_car_category("Autos, Motos y Otros > Motos > BMW > F 800 GS")
+
+
+def test_is_car_category_is_case_and_whitespace_tolerant():
+    assert _is_car_category("Autos, Motos y Otros >  autos y camionetas  > Ford > Ranger")
+
+
+def test_is_car_category_defaults_to_true_when_breadcrumb_is_missing_or_short():
+    # Mejor un falso negativo ocasional que tirar un auto real por un campo ausente.
+    assert _is_car_category(None)
+    assert _is_car_category("")
+    assert _is_car_category("Autos, Motos y Otros")
