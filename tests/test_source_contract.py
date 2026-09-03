@@ -39,6 +39,7 @@ from car_tracker_scraper.spiders.motordil_discovery import MotordilDiscoverySpid
 from car_tracker_scraper.extraction.v6 import PUBLISHED_CARS_URL
 from car_tracker_scraper.spiders.v6_discovery import V6DiscoverySpider
 from car_tracker_scraper.spiders.autocosmos_discovery import AutocosmosDiscoverySpider
+from car_tracker_scraper.spiders.kavak_discovery import KavakDiscoverySpider
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -159,6 +160,23 @@ def _autocosmos_case():
     )
 
 
+def _kavak_case():
+    """wdxtkg3hc5: como autocosmos, no filtra por marca en el request
+    (pagina el catalogo entero via `page`) - `marcas` solo normaliza al slug
+    curado."""
+    return (
+        KavakDiscoverySpider(
+            marcas="chevrolet,citroen,fiat,ford,honda,hyundai,jeep,peugeot,renault,toyota,volkswagen"
+        ),
+        _response(
+            "https://www.kavak.com/ar/usados?page=1",
+            (FIXTURES / "kavak_listado.html").read_bytes(),
+            {"page": 1},
+        ),
+        ["chevrolet", "citroen", "fiat", "ford", "honda", "hyundai", "jeep", "peugeot", "renault", "toyota", "volkswagen"],
+    )
+
+
 PROVIDER_CASES = {
     "mercadolibre": _mercadolibre_case,
     "autocity": _autocity_case,
@@ -166,6 +184,7 @@ PROVIDER_CASES = {
     "deruedas": _deruedas_case,
     "v6": _v6_case,
     "autocosmos": _autocosmos_case,
+    "kavak": _kavak_case,
 }
 
 

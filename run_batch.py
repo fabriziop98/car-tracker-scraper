@@ -273,6 +273,19 @@ SOURCES = (
         detail_batch_size=40,
         seconds_per_request=20.0,
     ),
+    SourceConfig(
+        slug="kavak",
+        discovery_spider="kavak_discovery",
+        detail_spider="kavak_detail",
+        discovery_interval_hours=5,
+        # robots.txt de Kavak pide Crawl-delay: 20, igual que Autocosmos.
+        # Mismo techo de 45 (900s/20s) del tick de 15 min - 40 deja margen sin
+        # llegar al 100%, mismo criterio que Autocosmos/DeRuedas. Inventario
+        # mucho mas chico (1.112 usados medido 2026-09-02) que Autocosmos, asi
+        # que un batch de 40 alcanza de sobra en regimen estable.
+        detail_batch_size=40,
+        seconds_per_request=20.0,
+    ),
 )
 
 
