@@ -38,6 +38,7 @@ from car_tracker_scraper.spiders.mercadolibre_discovery import MercadolibreDisco
 from car_tracker_scraper.spiders.motordil_discovery import MotordilDiscoverySpider
 from car_tracker_scraper.extraction.v6 import PUBLISHED_CARS_URL
 from car_tracker_scraper.spiders.v6_discovery import V6DiscoverySpider
+from car_tracker_scraper.spiders.autocosmos_discovery import AutocosmosDiscoverySpider
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -141,12 +142,30 @@ def _v6_case():
     )
 
 
+def _autocosmos_case():
+    """wdxtkg3hc4: como autocity/v6, no filtra por marca en el request (pagina
+    el catalogo entero via `pidx`) - `marcas` solo normaliza al slug curado.
+    El fixture mezcla avisos "financiados en cuotas" (price_amount=None,
+    financing_initial_payment seteado) con avisos de precio real, a proposito:
+    es la regresion del hallazgo central de esta fuente."""
+    return (
+        AutocosmosDiscoverySpider(marcas="chery,chevrolet,fiat,ford,kia,peugeot,renault,toyota,volkswagen"),
+        _response(
+            "https://www.autocosmos.com.ar/auto/usado",
+            (FIXTURES / "autocosmos_listado.html").read_bytes(),
+            {"page": 1},
+        ),
+        ["chery", "chevrolet", "fiat", "ford", "kia", "peugeot", "renault", "toyota", "volkswagen"],
+    )
+
+
 PROVIDER_CASES = {
     "mercadolibre": _mercadolibre_case,
     "autocity": _autocity_case,
     "motordil": _motordil_case,
     "deruedas": _deruedas_case,
     "v6": _v6_case,
+    "autocosmos": _autocosmos_case,
 }
 
 

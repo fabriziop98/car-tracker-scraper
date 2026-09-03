@@ -257,6 +257,22 @@ SOURCES = (
         # arrancar en frio) en vez de exagerarlo 250x.
         seconds_per_request=0.1,
     ),
+    SourceConfig(
+        slug="autocosmos",
+        discovery_spider="autocosmos_discovery",
+        detail_spider="autocosmos_detail",
+        discovery_interval_hours=5,
+        # robots.txt pide Crawl-delay: 20 bajo User-agent: * (confirmado
+        # 2026-09-02) - mismo orden que Kavak, mas lento que DeRuedas (5). Con
+        # ese costo por request, el techo real de un tick de 15 min (900s) es
+        # 45 (test_every_registered_source_has_distinct_spiders_and_a_sane_batch_size).
+        # 40 deja margen sin llegar al 100%, mismo criterio que DeRuedas
+        # (wdxtkg39qx): en regimen estable (re-Detail cada DETAIL_TIER_HOURS=72h)
+        # el volumen a re-pedir por tick de este catalogo (5.690 usados) es
+        # bajo, asi que no hace falta apurar el drenaje inicial.
+        detail_batch_size=40,
+        seconds_per_request=20.0,
+    ),
 )
 
 
