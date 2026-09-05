@@ -111,6 +111,18 @@ iban a necesitar cortarse por año para superar el tope (no lo necesitaban).
 Las dos salieron de leer `/toyota/corolla` como un filtro marca+modelo cuando
 en realidad es una búsqueda de texto por "corolla".
 
+**Esa conclusión de Corolla/Hilux era correcta para esos dos modelos, pero no
+generalizaba** — confirmado el 2026-09-06 con Ford Ranger: `/ranger` sola
+publica `results_limit: 2000` con un total real de 3.160 (facet BRAND), y
+cruzando avisos reales uno por uno ("Ford Ranger 2019 Limited": 14 en ML, solo
+5 en nuestra base) se confirmó que los otros 9 nunca habían sido vistos por
+ningún Discovery. La diferencia con el intento anterior: esta vez se cruzó
+contra `source_listing_key` reales, no contra un agregado. `_abanico_por_anio`
+(wdxtkg3j4o) resuelve esto un nivel más abajo que `_abanico_por_modelo`
+(wdxtkg39v1), gateado por `anio_fanout_min_volumen` para no pagar el costo en
+los modelos que sí entran enteros en su propia consulta (la inmensa mayoría,
+Corolla e Hilux incluidos).
+
 - **Cruzar el total contra un conteo independiente.** Un parser que devuelve 0
   se lee idéntico a "no hay nada". Es el modo de falla más caro porque no
   parece un error.

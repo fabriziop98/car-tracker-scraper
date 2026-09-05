@@ -40,6 +40,14 @@ de la pagina actual, y parar de fanear cuando no queda ninguno - `max_pages`
 pasa a ser el backstop por si ese calculo nunca converge (nunca deberia,
 en operacion normal).
 
+wdxtkg3j4o (2026-09-06): el tope de ~2.000 por consulta (ver `_abanico_por_modelo`,
+wdxtkg39v1) tambien lo puede superar un MODELO individual, no solo una marca -
+confirmado contra el sitio real: Ford Ranger tiene 3.160 avisos y `/ranger`
+sola solo alcanza 2.000. `_abanico_por_anio` repite el mismo mecanismo un
+nivel mas abajo (consulta compuesta `/{anio}/{modelo}`), gateado por
+`anio_fanout_min_volumen` para no pagar el costo extra en los modelos chicos
+que ya entran enteros en su propia consulta.
+
 Uso:
     scrapy crawl mercadolibre_discovery -a marcas=fiat,ford \
         -O output/discovery_%(time)s.jsonl
@@ -56,6 +64,7 @@ from car_tracker_scraper.extraction.mercadolibre import (
     extract_nordic_ctx,
     iter_model_facet,
     iter_polycards,
+    iter_year_facet,
     polycard_components,
 )
 from car_tracker_scraper.spiders.base import landing_meta
@@ -144,6 +153,9 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
         max_pages: str = "30",
         modelo_min_volumen: str = "150",
         max_modelos_por_marca: str = "15",
+        anio_min_volumen: str = "100",
+        anio_fanout_min_volumen: str = "1500",
+        max_anios_por_modelo: str = "40",
         *args,
         **kwargs,
     ):
@@ -156,6 +168,16 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
         # base sin tocar codigo).
         self.modelo_min_volumen = int(modelo_min_volumen)
         self.max_modelos_por_marca = int(max_modelos_por_marca)
+        # wdxtkg3j4o: mismo problema un nivel mas abajo - un modelo individual
+        # puede por si solo superar el tope de ~2.000 de ML (medido 2026-09-06:
+        # Ford Ranger, 3.160 avisos reales). anio_fanout_min_volumen es el
+        # gate: solo modelos que ya rozan o superan ese tope pagan el costo
+        # extra de una consulta por año; anio_min_volumen es el piso POR AÑO
+        # dentro de ese abanico (mismo rol que modelo_min_volumen un nivel
+        # arriba). 0 en cualquiera de los dos desactiva ese nivel del abanico.
+        self.anio_min_volumen = int(anio_min_volumen)
+        self.anio_fanout_min_volumen = int(anio_fanout_min_volumen)
+        self.max_anios_por_modelo = int(max_anios_por_modelo)
 
     async def start(self):
         # start_requests() esta deprecado desde Scrapy 2.13 en favor de este
@@ -237,6 +259,70 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
                     "marca": marca,  # la marca real, NO el termino - ver docstring
                     "page_count": 1,
                     "termino_modelo": modelo["slug"],
+                    "es_pagina_de_modelo": True,
+                    "modelo_count": modelo["count"],
+                },
+            )
+
+    def _abanico_por_anio(self, marca: str, modelo_slug: str, modelo_count: int, search: dict):
+        """wdxtkg3j4o: mismo problema que `_abanico_por_modelo`, un nivel mas
+        abajo - un modelo individual puede por si solo superar el tope de
+        ~2.000 resultados por consulta de ML. Medido contra el sitio real
+        (2026-09-06): Ford Ranger tiene 3.160 avisos reales (facet MODEL de
+        `/ford`), y `/ranger` sola solo alcanza los 2.000 de siempre - el 63%.
+        Confirmado ademas cruzando avisos reales: de 14 avisos "Ford Ranger
+        2019 Limited" que ML muestra hoy, 9 nunca habian sido vistos por
+        ningun Discovery de los ultimos 9 dias.
+
+        `modelo_count` (el conteo que ya trajo el facet MODEL de la pagina de
+        marca, wdxtkg39v1) es el gate: solo modelos que ya rozan o superan el
+        tope de ML pagan el costo extra de abrir una consulta por año -
+        gastar ese request extra en los miles de modelos chicos que ya entran
+        enteros en su propia consulta seria puro desperdicio.
+
+        Se pide `/{anio}/{modelo}` como termino de busqueda COMPUESTO (dos
+        palabras), no un filtro estructurado - mismo criterio que
+        `_abanico_por_modelo`: el slug del año sale de la URL real que
+        publica el facet VEHICLE_YEAR de la pagina del modelo
+        (`/{anio}/{modelo}_NoIndex_True#applied_...`, confirmado contra el
+        sitio real 2026-09-06), no de un año inventado a mano.
+
+        No reemplaza a la consulta plana `/{modelo}` (que sigue yendo igual) -
+        la complementa. Los años sin volumen propio (por debajo de
+        `anio_min_volumen`) ya entran dentro del cupo de esa consulta plana;
+        redescubrir los mismos avisos por las dos vias no es un problema, la
+        ingesta ya es idempotente por `source_listing_key`.
+        """
+        if modelo_count < self.anio_fanout_min_volumen:
+            return
+
+        anios = [
+            a for a in iter_year_facet(search)
+            if a["count"] >= self.anio_min_volumen
+        ]
+        anios.sort(key=lambda a: a["count"], reverse=True)
+        anios = anios[: self.max_anios_por_modelo]
+
+        if not anios:
+            return
+        self.logger.info(
+            "wdxtkg3j4o [%s/%s]: %d anios con volumen propio (>=%d) de %d avisos totales: %s",
+            marca,
+            modelo_slug,
+            len(anios),
+            self.anio_min_volumen,
+            modelo_count,
+            ", ".join(f"{a['slug']}({a['count']})" for a in anios),
+        )
+        for anio in anios:
+            yield scrapy.Request(
+                f"https://autos.mercadolibre.com.ar/{anio['slug']}/{modelo_slug}",
+                callback=self.parse,
+                meta={
+                    "marca": marca,  # la marca real, NO el termino - mismo criterio que _abanico_por_modelo
+                    "page_count": 1,
+                    "termino_modelo": modelo_slug,
+                    "termino_anio": anio["slug"],
                 },
             )
 
@@ -249,6 +335,11 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
 
         if response.meta.get("es_pagina_de_marca") and self.modelo_min_volumen > 0:
             yield from self._abanico_por_modelo(marca, search)
+
+        if response.meta.get("es_pagina_de_modelo") and self.anio_min_volumen > 0:
+            yield from self._abanico_por_anio(
+                marca, response.meta["termino_modelo"], response.meta.get("modelo_count", 0), search
+            )
 
         for polycard in iter_polycards(search.get("results", [])):
             metadata = polycard.get("metadata", {})
@@ -331,11 +422,14 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
                 # es_pagina_de_marca NO se propaga a proposito: el abanico por
                 # modelo (wdxtkg39v1) tiene que dispararse una sola vez por
                 # marca, en su primera pagina, y no en cada pagina siguiente.
-                # termino_modelo si viaja, solo para poder leer en el log de que
+                # es_pagina_de_modelo tampoco: el abanico por año (wdxtkg3j4o)
+                # tiene la misma regla, una sola vez por modelo. termino_modelo/
+                # termino_anio si viajan, solo para poder leer en el log de que
                 # consulta salio cada pagina.
                 meta={
                     "marca": marca,
                     "page_count": page_count + 1,
                     "termino_modelo": response.meta.get("termino_modelo"),
+                    "termino_anio": response.meta.get("termino_anio"),
                 },
             )
