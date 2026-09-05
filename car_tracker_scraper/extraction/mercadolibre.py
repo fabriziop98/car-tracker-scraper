@@ -60,7 +60,7 @@ def _iter_facet_values(search: dict, filtro_id: str) -> Iterator[dict[str, Any]]
     """Valores de un facet de `sidebar.components[].filters[]`, con su slug
     canonico (primer segmento de la URL real que publica ML) y el conteo real
     de avisos. Comun a `iter_model_facet` (wdxtkg39v1) e `iter_year_facet`
-    (wdxtkg3j4o) - mismo shape de respuesta para los dos facets.
+    (wdxtkg3j52) - mismo shape de respuesta para los dos facets.
 
     Dos detalles medidos contra el sitio real (2026-09-01, MODEL; confirmado
     de nuevo 2026-09-06 para VEHICLE_YEAR - mismo shape), no asumidos:
@@ -113,7 +113,7 @@ def iter_model_facet(search: dict) -> Iterator[dict[str, Any]]:
 def iter_year_facet(search: dict) -> Iterator[dict[str, Any]]:
     """Años que ML ofrece como filtro en la pagina de listado de UN modelo, con
     su slug (el año como string, ej. "2019") y el conteo real de avisos de ese
-    modelo en ese año (wdxtkg3j4o).
+    modelo en ese año (wdxtkg3j52).
 
     Es el segundo nivel del mismo problema que resolvio wdxtkg39v1: un modelo
     individual puede por si solo superar el tope de ~2.000 resultados por

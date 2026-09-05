@@ -40,7 +40,7 @@ de la pagina actual, y parar de fanear cuando no queda ninguno - `max_pages`
 pasa a ser el backstop por si ese calculo nunca converge (nunca deberia,
 en operacion normal).
 
-wdxtkg3j4o (2026-09-06): el tope de ~2.000 por consulta (ver `_abanico_por_modelo`,
+wdxtkg3j52 (2026-09-06): el tope de ~2.000 por consulta (ver `_abanico_por_modelo`,
 wdxtkg39v1) tambien lo puede superar un MODELO individual, no solo una marca -
 confirmado contra el sitio real: Ford Ranger tiene 3.160 avisos y `/ranger`
 sola solo alcanza 2.000. `_abanico_por_anio` repite el mismo mecanismo un
@@ -168,7 +168,7 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
         # base sin tocar codigo).
         self.modelo_min_volumen = int(modelo_min_volumen)
         self.max_modelos_por_marca = int(max_modelos_por_marca)
-        # wdxtkg3j4o: mismo problema un nivel mas abajo - un modelo individual
+        # wdxtkg3j52: mismo problema un nivel mas abajo - un modelo individual
         # puede por si solo superar el tope de ~2.000 de ML (medido 2026-09-06:
         # Ford Ranger, 3.160 avisos reales). anio_fanout_min_volumen es el
         # gate: solo modelos que ya rozan o superan ese tope pagan el costo
@@ -265,7 +265,7 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
             )
 
     def _abanico_por_anio(self, marca: str, modelo_slug: str, modelo_count: int, search: dict):
-        """wdxtkg3j4o: mismo problema que `_abanico_por_modelo`, un nivel mas
+        """wdxtkg3j52: mismo problema que `_abanico_por_modelo`, un nivel mas
         abajo - un modelo individual puede por si solo superar el tope de
         ~2.000 resultados por consulta de ML. Medido contra el sitio real
         (2026-09-06): Ford Ranger tiene 3.160 avisos reales (facet MODEL de
@@ -306,7 +306,7 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
         if not anios:
             return
         self.logger.info(
-            "wdxtkg3j4o [%s/%s]: %d anios con volumen propio (>=%d) de %d avisos totales: %s",
+            "wdxtkg3j52 [%s/%s]: %d anios con volumen propio (>=%d) de %d avisos totales: %s",
             marca,
             modelo_slug,
             len(anios),
@@ -422,7 +422,7 @@ class MercadolibreDiscoverySpider(scrapy.Spider):
                 # es_pagina_de_marca NO se propaga a proposito: el abanico por
                 # modelo (wdxtkg39v1) tiene que dispararse una sola vez por
                 # marca, en su primera pagina, y no en cada pagina siguiente.
-                # es_pagina_de_modelo tampoco: el abanico por año (wdxtkg3j4o)
+                # es_pagina_de_modelo tampoco: el abanico por año (wdxtkg3j52)
                 # tiene la misma regla, una sola vez por modelo. termino_modelo/
                 # termino_anio si viajan, solo para poder leer en el log de que
                 # consulta salio cada pagina.

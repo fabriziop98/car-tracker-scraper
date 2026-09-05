@@ -118,7 +118,7 @@ cruzando avisos reales uno por uno ("Ford Ranger 2019 Limited": 14 en ML, solo
 5 en nuestra base) se confirmó que los otros 9 nunca habían sido vistos por
 ningún Discovery. La diferencia con el intento anterior: esta vez se cruzó
 contra `source_listing_key` reales, no contra un agregado. `_abanico_por_anio`
-(wdxtkg3j4o) resuelve esto un nivel más abajo que `_abanico_por_modelo`
+(wdxtkg3j52) resuelve esto un nivel más abajo que `_abanico_por_modelo`
 (wdxtkg39v1), gateado por `anio_fanout_min_volumen` para no pagar el costo en
 los modelos que sí entran enteros en su propia consulta (la inmensa mayoría,
 Corolla e Hilux incluidos).

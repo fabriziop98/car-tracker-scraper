@@ -1,4 +1,4 @@
-"""Discovery partido por año, un nivel mas abajo del modelo (wdxtkg3j4o).
+"""Discovery partido por año, un nivel mas abajo del modelo (wdxtkg3j52).
 
 Un modelo individual puede por si solo superar el mismo tope de ~2.000 por
 consulta que wdxtkg39v1 ya resolvio a nivel marca -> modelo. Medido contra el
