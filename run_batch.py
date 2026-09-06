@@ -181,15 +181,31 @@ SOURCES = (
         #
         # Los valores por defecto del spider son 150/15, que estimados dan
         # ~1.500-2.000 requests extra por corrida sobre los ~840 actuales. Se
-        # arranca en 400/5 -bastante mas arriba y mas angosto- porque el
+        # arranco en 400/5 -bastante mas arriba y mas angosto- porque el
         # circuit breaker de auto.mercadolibre.com.ar ya se abrio una vez
-        # (2026-08-28, 31% de error) al subir el ritmo de golpe. Primero medir
-        # cuantos candidatos nuevos aparecen y como responde ML; recien despues
-        # aflojar hacia 150/15.
+        # (2026-08-28, 31% de error) al subir el ritmo de golpe.
+        #
+        # wdxtkg3j80 (2026-09-06): max_modelos_por_marca=5 resulto DEMASIADO
+        # angosto, no solo conservador - encontrado con dato real, no
+        # sospechado: Volkswagen Golf (549 avisos reales en ML, muy por
+        # debajo del techo de 2.000 que motivo este corte) nunca recibia su
+        # propia consulta porque en Volkswagen queda 8vo en volumen (Amarok,
+        # Gol Trend, Vento, Suran, Taos, Polo, Gol, recien despues Golf) - un
+        # aviso real de Golf Variant llevaba scrapeado NUNCA en 43 corridas de
+        # Discovery. modelo_min_volumen=400 no es el problema (Golf ya lo
+        # supera comodo); el problema es el TOPE de modelos por marca.
+        #
+        # Antes de aflojar, se midio el circuit breaker real
+        # (`antiblock:cb:auto.mercadolibre.com.ar:events` en Redis): 0 fallas
+        # en los ultimos 400 eventos registrados, circuito cerrado desde hace
+        # mas de 9 dias. Con eso, se sube 5 -> 10 (paso intermedio, no el
+        # 15 del spider) - duplica la cobertura por marca sin saltar directo
+        # al maximo. Revisar el circuit breaker despues de un par de corridas
+        # (cada 5h) antes de decidir si seguir subiendo hacia 15.
         #
         # modelo_min_volumen=0 desactiva el corte por completo, para una corrida
         # de control contra la linea base sin tocar codigo.
-        discovery_args={"modelo_min_volumen": 400, "max_modelos_por_marca": 5},
+        discovery_args={"modelo_min_volumen": 400, "max_modelos_por_marca": 10},
     ),
     SourceConfig(
         slug="motordil",
