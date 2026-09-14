@@ -106,6 +106,15 @@ DISCOVERY_MAX_PAGES = 30  # wdxtkg398b: ya no es el corte real por marca (eso lo
 # ninguna pagina con value mayor a la actual - confirmado 2026-08-26 contra
 # Toyota real, ver mercadolibre_discovery.py). Esto es solo el backstop de
 # seguridad por si ese calculo no converge nunca.
+#
+# Este backstop se pasa a TODAS las fuentes (ver -a max_pages= abajo), pero
+# solo ML tiene el corte real propio que lo vuelve inofensivo. DeRuedas,
+# Autocosmos y Kavak cuentan paginas simple, asi que para ellas este 30 SI
+# era el corte real - confirmado en vivo 2026-09-14 (las 6 marcas de mayor
+# volumen de DeRuedas y el total de Autocosmos/Kavak lo pegaban en cada
+# corrida). Las tres tienen su propio discovery_args={"max_pages": ...} mas
+# abajo con el default que ya media cada spider, para que esto vuelva a ser
+# un backstop raro en vez del limite de todos los dias.
 
 DETAIL_TIER_HOURS = 72
 
@@ -241,6 +250,16 @@ SOURCES = (
         # run_source hace que el tick siguiente saltee en vez de solaparse.
         detail_batch_size=120,
         seconds_per_request=5.0,
+        # DISCOVERY_MAX_PAGES=30 es el backstop de ML (ya no su corte real,
+        # ver el comentario de esa constante) aplicado sin querer a esta
+        # fuente tambien - deruedas_discovery cuenta paginas simple por
+        # marca, asi que 30 SI era el corte real acá. Confirmado en vivo
+        # 2026-09-14: las 6 marcas de mayor volumen (chevrolet/ford/
+        # volkswagen/renault/fiat/peugeot) lo pegaban en cada corrida de
+        # Discovery, dos veces ese mismo dia. Se sube al default propio del
+        # spider (80, ver deruedas_discovery.py) para que vuelva a ser un
+        # backstop raro y no el limite de todos los dias.
+        discovery_args={"max_pages": "80"},
     ),
     SourceConfig(
         slug="autocity",
@@ -288,6 +307,13 @@ SOURCES = (
         # bajo, asi que no hace falta apurar el drenaje inicial.
         detail_batch_size=40,
         seconds_per_request=20.0,
+        # Mismo problema que DeRuedas (ver su comentario): DISCOVERY_MAX_PAGES=30
+        # es el backstop de ML, no pensado para el corte simple por pagina que
+        # usa este spider. Con 5.690 usados / 48 por pagina, el catalogo entero
+        # necesita ~119 paginas - 30 lo cortaba a 1.440 candidatos (30*48,
+        # confirmado exacto en el log 2026-09-14) sin llegar nunca al resto.
+        # Se sube al default propio del spider (150, ver autocosmos_discovery.py).
+        discovery_args={"max_pages": "150"},
     ),
     SourceConfig(
         slug="kavak",
@@ -301,6 +327,11 @@ SOURCES = (
         # que un batch de 40 alcanza de sobra en regimen estable.
         detail_batch_size=40,
         seconds_per_request=20.0,
+        # Mismo problema que DeRuedas/Autocosmos (ver sus comentarios):
+        # DISCOVERY_MAX_PAGES=30 (backstop de ML) lo pegaba en cada corrida
+        # (confirmado en el log, 2 veces el 2026-09-14). Se sube al default
+        # propio del spider (60, ver kavak_discovery.py).
+        discovery_args={"max_pages": "60"},
     ),
 )
 

@@ -791,12 +791,23 @@ def test_el_corte_por_modelo_de_ML_sigue_por_debajo_del_default_del_spider():
     assert ml.discovery_args["max_modelos_por_marca"] <= 10
 
 
-def test_las_otras_fuentes_no_heredan_el_corte_por_modelo():
-    """Es especifico de ML: es la unica fuente con un techo de paginacion
-    medido. Motordil y DeRuedas se drenan enteras con la consulta normal."""
+def test_las_otras_fuentes_no_heredan_el_corte_por_modelo_de_ML():
+    """modelo_min_volumen/max_modelos_por_marca son especificos del corte por
+    modelo de ML (test de arriba) - ninguna otra fuente deberia traerlos.
+
+    Correccion 2026-09-14: la version anterior de este test exigia
+    discovery_args == {} para toda fuente que no fuera ML, con la premisa de
+    que "Motordil y DeRuedas se drenan enteras con la consulta normal". Esa
+    premisa resulto falsa - medido en vivo el mismo dia, DISCOVERY_MAX_PAGES=30
+    (el backstop de ML, ver su comentario en run_batch.py) le pegaba el techo
+    a las 6 marcas de mayor volumen de DeRuedas y al total de Autocosmos/Kavak
+    en cada corrida, porque esas fuentes cuentan paginas simple y no tienen el
+    corte real propio que tiene ML. Las tres necesitan su propio
+    discovery_args={"max_pages": ...} - lo que este test no debe prohibir."""
+    claves_de_ml = {"modelo_min_volumen", "max_modelos_por_marca"}
     for source in run_batch.SOURCES:
         if source.slug != "mercadolibre":
-            assert source.discovery_args == {}, source.slug
+            assert not (claves_de_ml & source.discovery_args.keys()), source.slug
 
 
 def test_release_stale_source_locks_limpia_todos_los_locks(monkeypatch):
