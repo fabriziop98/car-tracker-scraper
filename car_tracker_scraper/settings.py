@@ -97,7 +97,16 @@ DOWNLOADER_MIDDLEWARES = {
 # rate, 403/429, latencia p95, items/min, null% por campo, nuevos vs
 # conocidos. METRICS_PUSHGATEWAY_URL vacio = deshabilitado, no rompe el
 # spider. Config real por variable de entorno - ver .env.example.
-METRICS_PUSHGATEWAY_URL = ""
+#
+# 2026-09-14: el "" hardcodeado nunca leia la variable de entorno a pesar
+# de lo que dice el comentario de arriba - Settings.get(name, default) solo
+# usa el default cuando la CLAVE esta ausente, no cuando esta presente pero
+# vacia, asi que el fallback a os.environ que tiene metrics.py nunca se
+# ejecutaba. Confirmado en vivo: METRICS_PUSHGATEWAY_URL estaba bien seteado
+# en el contenedor scheduler pero las 7 fuentes registraban "no configurado"
+# en cada corrida - cero metricas empujadas a Pushgateway desde que existe
+# esta linea.
+METRICS_PUSHGATEWAY_URL = os.environ.get("METRICS_PUSHGATEWAY_URL", "")
 EXTENSIONS = {
     "car_tracker_scraper.observability.metrics.SourceMetricsExtension": 500,
 }

@@ -3,6 +3,7 @@ fakeredis (in-memory) y mockean push_to_gateway - no hay Pushgateway real
 en este entorno de desarrollo, y no queremos requests HTTP reales en los
 tests. Verificar contra el Pushgateway real del docker-compose queda para
 Fabrizio."""
+import importlib
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -177,3 +178,24 @@ def test_pushgateway_failure_is_logged_not_raised():
 
     with patch("car_tracker_scraper.observability.metrics.push_to_gateway", side_effect=OSError("connection refused")):
         ext.spider_closed(SPIDER, reason="finished")  # no debe levantar
+
+
+def test_settings_actually_reads_pushgateway_url_from_the_environment(monkeypatch):
+    """Regresion (2026-09-14): METRICS_PUSHGATEWAY_URL estaba hardcodeado a
+    "" en settings.py a pesar de decir en su propio comentario "config real
+    por variable de entorno" - Settings.get(name, default) de Scrapy solo
+    usa el default cuando la CLAVE esta ausente, no cuando esta presente
+    pero vacia, asi que el fallback a os.environ de metrics.py nunca se
+    ejecutaba. Confirmado en produccion: 7 fuentes de 7 registraban "no
+    configurado" en cada corrida pese a tener la variable bien seteada en
+    el contenedor. Los demas tests de este archivo no lo detectaban porque
+    construyen SourceMetricsExtension directo con pushgateway_url= a mano,
+    sin pasar por settings.py - este test si pasa por ahi."""
+    monkeypatch.setenv("METRICS_PUSHGATEWAY_URL", "http://pushgateway-test:9091")
+    import car_tracker_scraper.settings as settings_module
+    importlib.reload(settings_module)
+    try:
+        assert settings_module.METRICS_PUSHGATEWAY_URL == "http://pushgateway-test:9091"
+    finally:
+        monkeypatch.delenv("METRICS_PUSHGATEWAY_URL", raising=False)
+        importlib.reload(settings_module)  # no dejar el modulo con el valor de este test
