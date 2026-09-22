@@ -41,6 +41,17 @@ This split applies **per source**, not just to MercadoLibre — all five spider 
 - **Detail** fetches the full listing page for URLs Discovery already found, and is what actually publishes to RabbitMQ. Expensive, so it's deliberately scoped narrower: only brands promoted into the canonical catalog (`GET {CAR_TRACKER_API_URL}/api/brands/curated`). Running Detail against an uncurated brand just fills the Java side's `pending_review` normalization queue with things that can never resolve. **This Discovery-broad/Detail-narrow split is load-bearing** — it was originally half-implemented (Discovery fixed, Detail still unscoped) and the gap was found and closed; don't reintroduce it when touching brand-related scraping logic. If the curated-marcas fetch fails, Detail skips the tick entirely rather than running unfiltered (fail-safe, same principle as everywhere else in the scheduler).
 - Neither list is hardcoded in this repo — `run_batch.py` fetches both from the Java API on every run. This repo never connects to Postgres directly; that HTTP call is the only bridge in that direction, the same way RabbitMQ/S3 are the only bridge in the other direction.
 
+### `max_modelos_por_marca` (Discovery ML) — revisar el 2026-10-06
+
+`run_batch.py`'s `mercadolibre` `SourceConfig.discovery_args` fija `max_modelos_por_marca=15` (el default real del spider) desde el 2026-09-22 (`wdxtkg3j80`, ver el comentario completo ahí mismo) — subido en dos pasos desde un arranque conservador de 5 (2026-08-28, después de un incidente real de circuit breaker), pasando por 10 (2026-09-06, tras encontrar con dato real que VW Golf, 8vo en volumen de su marca, nunca recibía su propia consulta de Discovery), hasta 15 (2026-09-22, tras 25 días con el circuit breaker cerrado sin una sola apertura y con el síntoma de Golf confirmado resuelto en Postgres).
+
+**Pedido explícito de Fabrizio: volver a revisar esto el 2026-10-06** (2 semanas después de la última subida) para confirmar que 15 sigue siendo seguro con más tiempo real corrido, no solo el momento en que se midió. Chequear:
+- `antiblock:cb:auto.mercadolibre.com.ar:events`/`:open_until` en Redis — que `open_until` siga sin moverse del 2026-08-28 (si tiene una fecha más reciente, el circuito se abrió de nuevo desde entonces).
+- Tasa de fallas en los eventos más recientes de ese mismo zset.
+- Un modelo real conocido de volumen medio (no solo VW Golf, que ya está confirmado) para confirmar que la cobertura por modelo sigue funcionando en general, no solo para el caso puntual que motivó el cambio.
+
+Si algo de esto se ve mal, el valor anterior conocido-seguro es 10 (25+ días de circuit breaker limpio confirmados a ese nivel) — bajar ahí primero y volver a investigar antes de subir de nuevo.
+
 ### Anti-blocking layer (`car_tracker_scraper/antiblocking/`)
 
 - **Token bucket per domain in Redis** (`token_bucket.py`) — shared across processes, unlike Scrapy's per-instance `DOWNLOAD_DELAY`. `DOWNLOAD_DELAY`/`AUTOTHROTTLE_ENABLED` are deliberately off in `settings.py` to avoid double-pacing.
