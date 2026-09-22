@@ -212,9 +212,21 @@ SOURCES = (
         # al maximo. Revisar el circuit breaker despues de un par de corridas
         # (cada 5h) antes de decidir si seguir subiendo hacia 15.
         #
+        # wdxtkg3j80 (2026-09-22, cierre): se cumplio el paso pendiente de
+        # arriba, con mas evidencia de la pedida. Circuit breaker: 401
+        # eventos mas recientes en Redis, 0 fallas, `open_until` sigue
+        # fechado 2026-08-28 (el incidente original, nunca se volvio a
+        # abrir desde entonces - 25 dias limpio, no "un par de corridas").
+        # Sintoma original resuelto y confirmado con dato real en Postgres:
+        # VW Golf tiene 1.446 avisos scrapeados de MercadoLibre, el mas
+        # reciente visto hoy mismo (2026-09-22, minutos antes de esta
+        # medicion). Se sube 10 -> 15, el default real del spider - no un
+        # numero nuevo, el techo con el que arranco el spider antes de
+        # angostarlo por el incidente del 28/08.
+        #
         # modelo_min_volumen=0 desactiva el corte por completo, para una corrida
         # de control contra la linea base sin tocar codigo.
-        discovery_args={"modelo_min_volumen": 400, "max_modelos_por_marca": 10},
+        discovery_args={"modelo_min_volumen": 400, "max_modelos_por_marca": 15},
     ),
     SourceConfig(
         slug="motordil",

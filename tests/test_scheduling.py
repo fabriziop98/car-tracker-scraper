@@ -777,18 +777,26 @@ def test_discovery_args_llegan_al_comando_de_scrapy(mock_run, _marcas, tmp_path:
         assert f"{clave}={valor}" in cmd, f"{clave} no llego al spider: {cmd}"
 
 
-def test_el_corte_por_modelo_de_ML_sigue_por_debajo_del_default_del_spider():
+def test_el_corte_por_modelo_de_ML_llego_al_default_del_spider_con_dato_medido():
     """Arranco en 400/5 (2026-08-28) porque el circuit breaker de ML ya se
     abrio una vez al subir el ritmo de golpe (31% de error). wdxtkg3j80
     (2026-09-06) encontro que max_modelos_por_marca=5 dejaba modelos reales
     sin cobertura propia (VW Golf, 8vo en volumen de su marca, nunca
     scrapeado) - se subio a 10 tras medir el circuit breaker real (0 fallas
-    en los ultimos 400 eventos). Sigue sin ser el default del spider (15):
-    este test es un recordatorio explicito de que subirlo mas es una
-    decision con dato medido, no un cambio de rutina."""
+    en los ultimos 400 eventos).
+
+    wdxtkg3j80 (2026-09-22, cierre): 16 dias despues, mismo chequeo con mas
+    evidencia - circuit breaker cerrado sin interrupcion desde el incidente
+    original (`open_until` nunca se volvio a mover de 2026-08-28), 0 fallas
+    en los 401 eventos mas recientes en Redis, y el sintoma concreto
+    confirmado resuelto en Postgres (VW Golf: 1.446 avisos reales,
+    scrapeado hoy mismo). Se subio a 15, el default real del spider -
+    dejo de ser un numero mas chico que ese default a proposito, asi que
+    este test pasa de "recordatorio de no subir sin medir" a "confirmar que
+    no se volvio a angostar sin querer"."""
     ml = next(s for s in run_batch.SOURCES if s.slug == "mercadolibre")
     assert ml.discovery_args["modelo_min_volumen"] >= 400
-    assert ml.discovery_args["max_modelos_por_marca"] <= 10
+    assert ml.discovery_args["max_modelos_por_marca"] == 15
 
 
 def test_las_otras_fuentes_no_heredan_el_corte_por_modelo_de_ML():
