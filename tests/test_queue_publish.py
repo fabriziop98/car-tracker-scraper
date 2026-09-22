@@ -12,6 +12,7 @@ corriendo (entorno sin Docker).
 from __future__ import annotations
 
 import json
+import os
 import time
 from unittest.mock import MagicMock, patch
 
@@ -99,28 +100,36 @@ def test_pipeline_publishes_only_detail_items(mock_pika_connection):
     assert body["schema_version"] == 1
 
 
+# wdxtkg3rpj: RabbitMQ del docker-compose de car-tracker ya no acepta
+# guest/guest (credenciales en su .env) - leer RABBITMQ_URL del entorno,
+# mismo patron que publisher.py, en vez de hardcodear la URL vieja. El
+# fallback guest/guest solo importa para alguien corriendo un RabbitMQ propio
+# suelto, no el de este stack.
+_RABBITMQ_URL = os.environ.get("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/%2F")
+
+
 def _rabbitmq_available() -> bool:
     try:
-        connection = pika.BlockingConnection(pika.URLParameters("amqp://guest:guest@localhost:5672/%2F"))
+        connection = pika.BlockingConnection(pika.URLParameters(_RABBITMQ_URL))
         connection.close()
         return True
     except Exception:
         return False
 
 
-@pytest.mark.skipif(not _rabbitmq_available(), reason="RabbitMQ real no disponible (docker compose no levantado)")
+@pytest.mark.skipif(not _rabbitmq_available(), reason="RabbitMQ real no disponible (docker compose no levantado, o RABBITMQ_URL sin setear)")
 def test_published_message_reaches_real_listings_observed_queue():
     """Integracion real: la cola/binding los declara el lado Java
     (ListingsQueueConfig) - este test asume que car-tracker ya corrio al
     menos una vez contra este mismo broker."""
-    publisher = ListingsQueuePublisher(url="amqp://guest:guest@localhost:5672/%2F")
+    publisher = ListingsQueuePublisher(url=_RABBITMQ_URL)
     try:
         payload = {"source": "mercadolibre", "source_listing_key": "MLA_TEST_INTEGRATION", "schema_version": 1}
         publisher.publish(ROUTING_KEY_OBSERVED, payload)
     finally:
         publisher.close()
 
-    connection = pika.BlockingConnection(pika.URLParameters("amqp://guest:guest@localhost:5672/%2F"))
+    connection = pika.BlockingConnection(pika.URLParameters(_RABBITMQ_URL))
     try:
         channel = connection.channel()
         try:
