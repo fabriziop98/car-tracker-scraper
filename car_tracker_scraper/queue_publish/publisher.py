@@ -25,15 +25,27 @@ ROUTING_KEY_OBSERVED = "listing.observed"
 
 class ListingsQueuePublisher:
     def __init__(self, url: str, exchange: str = EXCHANGE):
+        self._url = url
         self.exchange = exchange
-        self._connection = pika.BlockingConnection(pika.URLParameters(url))
+        self._connect()
+
+    def _connect(self) -> None:
+        self._connection = pika.BlockingConnection(pika.URLParameters(self._url))
         self._channel = self._connection.channel()
         self._channel.confirm_delivery()
         # Mismos parametros que TopicExchange declarado en ListingsQueueConfig -
         # declarar un exchange existente con los mismos parametros es un no-op.
         self._channel.exchange_declare(exchange=self.exchange, exchange_type="topic", durable=True)
 
-    def publish(self, routing_key: str, payload: dict) -> None:
+    def _reconnect(self) -> None:
+        try:
+            if self._connection.is_open:
+                self._connection.close()
+        except pika.exceptions.AMQPError:
+            pass  # la conexion ya esta en un estado roto - nada que cerrar prolijo
+        self._connect()
+
+    def publish(self, routing_key: str, payload: dict, _retry: bool = True) -> None:
         body = json.dumps(payload, default=str).encode("utf-8")
         try:
             self._channel.basic_publish(
@@ -52,6 +64,40 @@ class ListingsQueuePublisher:
             logger.warning("Mensaje no ruteable en exchange '%s' con routing_key '%s'", self.exchange, routing_key)
         except pika.exceptions.NackError:
             logger.warning("Broker rechazo (nack) la publicacion en '%s' (routing_key '%s')", self.exchange, routing_key)
+        except (pika.exceptions.AMQPConnectionError, pika.exceptions.AMQPChannelError) as exc:
+            # Conexion/canal caidos (visto en produccion: RabbitMQ cierra la
+            # conexion por "missed heartbeats" cuando el scraper pasa 60s+ sin
+            # publicar nada - circuit breaker abierto o racha de 403 sin items -
+            # porque pika.BlockingConnection solo procesa/envia heartbeats
+            # cuando se lo llama explicitamente; ver keepalive() mas abajo, que
+            # ataca la causa). Sin este reintento, cada item posterior se
+            # perdia en silencio (salvo el ERROR de log) hasta que el spider
+            # terminaba y abria una conexion nueva - wdxtkg3rpn, 2026-10-08/09.
+            if not _retry:
+                logger.error(
+                    "Publish perdido tras reconectar: no se pudo reenviar routing_key '%s' en '%s' (%s)",
+                    routing_key,
+                    self.exchange,
+                    exc,
+                )
+                raise
+            logger.warning("Conexion RabbitMQ caida (%s) - reconectando y reintentando publish", exc)
+            self._reconnect()
+            self.publish(routing_key, payload, _retry=False)
+
+    def keepalive(self) -> None:
+        """Procesa eventos pendientes (y envia/recibe heartbeats) aunque no haya
+        ningun item para publicar en este momento. Llamar periodicamente (ver
+        RabbitMQPublishPipeline) durante huecos largos sin items - circuit
+        breaker abierto, racha de errores del sitio origen - para que la
+        conexion no quede muda mas alla del timeout de heartbeat de RabbitMQ
+        (60s por defecto) y el broker la mate. No reconecta por si sola: una
+        conexion caida se repara recien en el proximo publish()."""
+        try:
+            if self._connection.is_open:
+                self._connection.process_data_events(time_limit=0)
+        except pika.exceptions.AMQPError as exc:
+            logger.warning("Keepalive sobre conexion RabbitMQ fallo (%s) - se reconectara en el proximo publish()", exc)
 
     def close(self) -> None:
         if self._connection.is_open:

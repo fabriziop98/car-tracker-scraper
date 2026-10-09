@@ -70,6 +70,53 @@ def test_publish_swallows_unroutable_error(mock_pika_connection):
     publisher.publish(ROUTING_KEY_OBSERVED, {"source": "mercadolibre"})  # no debe levantar
 
 
+def test_publish_reconnects_and_retries_once_on_connection_error(mock_pika_connection):
+    """wdxtkg3rpn: en produccion RabbitMQ mato la conexion por heartbeat
+    perdido (circuit breaker abierto / racha de 403 sin items dejaba el
+    publisher mudo mas de los 60s de timeout) y cada publish() posterior se
+    perdia hasta que el spider terminaba. Un error de conexion/canal ahora
+    reconecta y reintenta una vez antes de darse por vencido."""
+    connection_cls, connection, channel = mock_pika_connection
+    channel.basic_publish.side_effect = [pika.exceptions.StreamLostError("boom"), None]
+    publisher = ListingsQueuePublisher(url="amqp://guest:guest@localhost:5672/%2F")
+
+    publisher.publish(ROUTING_KEY_OBSERVED, {"source": "mercadolibre"})  # no debe levantar
+
+    assert channel.basic_publish.call_count == 2
+    assert connection_cls.call_count == 2  # conexion inicial + reconexion
+    connection.close.assert_called()
+
+
+def test_publish_raises_after_reconnect_retry_also_fails(mock_pika_connection):
+    _, _, channel = mock_pika_connection
+    channel.basic_publish.side_effect = pika.exceptions.ChannelWrongStateError("closed")
+    publisher = ListingsQueuePublisher(url="amqp://guest:guest@localhost:5672/%2F")
+
+    with pytest.raises(pika.exceptions.ChannelWrongStateError):
+        publisher.publish(ROUTING_KEY_OBSERVED, {"source": "mercadolibre"})
+
+    assert channel.basic_publish.call_count == 2  # intento original + 1 reintento, no mas
+
+
+def test_keepalive_processes_pending_events_on_open_connection(mock_pika_connection):
+    _, connection, _ = mock_pika_connection
+    connection.is_open = True
+    publisher = ListingsQueuePublisher(url="amqp://guest:guest@localhost:5672/%2F")
+
+    publisher.keepalive()
+
+    connection.process_data_events.assert_called_once_with(time_limit=0)
+
+
+def test_keepalive_swallows_amqp_error_on_dead_connection(mock_pika_connection):
+    _, connection, _ = mock_pika_connection
+    connection.is_open = True
+    connection.process_data_events.side_effect = pika.exceptions.StreamLostError("boom")
+    publisher = ListingsQueuePublisher(url="amqp://guest:guest@localhost:5672/%2F")
+
+    publisher.keepalive()  # no debe levantar - se repara en el proximo publish()
+
+
 def test_close_closes_open_connection(mock_pika_connection):
     _, connection, _ = mock_pika_connection
     connection.is_open = True
@@ -98,6 +145,20 @@ def test_pipeline_publishes_only_detail_items(mock_pika_connection):
     body = json.loads(kwargs["body"])
     assert body["source_listing_key"] == "MLA1"
     assert body["schema_version"] == 1
+
+
+def test_pipeline_starts_and_stops_keepalive_loop(mock_pika_connection):
+    """wdxtkg3rpn: sin esto, un hueco largo sin items (circuit breaker
+    abierto) deja pika.BlockingConnection sin tocar y RabbitMQ la mata por
+    heartbeat perdido."""
+    pipeline = RabbitMQPublishPipeline()
+    spider = _FakeSpider()
+
+    pipeline.open_spider(spider)
+    assert pipeline._keepalive_task.running
+
+    pipeline.close_spider(spider)
+    assert not pipeline._keepalive_task.running
 
 
 # wdxtkg3rpj: RabbitMQ del docker-compose de car-tracker ya no acepta
